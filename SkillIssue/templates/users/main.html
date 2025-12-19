@@ -47,8 +47,8 @@
             </div>
 
             <!-- Управление -->
-            <button class="carousel-btn prev" onclick="if (typeof moveSlide === 'function') moveSlide(-1)" aria-label="Previous slide">&lt;</button>
-            <button class="carousel-btn next" onclick="if (typeof moveSlide === 'function') moveSlide(1)" aria-label="Next slide">&gt;</button>
+            <button class="carousel-btn prev" onclick="moveSlide(-1)" aria-label="Previous slide">&lt;</button>
+            <button class="carousel-btn next" onclick="moveSlide(1)" aria-label="Next slide">&gt;</button>
 
             <!-- Индикаторы (опционально) -->
             <div class="carousel-indicators" id="carouselIndicators"></div>
@@ -208,14 +208,54 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 </script>
 <script>
+    // Глобальные переменные для карусели
     let currentSlide = 0;
     let totalSlides = 0;
     let slides = [];
-    const carousel = document.getElementById('carousel');
-    const indicatorsContainer = document.getElementById('carouselIndicators');
+    let carousel = null;
+    let indicatorsContainer = null;
+
+    // Глобальные функции для работы карусели
+    function moveSlide(direction) {
+        goToSlide(currentSlide + direction);
+    }
+
+    function goToSlide(index) {
+        if (totalSlides === 0) return;
+        if (index < 0) index = totalSlides - 1;
+        if (index >= totalSlides) index = 0;
+        currentSlide = index;
+        updateCarousel();
+    }
+
+    function updateCarousel() {
+        if (!carousel || totalSlides === 0) return;
+        carousel.style.transform = `translateX(-${currentSlide * 100}%)`;
+        const indicators = document.querySelectorAll('.indicator');
+        indicators.forEach((ind, idx) => {
+            ind.classList.toggle('active', idx === currentSlide);
+        });
+    }
+
+    // Экранирование HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 
     // Загрузка популярных элементов из API
     async function loadPopularItems() {
+        if (!carousel || !indicatorsContainer) {
+            carousel = document.getElementById('carousel');
+            indicatorsContainer = document.getElementById('carouselIndicators');
+        }
+        
+        if (!carousel || !indicatorsContainer) {
+            console.error('Элементы карусели не найдены');
+            return;
+        }
+        
         try {
             const response = await fetch('/api/popular-items/');
             if (!response.ok) {
@@ -295,6 +335,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Функция для загрузки дефолтных слайдов (если API не работает)
     function loadDefaultSlides() {
+        if (!carousel || !indicatorsContainer) {
+            carousel = document.getElementById('carousel');
+            indicatorsContainer = document.getElementById('carouselIndicators');
+        }
+        
+        if (!carousel || !indicatorsContainer) {
+            console.error('Элементы карусели не найдены');
+            return;
+        }
+        
         const defaultSlides = [
             {
                 image: "{% static 'images/default-announcement.png' %}",
@@ -341,34 +391,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         
         slides = document.querySelectorAll('.carousel-slide');
         updateCarousel();
-    }
-
-    // Экранирование HTML
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    function updateCarousel() {
-        if (totalSlides === 0) return;
-        carousel.style.transform = `translateX(-${currentSlide * 100}%)`;
-        const indicators = document.querySelectorAll('.indicator');
-        indicators.forEach((ind, idx) => {
-            ind.classList.toggle('active', idx === currentSlide);
-        });
-    }
-
-    function goToSlide(index) {
-        if (totalSlides === 0) return;
-        if (index < 0) index = totalSlides - 1;
-        if (index >= totalSlides) index = 0;
-        currentSlide = index;
-        updateCarousel();
-    }
-
-    function moveSlide(direction) {
-        goToSlide(currentSlide + direction);
     }
 
     // Загружаем популярные элементы при загрузке страницы

@@ -83,6 +83,7 @@ urlpatterns = [
     path('api/search/all/', views.search_all_items, name='search_all'),
     path('api/search/', views.search_items, name='search'),
     path('api/popular-items/', views.popular_items, name='popular_items'),
+    path('api/users/<str:username>/activities/', views.user_activities, name='user_activities'),
     path('api/set-language/', views.set_language, name='set_language'),
 ]
 

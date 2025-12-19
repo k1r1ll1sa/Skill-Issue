@@ -30,7 +30,7 @@ import random
 import string
 
 
-from .models import Profile, GuideRating, Review, Guide, ProfileReview, Announcement, AnnouncementComment, EmailVerificationCode, ChatMessage
+from .models import Profile, GuideRating, Review, Guide, ProfileReview, Announcement, AnnouncementComment, EmailVerificationCode, ChatMessage, UserActivity
 from .serializers import RegisterSerializer, UserProfileSerializer, ReviewSerializer, GuideSerializer, \
     AnnouncementSerializer, ChatMessageSerializer, ChatContactSerializer, ProfileCommentSerializer
 from .forms import GuideForm
@@ -54,6 +54,7 @@ def profile_page(request, username):
     guides = Guide.objects.filter(author=user_obj).order_by('-created_at')
     announcements = Announcement.objects.filter(author=user_obj).order_by('-created_at')
     reviews = ProfileReview.objects.filter(profile=profile).order_by('-created_at')
+    activities = UserActivity.objects.filter(user=user_obj).order_by('-created_at')[:20]
 
     return render(request, "users/profile.html", {
         "username": username,
@@ -61,6 +62,7 @@ def profile_page(request, username):
         "guides": guides,
         "reviews": reviews,
         "announcements": announcements,
+        "activities": activities,
     })
 
 
@@ -147,12 +149,14 @@ def create_guide(request):
         
         if guide:
             # Редактирование существующего руководства
+            update_fields = ['title', 'content', 'tags']
             guide.title = title
             guide.content = content
             guide.tags = tags_list
             if image:
                 guide.image = image
-            guide.save()
+                update_fields.append('image')
+            guide.save(update_fields=update_fields)
             guide_obj = guide
         else:
             # Создание нового руководства
@@ -270,14 +274,16 @@ def update_announcement(request, announcement_id):
         if request.user != announcement.author:
             return redirect('announcement_detail', announcement_id=announcement_id)
 
+        update_fields = ['title', 'description', 'tags']
         announcement.title = request.POST.get('title')
         announcement.description = request.POST.get('description')
         announcement.tags = request.POST.get('tags', '')
 
         if 'image' in request.FILES:
             announcement.image = request.FILES['image']
+            update_fields.append('image')
 
-        announcement.save()
+        announcement.save(update_fields=update_fields)
 
         return redirect('announcement_detail', announcement_id=announcement_id)
 
@@ -1162,11 +1168,17 @@ class AnnouncementCommentCreateView(APIView):
             content=content
         )
 
+        # Получаем аватар автора
+        author_avatar = None
+        if hasattr(comment.author, 'profile') and comment.author.profile.avatar:
+            author_avatar = comment.author.profile.avatar.url
+        
         return Response({
             "id": comment.id,
             "content": comment.content,
             "author": comment.author.username,
-            "created_at": comment.created_at,
+            "author_avatar": author_avatar,
+            "created_at": comment.created_at.strftime('%d.%m.%Y %H:%M'),
             "is_edited": comment.is_edited,
             "announcement_id": announcement.id
         }, status=status.HTTP_201_CREATED)
@@ -1724,6 +1736,78 @@ class ChatSendMessageView(APIView):
 
         serializer = ChatMessageSerializer(message, context={"request": request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@swagger_auto_schema(
+    method='get',
+    operation_description="Получить историю активности пользователя",
+    manual_parameters=[
+        openapi.Parameter(
+            'username',
+            openapi.IN_PATH,
+            description="Username пользователя",
+            type=openapi.TYPE_STRING,
+            required=True
+        ),
+    ],
+    responses={
+        200: openapi.Response(
+            description="Список активностей пользователя",
+            schema=openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'action': openapi.Schema(type=openapi.TYPE_STRING),
+                        'action_display': openapi.Schema(type=openapi.TYPE_STRING),
+                        'target_type': openapi.Schema(type=openapi.TYPE_STRING),
+                        'target_type_display': openapi.Schema(type=openapi.TYPE_STRING),
+                        'target_title': openapi.Schema(type=openapi.TYPE_STRING),
+                        'created_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME),
+                        'url': openapi.Schema(type=openapi.TYPE_STRING),
+                    }
+                )
+            )
+        ),
+        404: "Пользователь не найден"
+    },
+    tags=['Активность']
+)
+@api_view(['GET'])
+def user_activities(request, username):
+    """Получить историю активности пользователя"""
+    try:
+        user_obj = get_object_or_404(User, username=username)
+        activities = UserActivity.objects.filter(user=user_obj).order_by('-created_at')[:50]
+        
+        activities_data = []
+        for activity in activities:
+            # Определяем URL в зависимости от типа объекта
+            url = None
+            if activity.target_type == 'GUIDE' and activity.guide:
+                url = f'/guides/{activity.guide.id}/'
+            elif activity.target_type == 'ANNOUNCEMENT' and activity.announcement:
+                url = f'/announcements/{activity.announcement.id}/'
+            
+            # Преобразуем время из UTC в локальное время
+            local_time = timezone.localtime(activity.created_at)
+            
+            activities_data.append({
+                'id': activity.id,
+                'action': activity.action,
+                'action_display': activity.get_action_display(),
+                'target_type': activity.target_type,
+                'target_type_display': activity.get_target_type_display(),
+                'target_title': activity.target_title,
+                'created_at': local_time.strftime('%d.%m.%Y %H:%M'),
+                'time': local_time.strftime('%H:%M'),
+                'url': url
+            })
+        
+        return Response(activities_data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])

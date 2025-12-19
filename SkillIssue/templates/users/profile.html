@@ -68,7 +68,7 @@
 
     <hr style="color:black; width:96%;">
 
-    <div class="profile-row-container" style="gap:20px; padding:10px 0 0 0; margin-left: 20px;">
+    <div class="profile-row-container" style="gap:20px; padding:10px 0 0 0; margin-left: 20px; justify-content: flex-start;">
         <button class="profile-button" id="bttn-1" data-lang-ru="руководства" data-lang-en="guides">руководства</button>
         <button class="profile-button" id="bttn-2" data-lang-ru="объявления" data-lang-en="announcements">объявления</button>
         {% if user == profile.user %}
@@ -116,27 +116,18 @@
         {% endif %}
     </div>
 
+    {% if user == profile.user %}
     <div style="margin: 20px auto; width: 95%;">
         <a class="simple-text" style="font-size: 1.3rem; margin-bottom: 10px; display: block;">
             История активности
         </a>
         <div id="activity-container">
-            {% if request.user.activities.exists %}
-                {% for act in request.user.activities.all %}
-                    <div class="activity-item">
-                        <span style="color: #666;">{{ act.created_at|date:"H:i" }}</span>
-                        <strong>{{ act.get_action_display }}</strong>
-                        <span>{{ act.get_target_type_display|lower }}</span>
-                        "<em>{{ act.target_title }}</em>"
-                    </div>
-                {% endfor %}
-            {% else %}
-                <div style="text-align: center; color: #888; font-style: italic; padding: 20px 0;">
-                    Нет активности
-                </div>
-            {% endif %}
+            <div style="text-align: center; color: #888; font-style: italic; padding: 20px 0;">
+                Загрузка активности...
+            </div>
         </div>
     </div>
+    {% endif %}
 
     <hr style="color:black; width:96%; margin:20px auto;">
     <a class="simple-text" style="line-height:20px; margin-bottom: 20px"
@@ -149,7 +140,7 @@
              data-comment-id="{{ review.id }}"
              style="justify-content: left; padding: 10px; background-color: ghostwhite; border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto">
 
-            <div class="profile-row-container" style="gap: 5px">
+            <div class="profile-row-container" style="gap: 5px; justify-content: flex-start;">
                 {% if review.reviewer.profile.avatar %}
                     <img src="{{ review.reviewer.profile.avatar.url }}" class="rec_avatar" alt="{{ review.reviewer.username }}">
                 {% else %}
@@ -488,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 newComment.innerHTML = `
-                    <div class="profile-row-container" style="gap: 5px">
+                    <div class="profile-row-container" style="gap: 5px; justify-content: flex-start">
                         <img src="${escapeHtml(avatarUrl)}" class="rec_avatar" alt="${escapedAuthor}">
                         <div class="profile-column-container">
                             <a href="/users/${escapedAuthor}/" class="simple-text" style="font-size: 1rem; padding-left: 10px;">${escapedAuthor}</a>
@@ -605,6 +596,64 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             authManager.logout();
         });
+    }
+    
+    // Загрузка активности пользователя (только для владельца профиля)
+    const activityContainer = document.getElementById('activity-container');
+    const profileUsername = "{{ profile.user.username }}";
+    const currentUser = "{{ user.username|default:'' }}";
+    const isOwner = currentUser === profileUsername;
+    
+    if (activityContainer && profileUsername && isOwner) {
+        fetch(`/api/users/${profileUsername}/activities/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load activities');
+                }
+                return response.json();
+            })
+            .then(activities => {
+                activityContainer.innerHTML = '';
+                
+                if (activities.length === 0) {
+                    const noActivity = document.createElement('div');
+                    noActivity.style.cssText = 'text-align: center; color: #888; font-style: italic; padding: 20px 0;';
+                    noActivity.textContent = 'Нет активности';
+                    activityContainer.appendChild(noActivity);
+                    return;
+                }
+                
+                activities.forEach(activity => {
+                    const activityItem = document.createElement('div');
+                    activityItem.className = 'activity-item';
+                    
+                    // Формируем текст активности
+                    const actionText = activity.action_display || activity.action;
+                    const targetTypeText = (activity.target_type_display || activity.target_type).toLowerCase();
+                    const time = activity.time || (activity.created_at ? activity.created_at.split(' ')[1] : '') || '';
+                    
+                    let activityHTML = `<span style="color: #666;">${time}</span> `;
+                    activityHTML += `<strong>${actionText}</strong> `;
+                    activityHTML += `<span>${targetTypeText}</span> `;
+                    
+                    if (activity.url) {
+                        activityHTML += `"<a href="${activity.url}" style="color: #0088cc; text-decoration: none;"><em>${activity.target_title}</em></a>"`;
+                    } else {
+                        activityHTML += `"<em>${activity.target_title}</em>"`;
+                    }
+                    
+                    activityItem.innerHTML = activityHTML;
+                    activityContainer.appendChild(activityItem);
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки активности:', error);
+                activityContainer.innerHTML = `
+                    <div style="text-align: center; color: #888; font-style: italic; padding: 20px 0;">
+                        Нет активности
+                    </div>
+                `;
+            });
     }
 });
 </script>

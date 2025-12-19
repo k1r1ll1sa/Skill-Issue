@@ -86,7 +86,7 @@
             <div class="profile-column-container comment-block"
                  data-comment-id="{{ comment.id }}"
                  style="justify-content: left; padding: 10px 20px; background-color: ghostwhite; border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto">
-                <div class="profile-row-container" style="gap: 5px">
+                <div class="profile-row-container" style="gap: 5px; justify-content: flex-start;">
                     {% if comment.author.profile.avatar %}
                         <img src="{{ comment.author.profile.avatar.url }}" class="rec_avatar" alt="{{ comment.author.username }}">
                     {% else %}
@@ -136,7 +136,7 @@
         <hr style="color: black; width: 96%; margin: auto; margin-bottom: 20px; margin-top: 20px;">
         <a class="simple-text" id="form-title" data-lang-ru="Напишите свой комментарий" data-lang-en="Write your comment">Напишите свой комментарий</a>
 
-        <form id="comment-form" method="POST" class="profile-column-container">
+        <form id="comment-form" method="POST" class="profile-column-container" action="#" onsubmit="return false;">
             {% csrf_token %}
             <input type="hidden" id="comment-id-edit" name="comment_id" value="">
             <textarea id="comment-text" name="content" class="textarea_profile" placeholder="Поделитесь своим мнением об этом объявлении..."
@@ -252,49 +252,54 @@
                 }
                 return element;
             }
-
+    
             // Получаем элементы с проверкой
+            const form = getElement('comment-form');
+            if (!form) {
+                console.log('Форма не найдена');
+                return;
+            }
+            
             const textarea = getElement('comment-text');
             const commentIdInput = getElement('comment-id-edit');
             const errorEl = getElement('error');
-            const form = getElement('comment-form');
             const formTitle = getElement('form-title');
             const submitBtn = getElement('response-btn');
             const csrfTokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
-
+    
             // Если нет основных элементов, выходим
             if (!textarea || !form || !csrfTokenElement) {
-                console.log('Форма комментариев не найдена на странице');
+                console.log('Форма комментариев не найдена на странице. Возможно, пользователь не авторизован или является автором объявления.');
                 return;
             }
-
+    
             const csrfToken = csrfTokenElement.value;
             const announcementId = "{{ announcement.id }}";
-
+    
             // Редактирование существующего комментария
             document.querySelectorAll('.edit-comment-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const commentId = btn.dataset.commentId;
                     const content = btn.dataset.commentContent;
-
+    
                     textarea.value = content;
                     if (commentIdInput) commentIdInput.value = commentId;
-
+    
                     const lang = localStorage.getItem('lang') || 'RU';
                     if (submitBtn) submitBtn.textContent = lang === 'RU' ? "Сохранить изменения" : "Save changes";
                     if (formTitle) formTitle.textContent = lang === 'RU' ? "Редактировать комментарий" : "Edit comment";
                     textarea.focus();
                 });
             });
-
-            // Удаление комментария
+    
+            // Удаление комментария - ИСПРАВЛЕННЫЙ КОД
             document.querySelectorAll('.delete-comment-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const commentId = btn.dataset.commentId;
                     const lang = localStorage.getItem('lang') || 'RU';
                     const confirmMsg = lang === 'RU' ? "Вы уверены, что хотите удалить этот комментарий?" : "Are you sure you want to delete this comment?";
                     if (!confirm(confirmMsg)) return;
-
+    
                     fetch(`/api/announcements/comments/${commentId}/delete/`, {
                         method: "DELETE",
                         headers: {
@@ -303,7 +308,10 @@
                         }
                     }).then(res => {
                         if (!res.ok) {
-                            return res.json().then(data => { throw new Error(data.error) });
+                            return res.json().then(data => { 
+                                const errorMsg = data.error || data.detail || 'Неизвестная ошибка';
+                                throw new Error(errorMsg);
+                            });
                         }
                         return res.json();
                     })
@@ -312,6 +320,17 @@
                         const block = document.querySelector(`.comment-block[data-comment-id="${commentId}"]`);
                         if (block) {
                             block.remove();
+                            
+                            // Если комментариев не осталось, показываем сообщение
+                            const commentsContainer = document.getElementById('comments-container');
+                            const remainingComments = commentsContainer.querySelectorAll('.comment-block');
+                            if (remainingComments.length === 0) {
+                                commentsContainer.innerHTML = `
+                                    <div class="profile-column-container" style="justify-content: center; padding: 20px; background-color: ghostwhite; border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto">
+                                        <a class="simple-text" style="font-size: 1rem; color: #666; text-align: center;" data-lang-ru="Пока нет комментариев. Будьте первым!" data-lang-en="No comments yet. Be the first!">Пока нет комментариев. Будьте первым!</a>
+                                    </div>
+                                `;
+                            }
                         }
                     })
                     .catch(error => {
@@ -320,28 +339,34 @@
                             : 'Error deleting comment: ';
                         alert(errorMsg + error.message);
                     });
+                }); // Закрытие обработчика события
             });
-
+    
             // Отправка формы комментария
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-
+                console.log('Форма отправлена!', e);
+    
                 const commentContent = textarea.value.trim();
+                
                 if (!commentContent) {
+                    console.log('Комментарий пустой, показываем ошибку');
                     if (errorEl) errorEl.hidden = false;
                     return;
                 }
                 if (errorEl) errorEl.hidden = true;
-
+    
                 const commentId = commentIdInput ? commentIdInput.value : "";
                 const isUpdate = commentId !== "";
-
+                console.log('Режим:', isUpdate ? 'Обновление' : 'Создание', 'ID комментария:', commentId);
+    
                 const url = isUpdate
                     ? `/api/announcements/comments/${commentId}/update/`
                     : `/api/announcements/comments/create/`;
-
+    
                 const method = isUpdate ? "PUT" : "POST";
-
+                console.log('Отправка запроса:', method, url);
+    
                 fetch(url, {
                     method: method,
                     headers: {
@@ -354,7 +379,16 @@
                     })
                 }).then(res => {
                     if (!res.ok) {
-                        return res.json().then(data => { throw new Error(data.error) });
+                        return res.json().then(data => { 
+                            const errorMsg = data.error || data.detail || 'Неизвестная ошибка';
+                            throw new Error(errorMsg);
+                        }).catch(err => {
+                            // Если не удалось распарсить JSON, используем текст ошибки
+                            if (err instanceof SyntaxError) {
+                                throw new Error(`Ошибка сервера: ${res.status} ${res.statusText}`);
+                            }
+                            throw err;
+                        });
                     }
                     return res.json();
                 })
@@ -367,7 +401,7 @@
                             if (contentElement) {
                                 contentElement.textContent = commentContent;
                             }
-
+    
                             // Показываем метку "редактировано"
                             const editedLabel = block.querySelector('.edited-label');
                             if (editedLabel) {
@@ -382,7 +416,7 @@
                                 }
                             }
                         }
-
+    
                         // Сбрасываем форму
                         textarea.value = "";
                         if (commentIdInput) commentIdInput.value = "";
@@ -390,8 +424,154 @@
                         if (submitBtn) submitBtn.textContent = lang === 'RU' ? "Отправить" : "Send";
                         if (formTitle) formTitle.textContent = lang === 'RU' ? "Напишите свой комментарий" : "Write your comment";
                     } else {
-                        // Перезагружаем страницу для показа нового комментария
-                        location.reload();
+                        // Добавляем новый комментарий в DOM без перезагрузки страницы
+                        const commentsContainer = document.getElementById('comments-container');
+                        if (!commentsContainer) {
+                            location.reload();
+                            return;
+                        }
+                        
+                        // Удаляем сообщение "Пока нет комментариев"
+                        const noCommentsMsg = commentsContainer.querySelector('.profile-column-container:not(.comment-block)');
+                        if (noCommentsMsg && (noCommentsMsg.textContent.includes('Пока нет комментариев') || noCommentsMsg.textContent.includes('No comments yet'))) {
+                            noCommentsMsg.remove();
+                        }
+                        
+                        // Экранирование HTML
+                        function escapeHtml(text) {
+                            const div = document.createElement('div');
+                            div.textContent = text;
+                            return div.innerHTML;
+                        }
+                        
+                        const currentUser = "{{ user.username|default:'' }}";
+                        const isAuthor = data.author === currentUser;
+                        
+                        const avatarUrl = data.author_avatar || "{% static 'images/default-avatar.jpg' %}";
+                        const escapedAuthor = escapeHtml(data.author);
+                        const escapedContent = escapeHtml(data.content);
+                        const escapedCreatedAt = escapeHtml(data.created_at || new Date().toLocaleString('ru-RU'));
+                        
+                        const newComment = document.createElement('div');
+                        newComment.className = 'profile-column-container comment-block';
+                        newComment.dataset.commentId = data.id;
+                        newComment.style.cssText = 'justify-content: left; padding: 10px 20px; background-color: ghostwhite; border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto';
+                        
+                        let buttonsHtml = '';
+                        if (isAuthor) {
+                            buttonsHtml = `
+                                <button class="profile-button edit-comment-btn"
+                                        data-comment-id="${data.id}"
+                                        data-comment-content="${escapedContent.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                                        style="margin-left: auto; height: 30px; min-width: auto; padding: 0 10px;"
+                                        title="Редактировать">✎</button>
+                                <button class="profile-button delete-comment-btn"
+                                        data-comment-id="${data.id}"
+                                        style="margin-left: 5px; height: 30px; background-color: #FF6347; color: white; min-width: auto; padding: 0 10px"
+                                        title="Удалить">🗑</button>
+                            `;
+                        }
+                        
+                        const defaultAvatar = "{% static 'images/default-avatar.jpg' %}";
+                        newComment.innerHTML = `
+                            <div class="profile-row-container" style="gap: 5px; justify-content: flex-start;">
+                                <img src="${escapeHtml(avatarUrl)}" class="rec_avatar" alt="${escapedAuthor}">
+                                <div class="profile-column-container">
+                                    <a href="/users/${escapedAuthor}/" class="simple-text" style="text-align: left; font-size: 1rem; margin-top: auto; margin-bottom: auto; padding-left: 10px">${escapedAuthor}</a>
+                                    <a class="simple-text" style="text-align: left; font-size: 0.8rem; color: #444; margin-top: auto; margin-bottom: auto; padding-left: 10px">${escapedCreatedAt}</a>
+                                </div>
+                                ${buttonsHtml}
+                            </div>
+                            <a class="simple-text comment-content" style="text-align: left; font-size: 1rem; padding-top: 5px; white-space: pre-wrap;">${escapedContent}</a>
+                        `;
+                        
+                        // Добавляем обработчик ошибки загрузки изображения
+                        const img = newComment.querySelector('img');
+                        if (img) {
+                            img.addEventListener('error', function() {
+                                this.src = defaultAvatar;
+                            });
+                        }
+                        
+                        // Добавляем комментарий в начало списка
+                        commentsContainer.insertBefore(newComment, commentsContainer.firstChild);
+                        
+                        // Добавляем обработчики для новых кнопок
+                        if (isAuthor) {
+                            const editBtn = newComment.querySelector('.edit-comment-btn');
+                            const deleteBtn = newComment.querySelector('.delete-comment-btn');
+                            
+                            if (editBtn) {
+                                editBtn.addEventListener('click', () => {
+                                    const commentId = editBtn.dataset.commentId;
+                                    const content = editBtn.dataset.commentContent;
+                                    textarea.value = content;
+                                    if (commentIdInput) commentIdInput.value = commentId;
+                                    const lang = localStorage.getItem('lang') || 'RU';
+                                    if (submitBtn) submitBtn.textContent = lang === 'RU' ? "Сохранить изменения" : "Save changes";
+                                    if (formTitle) formTitle.textContent = lang === 'RU' ? "Редактировать комментарий" : "Edit comment";
+                                    textarea.focus();
+                                });
+                            }
+                            
+                            if (deleteBtn) {
+                                deleteBtn.addEventListener('click', () => {
+                                    const commentId = deleteBtn.dataset.commentId;
+                                    const lang = localStorage.getItem('lang') || 'RU';
+                                    const confirmMsg = lang === 'RU' ? "Вы уверены, что хотите удалить этот комментарий?" : "Are you sure you want to delete this comment?";
+                                    if (!confirm(confirmMsg)) return;
+                                    
+                                    fetch(`/api/announcements/comments/${commentId}/delete/`, {
+                                        method: "DELETE",
+                                        headers: {
+                                            "X-CSRFToken": csrfToken,
+                                            "Content-Type": "application/json"
+                                        }
+                                    }).then(res => {
+                                        if (!res.ok) {
+                                            return res.json().then(data => { 
+                                                const errorMsg = data.error || data.detail || 'Неизвестная ошибка';
+                                                throw new Error(errorMsg);
+                                            }).catch(err => {
+                                                if (err instanceof SyntaxError) {
+                                                    throw new Error(`Ошибка сервера: ${res.status} ${res.statusText}`);
+                                                }
+                                                throw err;
+                                            });
+                                        }
+                                        return res.json();
+                                    })
+                                    .then(() => {
+                                        const block = document.querySelector(`.comment-block[data-comment-id="${commentId}"]`);
+                                        if (block) {
+                                            block.remove();
+                                        }
+                                        // Если комментариев не осталось, показываем сообщение
+                                        const remainingComments = commentsContainer.querySelectorAll('.comment-block');
+                                        if (remainingComments.length === 0) {
+                                            commentsContainer.innerHTML = `
+                                                <div class="profile-column-container" style="justify-content: center; padding: 20px; background-color: ghostwhite; border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto">
+                                                    <a class="simple-text" style="font-size: 1rem; color: #666; text-align: center;" data-lang-ru="Пока нет комментариев. Будьте первым!" data-lang-en="No comments yet. Be the first!">Пока нет комментариев. Будьте первым!</a>
+                                                </div>
+                                            `;
+                                        }
+                                    })
+                                    .catch(error => {
+                                        const errorMsg = localStorage.getItem('lang') === 'RU' 
+                                            ? 'Ошибка при удалении комментария: ' 
+                                            : 'Error deleting comment: ';
+                                        alert(errorMsg + error.message);
+                                    });
+                                });
+                            }
+                        }
+                        
+                        // Сбрасываем форму
+                        textarea.value = "";
+                        if (commentIdInput) commentIdInput.value = "";
+                        const lang = localStorage.getItem('lang') || 'RU';
+                        if (submitBtn) submitBtn.textContent = lang === 'RU' ? "Отправить" : "Send";
+                        if (formTitle) formTitle.textContent = lang === 'RU' ? "Напишите свой комментарий" : "Write your comment";
                     }
                 })
                 .catch(error => {
@@ -401,23 +581,23 @@
                     alert(errorMsg + error.message);
                 });
             });
-
+    
             // Скрытие ошибки при вводе
             textarea.addEventListener('input', function() {
                 if (errorEl) errorEl.hidden = true;
             });
-
+    
             // Автоматическое увеличение высоты textarea
             textarea.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = (this.scrollHeight) + 'px';
             });
-
+    
             // Поддержка смены языка после загрузки
             window.addEventListener('languageChanged', () => {
                 const lang = localStorage.getItem('lang') || 'RU';
                 const isRu = lang === 'RU';
-
+    
                 if (formTitle) formTitle.textContent = isRu ? "Напишите свой комментарий" : "Write your comment";
                 if (errorEl) errorEl.textContent = isRu ? "Комментарий не может быть пустым!" : "Comment cannot be empty!";
                 if (submitBtn) submitBtn.textContent = isRu ? "Отправить" : "Send";

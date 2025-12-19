@@ -912,6 +912,8 @@ textarea {
 
 #activity-container::-webkit-scrollbar-thumb:hover {
     background: #999;
+}
+
 .carousel-container {
     position: relative;
     width: 95%;

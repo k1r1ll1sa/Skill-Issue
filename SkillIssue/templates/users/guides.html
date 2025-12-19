@@ -47,7 +47,7 @@
 
         <!-- ФОРМА ПОИСКА ПО РУКОВОДСТВАМ -->
         <form method="GET" action="{% url 'guides_list' %}" style="display: flex; flex-direction: column; align-items: center;">
-            <div class="profile-row-container" style="display: flex; justify-content: center; gap:5%; margin-top:20px">
+            <div class="profile-row-container" style="display: flex; justify-content: center; gap:5%; margin-top:20px; flex-wrap: nowrap;">
                 <input type="text"
                        name="search"
                        placeholder="поиск по названию"
@@ -91,8 +91,6 @@
                     data-lang-ru="найти" data-lang-en="search">
                 найти
             </button>
-        </form>
-                    data-lang-ru="найти" data-lang-en="search">найти</button>
         </form>
 
         <!-- Блок создания руководства сразу под фильтрами -->
@@ -195,12 +193,6 @@
             </div>
         </div>
         {% endif %}
-        <a class="simple-text" style="margin: 10px 0; margin-top:40px" data-lang-ru="Или напишите своё собственное!" data-lang-en="Or write your own!">Или напишите своё собственное!</a>
-
-        <form action="{% url 'create' %}">
-            <input class="profile-button" style="width: 200px; height: 40px;" type="submit"
-                   value="Перейти" data-lang-ru="Перейти" data-lang-en="Go" />
-        </form>
     </div>
 
     <!-- Чат -->
