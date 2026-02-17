@@ -11,6 +11,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const messageForm = document.getElementById('message-form');
     const messageInput = document.getElementById('message-input');
 
+    // Превью изображения
+    let currentImageFile = null;
+    const attachButton = document.getElementById('attach-button');
+    const imageUploadInput = document.getElementById('image-upload');
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const removeImageButton = document.getElementById('remove-image');
+
     if (!modal || !button) return; // Если элементов нет, выходим
 
     let currentReceiverId = null;
@@ -32,6 +40,57 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.style.right = '-400px';
     });
     }
+
+
+    if (attachButton && imageUploadInput) {
+            attachButton.addEventListener('click', () => {
+            imageUploadInput.click();
+        });
+
+        imageUploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Проверка типа файла
+            if (!file.type.match('image.*')) {
+                alert('Пожалуйста, выберите изображение (PNG, JPG, JPEG)');
+                imageUploadInput.value = '';
+                return;
+            }
+
+            // Проверка размера (опционально, например до 5МБ)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Размер изображения не должен превышать 5 МБ');
+                imageUploadInput.value = '';
+                return;
+            }
+
+            // Создание превью
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                if (imagePreview) {
+                    imagePreview.src = event.target.result;
+                    imagePreviewContainer.style.display = 'block';
+                    currentImageFile = file;
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Удаление изображения из превью
+        if (removeImageButton) {
+            removeImageButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Сброс всех значений
+                if (imagePreview) imagePreview.src = '';
+                if (imagePreviewContainer) imagePreviewContainer.style.display = 'none';
+                if (imageUploadInput) imageUploadInput.value = '';
+                currentImageFile = null;
+            });
+        }
 
     /* ─────────────────────────────────────────────
        ЗАГРУЗКА КОНТАКТОВ ИЗ API
@@ -111,6 +170,10 @@ document.addEventListener('DOMContentLoaded', function () {
        ОТКРЫТИЕ ДИАЛОГА
     ───────────────────────────────────────────── */
     async function openDialog(userId, username) {
+        if (imagePreviewContainer) imagePreviewContainer.style.display = 'none';
+        if (imagePreview) imagePreview.src = '';
+        if (imageUploadInput) imageUploadInput.value = '';
+        currentImageFile = null;
         if (!authManager || !authManager.isAuthenticated()) {
             alert('Войдите, чтобы использовать чат');
             return;
@@ -164,7 +227,11 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 messagesContainer.innerHTML = '';
                 messages.forEach(msg => {
-                    addMessage(msg.direction === 'outgoing' ? 'sent' : 'received', msg.message, formatTime(msg.created_at));
+                    addMessage(msg.direction === 'outgoing' ? 'sent' : 'received',
+                        msg.message, 
+                        formatTime(msg.created_at),
+                        msg.image_url
+                    );
                 });
             }
         } catch (err) {
@@ -176,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function () {
     /* ─────────────────────────────────────────────
        ДОБАВЛЕНИЕ СООБЩЕНИЯ
     ───────────────────────────────────────────── */
-    function addMessage(type, text, time) {
+    function addMessage(type, text, time, imageUrl = null) {
         if (!messagesContainer) {
             console.error('Контейнер сообщений не найден при добавлении сообщения');
             return;
@@ -194,11 +261,36 @@ document.addEventListener('DOMContentLoaded', function () {
             ? "max-width: 70%; background: #007bff; color: white; padding: 10px 15px; border-radius: 18px 18px 4px 18px; align-self: flex-end; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"
             : "max-width: 70%; background: white; padding: 10px 15px; border-radius: 18px 18px 18px 4px; align-self: flex-start; box-shadow: 0 1px 3px rgba(0,0,0,0.1);";
 
-        messageDiv.innerHTML = `
-            <div class="message-text" style="font-size: 0.95rem; ${type === 'sent' ? 'color: white;' : 'color: #333;'}">${escapeHtml(text)}</div>
-            <div class="message-time" style="font-size: 0.75rem; ${type === 'sent' ? 'color: rgba(255,255,255,0.8);' : 'color: #999;'} text-align: right; margin-top: 4px;">${time}</div>
+        let content = '';
+
+        // Добавляем изображение, если есть
+        if (imageUrl) {
+            content += `
+                <div style="max-width: 100%; margin-bottom: ${text ? '8px' : '0'};">
+                    <img src="${imageUrl}" alt="Изображение" 
+                         style="max-width: 100%; max-height: 400px; border-radius: 8px; display: block; cursor: pointer;"
+                         onclick="window.open('${imageUrl}', '_blank')">
+                </div>
+            `;
+        }
+
+        // Добавляем текст, если есть
+        if (text) {
+            content += `
+                <div class="message-text" style="font-size: 0.95rem; ${type === 'sent' ? 'color: white;' : 'color: #333;'}">
+                    ${escapeHtml(text)}
+                </div>
+            `;
+        }
+
+        // Добавляем время
+        content += `
+            <div class="message-time" style="font-size: 0.75rem; ${type === 'sent' ? 'color: rgba(255,255,255,0.8);' : 'color: #999;'} text-align: right; margin-top: 4px;">
+                ${time}
+            </div>
         `;
 
+        messageDiv.innerHTML = content;
         messagesContainer.appendChild(messageDiv);
         
         // Проверяем, что сообщение действительно добавлено
@@ -212,11 +304,11 @@ document.addEventListener('DOMContentLoaded', function () {
         // Прокручиваем вниз
         requestAnimationFrame(() => {
             if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 console.log('Прокрутка выполнена, scrollTop:', messagesContainer.scrollTop, 'scrollHeight:', messagesContainer.scrollHeight);
             }
         });
-        
+
         console.log('Сообщение добавлено в интерфейс:', { 
             type, 
             text, 
@@ -262,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             e.stopPropagation();
             
-            console.log('Форма отправки сообщения вызвана');
+            console.log('Форма отправки сообщения вызвана');    
             
             const input = document.getElementById('message-input');
             if (!input) {
@@ -276,8 +368,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             const text = input.value.trim();
-            if (!text) {
-                console.log('Текст сообщения пуст');
+            const hasImage = !!currentImageFile;
+            if (!text && !hasImage) {
+                console.log('Сообщение должно содержать текст или изображение');
                 return false;
             }
 
@@ -286,12 +379,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 return false;
             }
 
+            const formData = new FormData();
+            formData.append('receiver_id', currentReceiverId);
+            if (text) {
+                formData.append('message', text);
+            }
+            if (hasImage) {
+                formData.append('image', currentImageFile);
+            }
+
             // Блокируем повторную отправку
             const submitBtn = e.target.querySelector('button[type="submit"]');
-            const originalText = submitBtn ? submitBtn.textContent : 'Отправить';
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'Отправка...';
             }
 
             try {
@@ -299,11 +399,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 const res = await authManager.apiRequest('/api/chat/send/', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        receiver_id: currentReceiverId,
-                        message: text
-                    })
+                    body: formData,
                 });
 
                 console.log('Ответ сервера:', res.status, res.statusText);
@@ -319,6 +415,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 // Очищаем поле ввода
                 input.value = '';
+                if (imagePreviewContainer) imagePreviewContainer.style.display = 'none';
+                if (imagePreview) imagePreview.src = '';
+                if (imageUploadInput) imageUploadInput.value = '';
+                currentImageFile = null;
                 
                 // Проверяем, что контейнер сообщений существует и диалог открыт
                 const messagesContainer = document.getElementById('messages-container');
@@ -337,10 +437,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 // Добавляем сообщение в интерфейс
                 const messageText = data.message || text;
+                const imageUrl = data.image_url;
                 const messageTime = data.created_at ? formatTime(data.created_at) : formatTime(new Date().toISOString());
                 
                 console.log('Добавляем сообщение в интерфейс:', { messageText, messageTime, containerExists: !!messagesContainer });
-                addMessage('sent', messageText, messageTime);
+                addMessage('sent', messageText, messageTime, imageUrl);
                 
                 // Обновляем список контактов
                 await loadContacts();
@@ -351,7 +452,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Разблокируем кнопку
                 if (submitBtn) {
                     submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
+                    submitBtn.innerHTML = '↵';
                 }
             }
             
@@ -377,11 +478,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 if (!currentReceiverId) {
                     alert('Сначала выберите собеседника');
-                    return;
-                }
-
-                const text = input.value.trim();
-                if (!text) {
                     return;
                 }
 

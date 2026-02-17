@@ -11,7 +11,7 @@
             <a class="logo" href="{% url 'main_page' %}">Skill Issue</a>
             <div class="nav-group nav-group-left">
                 <a class="nav-links" href="{% url 'guides_list' %}" data-lang-ru="руководства" data-lang-en="guides">руководства</a>
-                <a class="nav-links" href="{% url 'create' %}" data-lang-ru="объявления" data-lang-en="announcements">объявления</a>
+                <a class="nav-links" href="{% url 'announcements_list' %}" data-lang-ru="объявления" data-lang-en="announcements">объявления</a>
             </div>
             <div class="nav-group nav-group-right">
                 <div class="search-container">
@@ -21,17 +21,18 @@
                     <div class="search-dropdown" id="searchDropdown">
                     </div>
                 </div>
-                <a class="nav-links" data-lang-ru="избранное" data-lang-en="favorites">избранное</a>
+                <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему">🌙</button>
                 <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
                 <div class="menu-container">
                     {% if user.is_authenticated %}
-                        <a class="nav-links" href="#">{{ user.username }}</a>
+                        <a class="nav-links"
+                           href="{% url 'profile_page' user.username %}"
+                           data-lang-ru="профиль"
+                           data-lang-en="profile"
+                           style="margin-right: 24px;">профиль</a>
                     {% else %}
                         <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
                     {% endif %}
-                    <div class="context-menu">
-                        <a href="{% url 'logout_page' %}" data-lang-ru="выйти" data-lang-en="log out">выйти</a>
-                    </div>
                 </div>
             </div>
         </nav>
@@ -45,7 +46,7 @@
         <div class="body-background">
             <a class="simple-text" style="margin-top: 20px; font-size: 1.5rem;" data-lang-ru="Начните писать своё объявление!" data-lang-en="Start writing your announcement!">Начните писать своё объявление!</a>
             <div class="editor-container">
-                <div class="profile-row-container" style="gap: 20px">
+                <div class="profile-row-container" style="gap: 20px; flex-wrap: nowrap;">
                     <div class="profile-column-container">
                         <div style="display: flex; justify-content: center; margin-top: 20px;">
                             <label for="image-upload" style="cursor: pointer;">
@@ -54,7 +55,7 @@
                             <input type="file" id="image-upload" class="file-input" accept="image/*">
                         </div>
                         <a class="simple-text" style="font-size: 1.2rem; margin: 0 auto;" data-lang-ru="Выберите изображение" data-lang-en="Choose image">Выберите изображение</a>
-                    </div>
+                    </div> 
                 <div class="profile-column-container" style="width: 100%;">
                     <input type="text" class="guide_name_input" style="margin-left: 0"
                            placeholder="Введите название объявления"
@@ -169,5 +170,6 @@
     </script>
     <script src="{% static 'js/search.js' %}"></script>
     <script src="{% static 'js/toggle_language.js' %}"></script>
+    <script src="{% static 'js/theme.js' %}"></script>
 </body>
 </html>

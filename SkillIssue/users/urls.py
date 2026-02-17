@@ -5,8 +5,9 @@ from . import views
 from django.conf import settings
 from django.conf.urls.static import static
 
-from .views import GuideRateAPIView, ReviewCreateView, create_announcement_view, \
-    ReviewUpdateView, ReviewDeleteView, AnnouncementListView, GuideListView
+from .views import (GuideRateAPIView, ReviewCreateView, create_announcement_view,
+    ReviewUpdateView, ReviewDeleteView, AnnouncementListView, GuideListView, ProfileCommentCreateView,
+                    ProfileCommentUpdateView, ProfileCommentDeleteView)
 
 router = DefaultRouter()
 router.register(r'guides', views.GuideViewSet, basename='guides')
@@ -38,10 +39,13 @@ urlpatterns = [
     path("api/profile/<str:username>/", views.UserProfileDetailView.as_view(), name="profile-detail"),
     path("api/profile/reviews/create/", views.ReviewCreateView.as_view(), name="review-create"),
     path('api/profile/<str:username>/guides/', views.profile_guides_api, name='profile_guides_api'),
+    path('api/profile/comments/create/', ProfileCommentCreateView.as_view(), name='profile-comment-create'),
+    path('api/profile/comments/<int:pk>/update/', ProfileCommentUpdateView.as_view(), name='profile-comment-update'),
+    path('api/profile/comments/<int:pk>/delete/', ProfileCommentDeleteView.as_view(), name='profile-comment-delete'),
 
-    # --- API для руководств ---
+    # --- API для рейтинга руководств ---
     path('api/guides/<int:guide_id>/rate/', GuideRateAPIView.as_view(), name='guide-rate'),
-    path('api/reviews/create/', ReviewCreateView.as_view(), name='review_create'),
+    path('api/reviews/create/', ReviewCreateView.as_view(), name='review-create'),
     path('api/reviews/<int:pk>/update/', ReviewUpdateView.as_view(), name='review-update'),
     path('api/reviews/<int:pk>/delete/', ReviewDeleteView.as_view(), name='review-delete'),
 
@@ -69,7 +73,7 @@ urlpatterns = [
     path('announcements/<int:announcement_id>/edit/', views.edit_announcement, name='edit_announcement'),
     path('announcements/<int:announcement_id>/update/', views.update_announcement, name='update_announcement'),
 
-    # --- API для фильтрации (должны быть ПЕРЕД router.urls) ---
+    # --- API для фильтрации ---
     path('api/announcements/filter/', views.filter_announcements, name='filter_announcements'),
     path('api/guides/filter/', views.filter_guides, name='filter_guides'),
 
@@ -78,6 +82,8 @@ urlpatterns = [
 
     path('api/search/all/', views.search_all_items, name='search_all'),
     path('api/search/', views.search_items, name='search'),
+    path('api/popular-items/', views.popular_items, name='popular_items'),
+    path('api/users/<str:username>/activities/', views.user_activities, name='user_activities'),
     path('api/set-language/', views.set_language, name='set_language'),
 ]
 

@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save, post_delete, pre_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.db.models import Avg
 from .models import Profile, GuideRating, Announcement, UserActivity, Guide
@@ -21,39 +21,41 @@ def update_profile_rating(sender, instance, **kwargs):
     profile.rating = round(avg_rating or 0.00, 2)
     profile.save(update_fields=['rating'])
 
-@receiver(pre_save, sender=Guide)
-def detect_guide_update(sender, instance, **kwargs):
-    if instance.pk is None:
-        return  # Это создание — будет обработано post_save
-
-    try:
-        old = Guide.objects.get(pk=instance.pk)
-        # Проверяем, изменились ли значимые поля
-        fields_to_watch = ['title', 'content', 'tags', 'image']
-        has_significant_change = any(
-            getattr(old, f) != getattr(instance, f)
-            for f in fields_to_watch
-        )
-        instance._significant_change = has_significant_change
-    except Guide.DoesNotExist:
-        instance._significant_change = True
-
 @receiver(post_save, sender=Guide)
 def log_guide_creation_update(sender, instance, created, **kwargs):
+    """
+    Логирует создание или обновление руководства.
+    Создает запись активности только при реальном изменении полей объекта.
+    """
     if created:
+        # При создании всегда логируем
         action = 'CREATE'
-    elif getattr(instance, '_significant_change', True):
-        action = 'UPDATE'
+        UserActivity.objects.create(
+            user=instance.author,
+            action=action,
+            target_type='GUIDE',
+            target_title=instance.title,
+            guide=instance
+        )
     else:
-        return  # Не логируем, если изменение — только рейтинг
+        # При обновлении проверяем, были ли изменены важные поля
+        update_fields = kwargs.get('update_fields')
+        if update_fields:
+            # Проверяем, изменялись ли важные поля (не только служебные)
+            important_fields = {'title', 'content', 'image', 'tags'}
+            if any(field in update_fields for field in important_fields):
+                UserActivity.objects.create(
+                    user=instance.author,
+                    action='UPDATE',
+                    target_type='GUIDE',
+                    target_title=instance.title,
+                    guide=instance
+                )
+        else:
+            # Если update_fields не указан, проверяем через сравнение с БД
+            # Но это может быть неэффективно, поэтому создаем запись только если явно указаны поля
+            pass
 
-    UserActivity.objects.create(
-        user=instance.author,
-        action=action,
-        target_type='GUIDE',
-        target_title=instance.title,
-        guide=instance
-    )
 
 @receiver(post_delete, sender=Guide)
 def log_guide_deletion(sender, instance, **kwargs):
@@ -74,15 +76,34 @@ def log_guide_deletion(sender, instance, **kwargs):
 def log_announcement_creation_update(sender, instance, created, **kwargs):
     """
     Логирует создание или обновление объявления.
+    Создает запись активности только при реальном изменении полей объекта.
     """
-    action = 'CREATE' if created else 'UPDATE'
-    UserActivity.objects.create(
-        user=instance.author,
-        action=action,
-        target_type='ANNOUNCEMENT',
-        target_title=instance.title,
-        announcement=instance  # Опциональная ссылка
-    )
+    if created:
+        # При создании всегда логируем
+        action = 'CREATE'
+        UserActivity.objects.create(
+            user=instance.author,
+            action=action,
+            target_type='ANNOUNCEMENT',
+            target_title=instance.title,
+            announcement=instance
+        )
+    else:
+        # При обновлении проверяем, были ли изменены важные поля
+        update_fields = kwargs.get('update_fields')
+        if update_fields:
+            # Проверяем, изменялись ли важные поля (не только служебные)
+            important_fields = {'title', 'description', 'image', 'tags'}
+            if any(field in update_fields for field in important_fields):
+                UserActivity.objects.create(
+                    user=instance.author,
+                    action='UPDATE',
+                    target_type='ANNOUNCEMENT',
+                    target_title=instance.title,
+                    announcement=instance
+                )
+        # Если update_fields не указан, не создаем запись активности
+        # чтобы избежать ложных срабатываний при автоматических сохранениях
 
 
 @receiver(post_delete, sender=Announcement)

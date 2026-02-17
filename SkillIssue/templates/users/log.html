@@ -11,7 +11,7 @@
             <a class="logo" href="{% url 'main_page' %}">Skill Issue</a>
             <div class="nav-group nav-group-left">
                 <a class="nav-links" href="{% url 'guides_list' %}" data-lang-ru="руководства" data-lang-en="guides">руководства</a>
-                <a class="nav-links" data-lang-ru="анкеты" data-lang-en="profiles">анкеты</a>
+                <a class="nav-links" href="{% url 'announcements_list' %}" data-lang-ru="объявления" data-lang-en="announcements">объявления</a>
             </div>
             <div class="nav-group nav-group-right">
                 <div class="search-container">
@@ -21,14 +21,12 @@
                     <div class="search-dropdown" id="searchDropdown">
                     </div>
                 </div>
-                <a class="nav-links" data-lang-ru="избранное" data-lang-en="favorites">избранное</a>
+                <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему">🌙</button>
                 <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
-                <div class="menu-container">
-                    <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
-                    <div class="context-menu">
-                        <a href="{% url 'register_page' %}" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
-                        <a href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
-                    </div>
+                <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
+                <div class="context-menu">
+                    <a href="{% url 'register_page' %}" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
+                    <a href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
                 </div>
             </div>
         </nav>
@@ -134,4 +132,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script src="{% static 'js/search.js' %}"></script>
+<script src="{% static 'js/theme.js' %}"></script>
+</body>
 </html>

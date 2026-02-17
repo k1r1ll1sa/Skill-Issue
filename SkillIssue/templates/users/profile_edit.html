@@ -11,7 +11,7 @@
         <a class="logo" href="{% url 'main_page' %}">Skill Issue</a>
         <div class="nav-group nav-group-left">
             <a class="nav-links" href="{% url 'guides_list' %}" data-lang-ru="руководства" data-lang-en="guides">руководства</a>
-            <a class="nav-links" href="#" data-lang-ru="объявления" data-lang-en="announcements">объявления</a>
+            <a class="nav-links" href="{% url 'announcements_list' %}" data-lang-ru="объявления" data-lang-en="announcements">объявления</a>
         </div>
         <div class="nav-group nav-group-right">
             <div class="search-container">
@@ -21,11 +21,15 @@
                     <div class="search-dropdown" id="searchDropdown">
                     </div>
             </div>
-            <a class="nav-links" href="#" data-lang-ru="избранное" data-lang-en="favorites">избранное</a>
+            <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему">🌙</button>
             <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
             <div class="menu-container">
                 {% if user.is_authenticated %}
-                    <a class="nav-links" href="{% url 'logout_page' %}" data-lang-ru="выйти" data-lang-en="log out">выйти</a>
+                    <a class="nav-links"
+                       href="{% url 'profile_page' user.username %}"
+                       data-lang-ru="профиль"
+                       data-lang-en="profile"
+                       style="margin-right: 24px;">профиль</a>
                 {% else %}
                     <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
                     <div class="context-menu">
@@ -134,5 +138,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script src="{% static 'js/search.js' %}"></script>
 <script src="{% static 'js/toggle_language.js' %}"></script>
+<script src="{% static 'js/theme.js' %}"></script>
 </body>
 </html>

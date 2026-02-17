@@ -2,6 +2,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     const searchDropdown = document.getElementById('searchDropdown');
 
+    // Проверяем наличие элементов поиска
+    if (!searchInput || !searchDropdown) {
+        console.warn('Элементы поиска не найдены на странице');
+        return;
+    }
+
     let allSearchData = [];
     let dataLoaded = false;
 

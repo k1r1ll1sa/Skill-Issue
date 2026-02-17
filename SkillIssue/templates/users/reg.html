@@ -2,137 +2,314 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Редактировать профиль — Skill Issue</title>
+    <title>Регистрация | Skill Issue</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
 <body>
-<header class="header" id="header">
-    <nav class="header-container">
-        <a class="logo" href="{% url 'main_page' %}">Skill Issue</a>
-        <div class="nav-group nav-group-left">
-            <a class="nav-links" href="{% url 'guides_list' %}" data-lang-ru="руководства" data-lang-en="guides">руководства</a>
-            <a class="nav-links" href="#" data-lang-ru="объявления" data-lang-en="announcements">объявления</a>
-        </div>
-        <div class="nav-group nav-group-right">
-            <div class="search-container">
+    <header class="header" id="header">
+        <nav class="header-container">
+            <a class="logo" href="{% url 'main_page' %}">Skill Issue</a>
+            <div class="nav-group nav-group-left">
+                <a class="nav-links" href="{% url 'guides_list' %}" data-lang-ru="руководства" data-lang-en="guides">руководства</a>
+                <a class="nav-links" href="{% url 'announcements_list' %}" data-lang-ru="объявления" data-lang-en="announcements">объявления</a>
+            </div>
+            <div class="nav-group nav-group-right">
+                <div class="search-container">
                     <input class="search" placeholder="поиск руководств, анкет и профилей" id="searchInput"
                            data-placeholder-ru="поиск руководств, анкет и профилей"
                            data-placeholder-en="search guides, profiles and announcements">
                     <div class="search-dropdown" id="searchDropdown">
                     </div>
-            </div>
-            <a class="nav-links" href="#" data-lang-ru="избранное" data-lang-en="favorites">избранное</a>
-            <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
-            <div class="menu-container">
-                {% if user.is_authenticated %}
-                    <a class="nav-links" href="{% url 'logout_page' %}" data-lang-ru="выйти" data-lang-en="log out">выйти</a>
-                {% else %}
-                    <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
-                    <div class="context-menu">
-                        <a href="{% url 'register_page' %}" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
-                        <a href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    </nav>
-</header>
-
-<div class="body-background">
-    <form id="profile-form" method="POST" enctype="multipart/form-data" style="text-align:center;">
-        {% csrf_token %}
-        <div class="profile-row-container">
-            <div class="image-container" style="position:relative; display:inline-block;">
-                {% if profile.avatar %}
-                    <img id="profile-image" src="{{ profile.avatar.url }}" alt="avatar" style="padding:20px; width:250px; height:250px; border-radius:50%;">
-                {% else %}
-                    <img id="profile-image" src="{% static 'images/default-avatar.jpg' %}" alt="avatar" style="padding:20px; width:250px; height:250px; border-radius:50%;">
-                {% endif %}
-                <div class="hover-text" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); opacity:0; transition:opacity 0.3s;">
-                    <label for="file-input" class="simple-text" style="color:white; background:rgba(0,0,0,0.7); padding:5px 10px; border-radius:5px; cursor:pointer;"
-                           data-lang-ru="выбрать"
-                           data-lang-en="choose">выбрать</label>
-                    <input id="file-input" name="avatar" type="file" accept="image/*" style="display:none;">
+                </div>
+                <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему">🌙</button>
+                <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
+                <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
+                <div class="context-menu">
+                    <a href="{% url 'register_page' %}" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
+                    <a href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
                 </div>
             </div>
+        </nav>
+    </header>
 
-            <div class="profile-column-container" style="min-width:67%;">
-                <input id="username-input" name="username" class="profile-input" value="{{ user.username }}"
-                       style="font-size:1.5rem; padding:20px 20px 0 0;"
-                       placeholder="Введите никнейм"
-                       data-placeholder-ru="Введите никнейм"
-                       data-placeholder-en="Enter nickname">
-                <hr style="color:black; width:100%;">
-                <input id="description-input" name="description" class="profile-input"
-                   value="{{ profile.bio|default:'' }}"
-                   style="font-size:1.3rem; padding:0 20px 20px 0; width:100%;"
-                   placeholder="Введите описание"
-                   data-placeholder-ru="Введите описание"
-                   data-placeholder-en="Enter description">
-                <a class="simple-text" style="font-size:1rem; padding:20px 20px 5px 0;"
-                   data-lang-ru="Рейтинг: {{ profile.rating|default:"0" }}/5"
-                   data-lang-en="Rating: {{ profile.rating|default:"0" }}/5">Рейтинг: {{ profile.rating|default:"0" }}/5</a>
+    <div class="register_container">
+        <form id="register_form" class="register_panel" novalidate>
+            <p class="simple-text" style="margin: auto; font-size: 2rem">Давайте зарегистрируемся</p>
+            
+            <input class="register_input" type="text" id="reg_username" placeholder="введите username">
+            <input class="register_input" type="password" id="reg_password" placeholder="введите пароль">
+            <input class="register_input" type="password" id="reg_repeat_password" placeholder="повторите пароль">
+            <input class="register_input" type="email" id="reg_email" placeholder="введите email">
+
+            <div style="height: 20px; margin-top: -30px; margin-bottom: -20px">
+                <p id="reg_error" class="simple-text" style="font-size:0.8rem"></p>
             </div>
-        </div>
-        <button id="save-button" type="submit" class="profile-button" style="margin:20px 0; width:200px; height:35px;"
-                data-lang-ru="Сохранить"
-                data-lang-en="Save">Сохранить</button>
-    </form>
-</div>
 
-<footer class="footer">
-    <div class="footer-container">
-        <table class="simple-text" style="width:100%; height:100%; color:lightgray; font-size:1rem;">
-            <tr>
-                <td colspan="3" style="width:33%;">
-                    <a href="https://www.sfu.ru/ru" class="nav-group-left" style="text-decoration:none; color:lightgray; margin-top:5px; font-size:1.25rem;"
-                       data-lang-ru="Сибирский Федеральный Университет"
-                       data-lang-en="Siberian Federal University">Сибирский Федеральный Университет</a>
-                </td>
-                <td style="text-align:right;">
-                    <p class="nav-group-right" style="margin-top:5px; font-size:1.25rem;">@skill_issue 2025</p>
-                </td>
-            </tr>
-            <tr>
-                <td><p style="text-align:left;">@bukohm</p></td>
-                <td><p style="text-align:center;">@hoolkayyy</p></td>
-                <td><p style="text-align:right;">@K1rkaSs</p></td>
-            </tr>
-        </table>
+            <button type="submit" class="register_button">зарегистрироваться</button>
+            <a href="{% url 'login_page' %}" class="simple-text" style="color: dimgray; font-size: 1rem; margin-top: -20px">я уже смешарик</a>
+        </form>
     </div>
-</footer>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const imgContainer = document.querySelector('.image-container');
-    const hoverText = imgContainer.querySelector('.hover-text');
-    const fileInput = document.getElementById('file-input');
-    const img = document.getElementById('profile-image');
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("updated") === "1") {
-        const lang = localStorage.getItem('lang') || 'RU';
-        const msg = lang === 'RU' ? "✅ Профиль успешно обновлён!" : "✅ Profile updated successfully!";
-        alert(msg);
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
-    }
+    <!-- Модальное окно подтверждения email -->
+    <div id="verify_email_modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px; padding: 30px;">
+            <h2 class="simple-text" style="font-size: 1.5rem; margin-bottom: 20px;">Подтверждение email</h2>
+            <p class="simple-text" style="font-size: 0.9rem; margin-bottom: 20px; color: dimgray;">
+                Мы отправили код подтверждения на ваш email. 
+                <span id="verify_email_address" style="font-weight: bold;"></span>
+            </p>
+            <p class="simple-text" style="font-size: 0.8rem; margin-bottom: 20px; color: dimgray;">
+                Проверьте консоль сервера или почту для получения кода.
+            </p>
+            
+            <input class="register_input" type="text" id="verify_code" placeholder="Введите 6-значный код" maxlength="6" style="margin-bottom: 10px;">
+            
+            <div style="height: 20px; margin-bottom: 10px;">
+                <p id="verify_error" class="simple-text" style="font-size:0.8rem; color: red;"></p>
+            </div>
 
-    imgContainer.addEventListener('mouseenter', () => hoverText.style.opacity = '1');
-    imgContainer.addEventListener('mouseleave', () => hoverText.style.opacity = '0');
+            <button type="button" id="verify_submit_btn" class="register_button" style="width: 100%; margin-bottom: 10px;">
+                Подтвердить
+            </button>
+            
+            <button type="button" id="resend_code_btn" class="simple-text" style="background: none; border: none; color: dimgray; cursor: pointer; font-size: 0.9rem; text-decoration: underline;">
+                Отправить код повторно
+            </button>
+        </div>
+    </div>
 
-    fileInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
+    <style>
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
+        .modal-content {
+            background-color: #1a1a1a;
+            margin: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .modal-content input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+    </style>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <table class="simple-text" style="width: 100%; height: 100%; color: lightgray; font-size: 1rem">
+                <tr>
+                    <td colspan="3" style="width:33%;">
+                        <a href="https://www.sfu.ru/ru" class="nav-group-left" style="text-decoration: none; color: lightgray; margin-top: 5px; font-size: 1.25rem ">Сибирский Федеральный Университет</a>
+                    <td style="text-align:right"><p class="nav-group-right" style="margin-top: 5px; font-size: 1.25rem;">@skill_issue 2025</p>
+                </tr>
+                <tr>
+                    <td><p style="text-align:left">@bukohm</p>
+                    <td><p style="text-align:center">@hoolkayyy</p>
+                    <td><p style="text-align:right">@K1rkaSs</p>
+                </tr>
+            </table>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const reg_form = document.getElementById('register_form');
+        const inputs = document.querySelectorAll('.register_input');
+        const error_par = document.getElementById('reg_error');
+        
+        // Элементы модального окна
+        const verifyModal = document.getElementById('verify_email_modal');
+        const verifyCodeInput = document.getElementById('verify_code');
+        const verifyError = document.getElementById('verify_error');
+        const verifySubmitBtn = document.getElementById('verify_submit_btn');
+        const resendCodeBtn = document.getElementById('resend_code_btn');
+        const verifyEmailAddress = document.getElementById('verify_email_address');
+        
+        let registeredEmail = '';
+
+        const bad_passwords = ['12345678', 'qwertyui', '1234567890', 'qwertyuio', 
+                               'qwertyuiop', '11111111', '22222222', '33333333', 
+                               '44444444', '55555555', '66666666', '77777777', 
+                               '88888888', '99999999', '00000000'];
+
+        const originalPlaceholders = {};
+        inputs.forEach(input => {
+            originalPlaceholders[input.id] = input.placeholder;
+        });
+
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.classList.remove('input_error');
+                this.placeholder = originalPlaceholders[this.id];
+                error_par.textContent = '';
+            });
+            input.addEventListener('input', function() {
+                this.classList.remove('input_error');
+                error_par.textContent = '';
+            });
+        });
+
+        // Обработка ввода кода (только цифры)
+        verifyCodeInput.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '');
+            verifyError.textContent = '';
+        });
+
+        // Подтверждение email
+        verifySubmitBtn.addEventListener('click', function() {
+            const code = verifyCodeInput.value.trim();
+            
+            if (code.length !== 6) {
+                verifyError.textContent = 'Код должен содержать 6 цифр';
+                return;
+            }
+
+            verifySubmitBtn.disabled = true;
+            verifyError.textContent = '';
+
+            fetch("/api/verify-email/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: registeredEmail,
+                    code: code
+                })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.message) {
+                    alert("Email успешно подтвержден! Теперь вы можете войти.");
+                    window.location.href = "{% url 'login_page' %}";
+                } else {
+                    verifyError.textContent = result.error || 'Ошибка подтверждения';
+                    verifySubmitBtn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                verifyError.textContent = "Ошибка сервера";
+                verifySubmitBtn.disabled = false;
+            });
+        });
+
+        // Повторная отправка кода
+        resendCodeBtn.addEventListener('click', function() {
+            resendCodeBtn.disabled = true;
+            verifyError.textContent = '';
+
+            fetch("/api/resend-code/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: registeredEmail
+                })
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.message) {
+                    verifyError.textContent = 'Код отправлен повторно. Проверьте консоль сервера.';
+                    verifyError.style.color = 'green';
+                    setTimeout(() => {
+                        verifyError.textContent = '';
+                        verifyError.style.color = 'red';
+                    }, 3000);
+                } else {
+                    verifyError.textContent = result.error || 'Ошибка отправки кода';
+                }
+                resendCodeBtn.disabled = false;
+            })
+            .catch(err => {
+                console.error(err);
+                verifyError.textContent = "Ошибка сервера";
+                resendCodeBtn.disabled = false;
+            });
+        });
+
+        reg_form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            let isValid = true;
+
+            const username = document.getElementById('reg_username').value.trim();
+            const password = document.getElementById('reg_password').value.trim();
+            const repeat_password = document.getElementById('reg_repeat_password').value.trim();
+            const email = document.getElementById('reg_email').value.trim();
+
+            if (username.length < 3) {
+                error_par.textContent = 'username должен содержать минимум 3 символа';
+                isValid = false;
+            } else if (password.length < 8) {
+                error_par.textContent = 'пароль должен содержать минимум 8 символов';
+                isValid = false;
+            } else if (bad_passwords.some(p => password.includes(p))) {
+                error_par.textContent = 'пароль содержит недопустимые комбинации';
+                isValid = false;
+            } else if (password !== repeat_password) {
+                error_par.textContent = 'пароли не совпадают';
+                isValid = false;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                error_par.textContent = 'некорректный адрес email';
+                isValid = false;
+            }
+
+            if (isValid) {
+                const data = {username, password, email};
+                const csrfToken = getCSRFToken();
+
+                fetch("/api/register/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: JSON.stringify(data),
+                    credentials: "include"
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.id) {
+                        registeredEmail = result.email;
+                        verifyEmailAddress.textContent = result.email;
+                        verifyCodeInput.value = '';
+                        verifyError.textContent = '';
+                        verifyModal.style.display = 'flex';
+                    } else {
+                        if (result.error) {
+                            error_par.textContent = result.error;
+                        } else if (result.email) {
+                            error_par.textContent = 'Пользователь с таким email уже существует';
+                        } else {
+                            error_par.textContent = JSON.stringify(result);
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    error_par.textContent = "Ошибка сервера";
+                });
+            }
+        });
     });
-});
-</script>
+    </script>
 <script src="{% static 'js/search.js' %}"></script>
 <script src="{% static 'js/toggle_language.js' %}"></script>
+<script src="{% static 'js/theme.js' %}"></script>
 </body>
 </html>

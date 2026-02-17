@@ -2,6 +2,7 @@ from .models import Profile, GuideRating, Review, Guide, ProfileReview, Announce
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import datetime, date
+from .dto import GuideInfoDTO
 
 class UserDAO:
     """DAO для профилей"""
@@ -123,6 +124,22 @@ class GuideDAO:
     @staticmethod
     def delete(guide):
         guide.delete()
+
+    @staticmethod
+    def get_guides_dto():
+        rows = Guide.objects.select_related("author").values(
+            "id", "title", "author__username", "rating"
+        )
+
+        return [
+            GuideInfoDTO(
+                id=r["id"],
+                title=r["title"],
+                author_username=r["author__username"],
+                rating=r["rating"]
+            )
+            for r in rows
+        ]
 
 class AnnouncementDAO:
     """DAO для объявлений"""

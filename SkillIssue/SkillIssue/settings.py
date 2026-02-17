@@ -31,6 +31,7 @@ DEBUG = os.environ.get('DEBUG')
 ALLOWED_HOSTS = []
 
 MEDIA_URL = '/media/'
+LOGIN_URL = '/login-page/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 

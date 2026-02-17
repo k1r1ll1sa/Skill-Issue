@@ -7,6 +7,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.middleware.csrf import get_token
 from django.views.generic import ListView
+from rest_framework.decorators import action
 from rest_framework import status, permissions, generics, viewsets, serializers
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
@@ -15,6 +16,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.decorators import api_view
 import markdown
 from rest_framework.parsers import MultiPartParser, FormParser
+from .daos import GuideDAO
 from django.db.models import Avg
 from django.db.models import Q
 from django.utils.safestring import mark_safe
@@ -28,9 +30,9 @@ import random
 import string
 
 
-from .models import Profile, GuideRating, Review, Guide, ProfileReview, Announcement, AnnouncementComment, EmailVerificationCode, ChatMessage
+from .models import Profile, GuideRating, Review, Guide, ProfileReview, Announcement, AnnouncementComment, EmailVerificationCode, ChatMessage, UserActivity
 from .serializers import RegisterSerializer, UserProfileSerializer, ReviewSerializer, GuideSerializer, \
-    AnnouncementSerializer, ChatMessageSerializer, ChatContactSerializer
+    AnnouncementSerializer, ChatMessageSerializer, ChatContactSerializer, ProfileCommentSerializer
 from .forms import GuideForm
 
 
@@ -52,6 +54,7 @@ def profile_page(request, username):
     guides = Guide.objects.filter(author=user_obj).order_by('-created_at')
     announcements = Announcement.objects.filter(author=user_obj).order_by('-created_at')
     reviews = ProfileReview.objects.filter(profile=profile).order_by('-created_at')
+    activities = UserActivity.objects.filter(user=user_obj).order_by('-created_at')[:20]
 
     return render(request, "users/profile.html", {
         "username": username,
@@ -59,6 +62,7 @@ def profile_page(request, username):
         "guides": guides,
         "reviews": reviews,
         "announcements": announcements,
+        "activities": activities,
     })
 
 
@@ -105,7 +109,6 @@ class GuideListView(ListView):
         search_query = self.request.GET.get('search')
 
         if not search_query:
-            # Показываем "Лучшее за всё время" только когда нет поиска
             context['top_guides'] = Guide.objects.order_by('-rating')[:6]
 
         return context
@@ -122,10 +125,6 @@ class AnnouncementListView(ListView):
         if search_query:
             queryset = queryset.filter(title__icontains=search_query)
         return queryset
-
-
-
-
 
 @login_required
 def create_guide(request):
@@ -150,12 +149,14 @@ def create_guide(request):
         
         if guide:
             # Редактирование существующего руководства
+            update_fields = ['title', 'content', 'tags']
             guide.title = title
             guide.content = content
             guide.tags = tags_list
             if image:
                 guide.image = image
-            guide.save()
+                update_fields.append('image')
+            guide.save(update_fields=update_fields)
             guide_obj = guide
         else:
             # Создание нового руководства
@@ -245,7 +246,7 @@ def profile_edit(request):
 
     return render(request, "users/profile_edit.html", {"profile": profile, "user": request.user})
 
-
+@login_required
 def edit_announcement(request, announcement_id):
     announcement = get_object_or_404(Announcement, id=announcement_id)
 
@@ -265,7 +266,7 @@ def edit_announcement(request, announcement_id):
     }
     return render(request, 'users/announcement_edit.html', context)
 
-
+@login_required
 def update_announcement(request, announcement_id):
     if request.method == 'POST':
         announcement = get_object_or_404(Announcement, id=announcement_id)
@@ -273,14 +274,16 @@ def update_announcement(request, announcement_id):
         if request.user != announcement.author:
             return redirect('announcement_detail', announcement_id=announcement_id)
 
+        update_fields = ['title', 'description', 'tags']
         announcement.title = request.POST.get('title')
         announcement.description = request.POST.get('description')
         announcement.tags = request.POST.get('tags', '')
 
         if 'image' in request.FILES:
             announcement.image = request.FILES['image']
+            update_fields.append('image')
 
-        announcement.save()
+        announcement.save(update_fields=update_fields)
 
         return redirect('announcement_detail', announcement_id=announcement_id)
 
@@ -668,26 +671,6 @@ class ReviewCreateView(generics.CreateAPIView):
             return Response({"error": e.detail[0]}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class GuideCreateAPI(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(
-        operation_description="Создать новое руководство (гайд)",
-        request_body=GuideSerializer,
-        responses={
-            201: GuideSerializer,
-            400: "Ошибка валидации данных"
-        },
-        tags=['Руководства']
-    )
-    def post(self, request):
-        serializer = GuideSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(author=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class IsAuthorOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
@@ -708,6 +691,29 @@ class GuideViewSet(viewsets.ModelViewSet):
     queryset = Guide.objects.all().order_by('-rating', '-created_at')
     serializer_class = GuideSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+
+    @action(detail=False, methods=['get'], url_path='dao-guides')
+    def get_guides_from_dao(self, request):
+        """
+        Метод, использующий DAO для получения списка руководств.
+        Аналог @GetMapping("students").
+        """
+        guides = GuideDAO.get_all()
+        serializer = GuideSerializer(guides, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='dto-guides')
+    def get_dto_guides(self, request):
+        dtos = GuideDAO.get_guides_dto()
+        return Response([
+            {
+                "id": d.id,
+                "title": d.title,
+                "author": d.author_username,
+                "rating": d.rating
+            }
+            for d in dtos
+        ])
 
     @swagger_auto_schema(
         operation_description="Получить список всех руководств, отсортированных по рейтингу",
@@ -1019,6 +1025,101 @@ class ReviewDeleteView(APIView):
             "profile_average_rating": profile.rating
         })
 
+
+class ProfileCommentCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['username', 'comment'],
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING, description='Username профиля'),
+                'comment': openapi.Schema(type=openapi.TYPE_STRING, description='Текст комментария'),
+            },
+        ),
+        responses={201: ProfileCommentSerializer}
+    )
+    def post(self, request):
+        username = request.data.get("username", "").strip()
+        comment_text = request.data.get("comment", "").strip()
+
+        if not username:
+            return Response({"error": "Не указан username профиля"}, status=status.HTTP_400_BAD_REQUEST)
+        if not comment_text:
+            return Response({"error": "Комментарий не может быть пустым"}, status=status.HTTP_400_BAD_REQUEST)
+
+        profile = get_object_or_404(Profile, user__username=username)
+
+        review, created = ProfileReview.objects.update_or_create(
+            reviewer=request.user,
+            profile=profile,
+            defaults={"comment": comment_text}
+        )
+
+        serializer = ProfileCommentSerializer(review, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ProfileCommentUpdateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Редактирование комментария к профилю",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['text'],
+            properties={
+                'text': openapi.Schema(type=openapi.TYPE_STRING, description='Новый текст комментария'),
+            },
+        ),
+        responses={
+            200: ProfileCommentSerializer,
+            403: "Нет прав на редактирование",
+            404: "Комментарий не найден",
+            400: "Комментарий не может быть пустым"
+        }
+    )
+    def put(self, request, pk):
+        comment = get_object_or_404(ProfileReview, id=pk)
+
+        if comment.reviewer != request.user:
+            return Response({"error": "Нет прав на редактирование"}, status=status.HTTP_403_FORBIDDEN)
+
+        text = request.data.get("text", "").strip()
+        if not text:
+            return Response({"error": "Комментарий не может быть пустым"}, status=status.HTTP_400_BAD_REQUEST)
+
+        comment.comment = text
+        comment.is_edited = True
+        comment.save()
+
+        serializer = ProfileCommentSerializer(comment, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# --- Удаление комментария ---
+class ProfileCommentDeleteView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Удаление комментария к профилю",
+        responses={
+            204: "Комментарий удален",
+            403: "Нет прав на удаление",
+            404: "Комментарий не найден"
+        }
+    )
+    def delete(self, request, pk):
+        comment = get_object_or_404(ProfileReview, id=pk)
+
+        if comment.reviewer != request.user:
+            return Response({"error": "Нет прав на удаление"}, status=status.HTTP_403_FORBIDDEN)
+
+        comment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class AnnouncementCommentCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -1067,11 +1168,17 @@ class AnnouncementCommentCreateView(APIView):
             content=content
         )
 
+        # Получаем аватар автора
+        author_avatar = None
+        if hasattr(comment.author, 'profile') and comment.author.profile.avatar:
+            author_avatar = comment.author.profile.avatar.url
+
         return Response({
             "id": comment.id,
             "content": comment.content,
             "author": comment.author.username,
-            "created_at": comment.created_at,
+            "author_avatar": author_avatar,
+            "created_at": comment.created_at.strftime('%d.%m.%Y %H:%M'),
             "is_edited": comment.is_edited,
             "announcement_id": announcement.id
         }, status=status.HTTP_201_CREATED)
@@ -1170,6 +1277,109 @@ class AnnouncementCommentDeleteView(APIView):
             "message": "Комментарий удалён",
             "announcement_id": announcement_id
         })
+
+
+@swagger_auto_schema(
+    method='get',
+    operation_description="Получить популярные руководства и объявления для карусели на главной странице",
+    responses={
+        200: openapi.Response(
+            description="Список популярных элементов",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'guides': openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                'title': openapi.Schema(type=openapi.TYPE_STRING),
+                                'image': openapi.Schema(type=openapi.TYPE_STRING),
+                                'author': openapi.Schema(type=openapi.TYPE_STRING),
+                                'rating': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                'url': openapi.Schema(type=openapi.TYPE_STRING),
+                            }
+                        )
+                    ),
+                    'announcements': openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                'title': openapi.Schema(type=openapi.TYPE_STRING),
+                                'image': openapi.Schema(type=openapi.TYPE_STRING),
+                                'author': openapi.Schema(type=openapi.TYPE_STRING),
+                                'url': openapi.Schema(type=openapi.TYPE_STRING),
+                            }
+                        )
+                    ),
+                }
+            )
+        ),
+        500: "Внутренняя ошибка сервера"
+    },
+    tags=['Главная страница']
+)
+@api_view(['GET'])
+def popular_items(request):
+    """Получить популярные руководства и объявления для карусели"""
+    try:
+        # Получаем популярные руководства (топ 5 по рейтингу)
+        popular_guides = Guide.objects.order_by('-rating', '-created_at')[:5]
+        guides_data = []
+        for guide in popular_guides:
+            request_obj = request
+            image_url = None
+            if guide.image:
+                if request_obj:
+                    image_url = request_obj.build_absolute_uri(guide.image.url)
+                else:
+                    image_url = guide.image.url
+            
+            guides_data.append({
+                'id': guide.id,
+                'title': guide.title,
+                'image': image_url or None,
+                'author': guide.author.username,
+                'rating': guide.rating,
+                'url': f'/guides/{guide.id}/',
+                'type': 'guide'
+            })
+        
+        # Получаем популярные объявления (последние 5)
+        popular_announcements = Announcement.objects.order_by('-created_at')[:5]
+        announcements_data = []
+        for announcement in popular_announcements:
+            request_obj = request
+            image_url = None
+            if announcement.image:
+                if request_obj:
+                    image_url = request_obj.build_absolute_uri(announcement.image.url)
+                else:
+                    image_url = announcement.image.url
+            
+            announcements_data.append({
+                'id': announcement.id,
+                'title': announcement.title,
+                'image': image_url or None,
+                'author': announcement.author.username,
+                'url': f'/announcements/{announcement.id}/',
+                'type': 'announcement'
+            })
+        
+        # Объединяем и перемешиваем (можно отсортировать по дате создания)
+        all_items = guides_data + announcements_data
+        # Сортируем по дате создания (новые первыми)
+        # Для этого нужно добавить created_at в данные
+        return Response({
+            'guides': guides_data,
+            'announcements': announcements_data,
+            'items': all_items[:6]  # Максимум 6 элементов для карусели
+        })
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @swagger_auto_schema(
@@ -1453,7 +1663,12 @@ class ChatContactsView(APIView):
             )
 
             if not data["last_message_at"] or msg.created_at > data["last_message_at"]:
-                data["last_message"] = msg.message[:200]
+                if msg.message.strip():
+                    data["last_message"] = msg.message[:200]
+                elif msg.image:
+                    data["last_message"] = "Картинка"
+                else:
+                    data["last_message"] = "Без сообщений"
                 data["last_message_at"] = msg.created_at
 
             if msg.receiver_id == user.id and not msg.is_read:
@@ -1496,6 +1711,7 @@ class ChatMessagesView(APIView):
 
 class ChatSendMessageView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
         """
@@ -1503,10 +1719,11 @@ class ChatSendMessageView(APIView):
         """
         receiver_id = request.data.get("receiver_id")
         text = (request.data.get("message") or "").strip()
+        image = request.FILES.get("image")
 
         if not receiver_id:
             return Response({"error": "Не указан получатель"}, status=status.HTTP_400_BAD_REQUEST)
-        if not text:
+        if not text and not image:
             return Response({"error": "Сообщение не может быть пустым"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
@@ -1522,10 +1739,83 @@ class ChatSendMessageView(APIView):
             sender=request.user,
             receiver=receiver,
             message=text,
+            image=image,
         )
 
         serializer = ChatMessageSerializer(message, context={"request": request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@swagger_auto_schema(
+    method='get',
+    operation_description="Получить историю активности пользователя",
+    manual_parameters=[
+        openapi.Parameter(
+            'username',
+            openapi.IN_PATH,
+            description="Username пользователя",
+            type=openapi.TYPE_STRING,
+            required=True
+        ),
+    ],
+    responses={
+        200: openapi.Response(
+            description="Список активностей пользователя",
+            schema=openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                        'action': openapi.Schema(type=openapi.TYPE_STRING),
+                        'action_display': openapi.Schema(type=openapi.TYPE_STRING),
+                        'target_type': openapi.Schema(type=openapi.TYPE_STRING),
+                        'target_type_display': openapi.Schema(type=openapi.TYPE_STRING),
+                        'target_title': openapi.Schema(type=openapi.TYPE_STRING),
+                        'created_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME),
+                        'url': openapi.Schema(type=openapi.TYPE_STRING),
+                    }
+                )
+            )
+        ),
+        404: "Пользователь не найден"
+    },
+    tags=['Активность']
+)
+@api_view(['GET'])
+def user_activities(request, username):
+    """Получить историю активности пользователя"""
+    try:
+        user_obj = get_object_or_404(User, username=username)
+        activities = UserActivity.objects.filter(user=user_obj).order_by('-created_at')[:50]
+        
+        activities_data = []
+        for activity in activities:
+            # Определяем URL в зависимости от типа объекта
+            url = None
+            if activity.target_type == 'GUIDE' and activity.guide:
+                url = f'/guides/{activity.guide.id}/'
+            elif activity.target_type == 'ANNOUNCEMENT' and activity.announcement:
+                url = f'/announcements/{activity.announcement.id}/'
+            
+            # Преобразуем время из UTC в локальное время
+            local_time = timezone.localtime(activity.created_at)
+            
+            activities_data.append({
+                'id': activity.id,
+                'action': activity.action,
+                'action_display': activity.get_action_display(),
+                'target_type': activity.target_type,
+                'target_type_display': activity.get_target_type_display(),
+                'target_title': activity.target_title,
+                'created_at': local_time.strftime('%d.%m.%Y %H:%M'),
+                'time': local_time.strftime('%H:%M'),
+                'url': url
+            })
+        
+        return Response(activities_data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])

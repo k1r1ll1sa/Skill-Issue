@@ -10,7 +10,7 @@
             <a class="logo" href="{% url 'main_page' %}">Skill Issue</a>
             <div class="nav-group nav-group-left">
                 <a class="nav-links" href="{% url 'guides_list' %}" data-lang-ru="руководства" data-lang-en="guides">руководства</a>
-                <a class="nav-links" data-lang-ru="объявления" data-lang-en="announcements">объявления</a>
+                <a class="nav-links" href="{% url 'announcements_list' %}" data-lang-ru="объявления" data-lang-en="announcements">объявления</a>
             </div>
             <div class="nav-group nav-group-right">
                 <div class="search-container">
@@ -20,14 +20,22 @@
                     <div class="search-dropdown" id="searchDropdown">
                     </div>
                 </div>
-                <a class="nav-links" data-lang-ru="избранное" data-lang-en="favorites">избранное</a>
+                <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему">🌙</button>
                 <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
                 <div class="menu-container">
-                    <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
-                    <div class="context-menu">
-                        <a href="{% url 'register_page' %}" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
-                        <a href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
-                    </div>
+                    {% if user.is_authenticated %}
+                        <a class="nav-links"
+                           href="{% url 'profile_page' user.username %}"
+                           data-lang-ru="профиль"
+                           data-lang-en="profile"
+                           style="margin-right: 24px;">профиль</a>
+                    {% else %}
+                        <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
+                        <div class="context-menu">
+                            <a href="{% url 'register_page' %}" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
+                            <a href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </nav>
@@ -94,6 +102,15 @@
         <div class="actions">
             <button class="profile-button" onclick="clearEditor()" data-lang-ru="Очистить" data-lang-en="Clear">Очистить</button>
             <button class="profile-button" onclick="saveGuide()" data-lang-ru="Сохранить руководство" data-lang-en="Save guide">Сохранить руководство</button>
+            {% if guide %}
+            <button class="profile-button"
+                    id="delete-guide-btn"
+                    style="background-color:#ff5c5c; border:none;"
+                    data-lang-ru="Удалить руководство"
+                    data-lang-en="Delete guide">
+                Удалить руководство
+            </button>
+            {% endif %}
         </div>
     </div>
 
@@ -126,13 +143,14 @@ const preview = document.getElementById('preview');
 const titleInput = document.getElementById('titleInput');
 const tagsInput = document.getElementById('tagsInput');
 const pageTitle = document.getElementById('pageTitle');
+let guideId = null;
 
 const imageStorage = new Map();
 let imageCounter = 0;
 
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
-    const guideId = urlParams.get('id');
+    guideId = urlParams.get('id');
 
     if (guideId) {
         const lang = localStorage.getItem('lang') || 'RU';
@@ -168,7 +186,41 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     updatePreview();
+
+    const deleteGuideBtn = document.getElementById('delete-guide-btn');
+    if (deleteGuideBtn && guideId) {
+        deleteGuideBtn.addEventListener('click', async () => {
+            const lang = localStorage.getItem('lang') || 'RU';
+            const confirmMsg = lang === 'RU'
+                ? 'Удалить это руководство? Действие необратимо.'
+                : 'Delete this guide? This action cannot be undone.';
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch(`/api/guides/${guideId}/`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') || '' },
+                    credentials: 'same-origin'
+                });
+
+                if (!res.ok) {
+                    throw new Error(lang === 'RU' ? 'Не удалось удалить руководство' : 'Failed to delete guide');
+                }
+
+                window.location.href = "{% url 'guides_list' %}";
+            } catch (err) {
+                alert(err.message || (lang === 'RU' ? 'Ошибка при удалении' : 'Error deleting'));
+            }
+        });
+    }
 });
+
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
 
 
 function insertText(before, after) {
@@ -334,8 +386,10 @@ editor.addEventListener('keydown', function(e) {
 });
 
 editor.addEventListener('input', updatePreview);
+
 </script>
 <script src="{% static 'js/search.js' %}"></script>
 <script src="{% static 'js/toggle_language.js' %}"></script>
+<script src="{% static 'js/theme.js' %}"></script>
 </body>
 </html>

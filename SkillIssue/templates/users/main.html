@@ -21,7 +21,7 @@
                     <div class="search-dropdown" id="searchDropdown">
                     </div>
                 </div>
-                <a class="nav-links" data-lang-ru="избранное" data-lang-en="favorites">избранное</a>
+                <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему">🌙</button>
                 <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
                 <div class="menu-container" id="menu-container">
                     <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
@@ -38,10 +38,22 @@
         <img src="{% static 'images/logo.png' %}" alt="Skill Issue logo"
              style="width: 40%; height: auto; margin-top: 50px;">
         <br><br>
-        <hr style="width: 50%; color: ghostwhite">
-        <p class="logo" style="color: black; font-size: 2.5rem">Skill Issue</p>
-        <hr style="width: 40%; color: ghostwhite">
+        <hr style="width: 50%; color: var(--bg-primary)">
+        <p class="logo" style="font-size: 2.5rem; color: var(--accent-color) !important;">Skill Issue</p>
+        <hr style="width: 40%; color: var(--bg-primary)">
         <p class="simple-text" style="margin-top: 5px" data-lang-ru="проект для поиска и обмена навыками" data-lang-en="project for finding and sharing skills">проект для поиска и обмена навыками</p>
+        <div class="carousel-container">
+            <div class="carousel" id="carousel">
+                <!-- Слайды будут загружены динамически через JavaScript -->
+            </div>
+
+            <!-- Управление -->
+            <button class="carousel-btn prev" onclick="moveSlide(-1)" aria-label="Previous slide">&lt;</button>
+            <button class="carousel-btn next" onclick="moveSlide(1)" aria-label="Next slide">&gt;</button>
+
+            <!-- Индикаторы (опционально) -->
+            <div class="carousel-indicators" id="carouselIndicators"></div>
+        </div>
     </div>
 
     <!-- Чат -->
@@ -57,18 +69,6 @@
             </div>
             <!--СПИСОК КОНТАКТОВ-->
             <div id="chat-list">
-                <a href="#" class="chat-item" data-user-id="1">
-                    <img src="{% static 'images/default-avatar.jpg' %}" alt="Avatar">
-                    <div style="flex: 1;">
-                        <div class="username">Алексей</div>
-                    </div>
-                </a>
-                <a href="#" class="chat-item" data-user-id="2">
-                    <img src="{% static 'images/default-avatar.jpg' %}" alt="Avatar">
-                    <div style="flex: 1;">
-                        <div class="username">Мария</div>
-                    </div>
-                </a>
             </div>
         </div>
 
@@ -79,30 +79,61 @@
                 <a id="profile-link" href="#">Никнейм</a>
             </div>
 
-            <div id="messages-container" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background-color: #f9f9f9;"></div>
+            <div id="messages-container" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px;"></div>
 
-            <div style="padding: 15px 20px; background: #f8f9fa; border-top: 1px solid #eee;">
-                <form id="message-form" style="display: flex; gap: 10px; align-items: center;">
-                    <input type="text" id="message-input" placeholder="Написать сообщение..." 
-                           style="flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 0.95rem;" autocomplete="off">
-                    <button type="submit" style="
+            <div style="padding: 15px 20px; background: var(--bg-secondary); border-top: 1px solid var(--border-color);">
+            <!-- превью изображения -->
+                <div id="image-preview-container" style="display: none; margin-bottom: 10px; position: relative; max-width: 100%;">
+                    <img id="image-preview" src="" alt="Предпросмотр"
+                         style="max-width: 100%; max-height: 200px; border-radius: 8px; display: block; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                    <button id="remove-image"
+                            style="position: absolute; top: -8px; right: -8px; background: #ff4d4d; color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 10;">
+                        &times;
+                    </button>
+                </div>
+                <input type="file" id="image-upload" accept="image/png, image/jpeg, image/jpg" style="display: none;">
+
+                <form id="message-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: nowrap;">
+                    <input type="text" id="message-input" placeholder="Написать сообщение..."
+                           style="flex: 1; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 20px; outline: none; font-size: 0.95rem; background: var(--bg-primary); color: var(--text-primary);" autocomplete="off">
+                    <button type="button" id="attach-button" style="
                         background: linear-gradient(135deg, #00BFFF 0%, #0099CC 100%);
                         color: white;
                         border: none;
-                        border-radius: 20px;
-                        padding: 10px 24px;
-                        font-size: 0.95rem;
-                        font-weight: 600;
+                        width: 45px;
+                        height: 36px;
+                    border-radius: 20px;
+                        padding: 0px 0px;
+                    font-size: 0.95rem;
                         cursor: pointer;
                         box-shadow: 0 2px 8px rgba(0, 191, 255, 0.3);
                         transition: all 0.3s ease;
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        min-width: 100px;
-                    " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(0, 191, 255, 0.4)';" 
+                    " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(0, 191, 255, 0.4)';"
                        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0, 191, 255, 0.3)';">
-                        Отправить
+                    📎
+                    </button>
+
+                    <button type="submit" style="
+                        background: linear-gradient(135deg, #00BFFF 0%, #0099CC 100%);
+                        color: white;
+                        border: none;
+                        width: 45px;
+                        height: 38px;
+                    border-radius: 20px;
+                        padding: 0px 3px;
+                    font-size: 0.95rem;
+                        cursor: pointer;
+                        box-shadow: 0 2px 8px rgba(0, 191, 255, 0.3);
+                        transition: all 0.3s ease;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(0, 191, 255, 0.4)';"
+                       onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0, 191, 255, 0.3)';">
+                         ↵
                     </button>
                 </form>
             </div>
@@ -135,9 +166,11 @@
     </footer>
 
 <script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/search.js' %}"></script>
 <script src="{% static 'js/toggle_chat.js' %}"></script>
 <script src="{% static 'js/toggle_language.js' %}"></script>
 <script src="{% static 'js/filter.js' %}"></script>
+<script src="{% static 'js/theme.js' %}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
     const menuContainer = document.querySelector(".menu-container");
@@ -150,9 +183,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const user = await response.json();
             menuContainer.innerHTML = `
                 <a class="nav-links" href="/users/${user.username}/" style="margin-right: 20px;" data-lang-ru="профиль" data-lang-en="profile">профиль</a>
-                <a class="nav-links" href="#" id="logout-btn" data-lang-ru="выйти" data-lang-en="log out">выйти</a>
             `;
-            // Применяем язык к новым элементам после небольшой задержки
             setTimeout(() => {
                 if (typeof applyLanguage === 'function') {
                     applyLanguage(currentLang);
@@ -167,7 +198,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 });
             }
         } else {
-            // Если не авторизован, показываем стандартное меню
             menuContainer.innerHTML = `
                 <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
                 <div class="context-menu">
@@ -175,7 +205,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <a href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
                 </div>
             `;
-            // Применяем язык к новым элементам после небольшой задержки
             setTimeout(() => {
                 if (typeof applyLanguage === 'function') {
                     applyLanguage(currentLang);
@@ -184,7 +213,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     } catch (err) {
         console.error("Ошибка при проверке авторизации", err);
-        // При ошибке показываем стандартное меню
         menuContainer.innerHTML = `
             <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
             <div class="context-menu">
@@ -192,7 +220,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <a href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
             </div>
         `;
-        // Применяем язык к новым элементам после небольшой задержки
         setTimeout(() => {
             if (typeof applyLanguage === 'function') {
                 applyLanguage(currentLang);
@@ -202,19 +229,202 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 </script>
 <script>
-function toggleLanguage(event) {
-    event.preventDefault();
-    const langBtn = document.getElementById('language-toggle');
-    
-    if (langBtn.textContent.trim() === 'RU') {
-        langBtn.textContent = 'EN';
-        // Здесь можно было бы подгружать английские переводы
-        alert('Переключено на английский (заглушка)');
-    } else {
-        langBtn.textContent = 'RU';
-        alert('Переключено на русский (заглушка)');
+    // Глобальные переменные для карусели
+    let currentSlide = 0;
+    let totalSlides = 0;
+    let slides = [];
+    let carousel = null;
+    let indicatorsContainer = null;
+
+    // Глобальные функции для работы карусели
+    function moveSlide(direction) {
+        goToSlide(currentSlide + direction);
     }
-}
+
+    function goToSlide(index) {
+        if (totalSlides === 0) return;
+        if (index < 0) index = totalSlides - 1;
+        if (index >= totalSlides) index = 0;
+        currentSlide = index;
+        updateCarousel();
+    }
+
+     function updateCarousel() {
+        if (!carousel || totalSlides === 0) return;
+        carousel.style.transform = `translateX(-${currentSlide * 100}%)`;
+        const indicators = document.querySelectorAll('.indicator');
+        indicators.forEach((ind, idx) => {
+        ind.classList.toggle('active', idx === currentSlide);
+        });
+    }
+
+    // Экранирование HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Загрузка популярных элементов из API
+    async function loadPopularItems() {
+        if (!carousel || !indicatorsContainer) {
+            carousel = document.getElementById('carousel');
+            indicatorsContainer = document.getElementById('carouselIndicators');
+        }
+        
+        if (!carousel || !indicatorsContainer) {
+            console.error('Элементы карусели не найдены');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/popular-items/');
+            if (!response.ok) {
+                throw new Error('Failed to load popular items');
+            }
+            const data = await response.json();
+            
+            // Используем объединенный список из API или объединяем сами
+            const allItems = data.items || [...(data.guides || []), ...(data.announcements || [])];
+            
+            // Если нет элементов, используем дефолтные
+            if (allItems.length === 0) {
+                loadDefaultSlides();
+                return;
+            }
+            
+            // Ограничиваем до 6 элементов
+            const itemsToShow = allItems.slice(0, 6);
+            totalSlides = itemsToShow.length;
+            
+            // Очищаем карусель
+            carousel.innerHTML = '';
+            indicatorsContainer.innerHTML = '';
+            
+            // Создаем слайды
+            itemsToShow.forEach((item, index) => {
+                const slide = document.createElement('div');
+                slide.className = 'carousel-slide';
+                slide.style.cursor = 'pointer';
+                
+                // Делаем слайд кликабельным
+                slide.addEventListener('click', () => {
+                    window.location.href = item.url;
+                });
+                
+                const imageUrl = item.image || "{% static 'images/default-announcement.png' %}";
+                const imageAlt = item.title || 'Image';
+                
+                slide.innerHTML = `
+                    <img src="${imageUrl}" alt="${imageAlt}" onerror="this.src='{% static 'images/default-announcement.png' %}'">
+                    <div class="slide-caption">
+                        <div class="slide-title">${escapeHtml(item.title)}</div>
+                        <div class="slide-author">
+                            ${item.type === 'guide' 
+                                ? `<span data-lang-ru="Автор: ${escapeHtml(item.author)}" data-lang-en="Author: ${escapeHtml(item.author)}">Автор: ${escapeHtml(item.author)}</span>`
+                                : `<span data-lang-ru="Автор: ${escapeHtml(item.author)}" data-lang-en="Author: ${escapeHtml(item.author)}">Автор: ${escapeHtml(item.author)}</span>`
+                            }
+                            ${item.rating !== undefined ? ` <span style="color: gold;">★ ${item.rating}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                carousel.appendChild(slide);
+                
+                // Создаем индикатор
+                const indicator = document.createElement('div');
+                indicator.classList.add('indicator');
+                if (index === 0) indicator.classList.add('active');
+                indicator.addEventListener('click', () => goToSlide(index));
+                indicatorsContainer.appendChild(indicator);
+            });
+            
+            slides = document.querySelectorAll('.carousel-slide');
+            updateCarousel();
+            
+            // Применяем языковые настройки
+            if (typeof applyLanguage === 'function') {
+                setTimeout(() => {
+                    applyLanguage(currentLang || 'RU');
+                }, 100);
+            }
+        } catch (error) {
+            console.error('Error loading popular items:', error);
+            loadDefaultSlides();
+        }
+    }
+
+    // Функция для загрузки дефолтных слайдов (если API не работает)
+    function loadDefaultSlides() {
+        if (!carousel || !indicatorsContainer) {
+            carousel = document.getElementById('carousel');
+            indicatorsContainer = document.getElementById('carouselIndicators');
+        }
+        
+        if (!carousel || !indicatorsContainer) {
+            console.error('Элементы карусели не найдены');
+            return;
+        }
+        
+        const defaultSlides = [
+            {
+                image: "{% static 'images/default-announcement.png' %}",
+                title: "Основы Python",
+                author: "Иван Петров",
+                url: "#"
+            },
+            {
+                image: "{% static 'images/default-avatar.jpg' %}",
+                title: "Веб-дизайн",
+                author: "Мария Сидорова",
+                url: "#"
+            },
+            {
+                image: "{% static 'images/default-avatar.jpg' %}",
+                title: "Git и GitHub",
+                author: "Алексей Козлов",
+                url: "#"
+            }
+        ];
+        
+        totalSlides = defaultSlides.length;
+        carousel.innerHTML = '';
+        indicatorsContainer.innerHTML = '';
+        
+        defaultSlides.forEach((item, index) => {
+            const slide = document.createElement('div');
+            slide.className = 'carousel-slide';
+            slide.innerHTML = `
+                <img src="${item.image}">
+                <div class="slide-caption">
+                    <div class="slide-title" data-lang-ru="${item.title}" data-lang-en="${item.title}">${item.title}</div>
+                    <div class="slide-author" data-lang-ru="Автор: ${item.author}" data-lang-en="Author: ${item.author}">Автор: ${item.author}</div>
+                </div>
+            `;
+            carousel.appendChild(slide);
+            
+            const indicator = document.createElement('div');
+            indicator.classList.add('indicator');
+            if (index === 0) indicator.classList.add('active');
+            indicator.addEventListener('click', () => goToSlide(index));
+            indicatorsContainer.appendChild(indicator);
+        });
+        
+        slides = document.querySelectorAll('.carousel-slide');
+        updateCarousel();
+    }
+
+    // Загружаем популярные элементы при загрузке страницы
+    document.addEventListener('DOMContentLoaded', () => {
+        loadPopularItems();
+        
+        // Автоматическая смена слайдов каждые 5 секунд
+        setInterval(() => {
+            if (totalSlides > 0) {
+                moveSlide(1);
+            }
+        }, 5000);
+    });
 </script>
 </body>
 </html>

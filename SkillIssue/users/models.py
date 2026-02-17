@@ -47,12 +47,20 @@ class ChatMessage(models.Model):
     """Модель сообщения в чате"""
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
-    message = models.TextField()
+    message = models.TextField(blank=True)  # Может быть пустым, если есть изображение
+    image = models.ImageField(upload_to='chat_images/', null=True, blank=True)  # Новое поле для изображения
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
 
-    def __str__(self):
-        return f"Сообщение от {self.sender} к {self.receiver}"
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['sender', 'receiver', '-created_at']),
+        ]
+
+    def has_content(self):
+        """Проверка, есть ли в сообщении текст или изображение"""
+        return bool(self.message) or bool(self.image)
 
 
 class Guide(models.Model):
@@ -128,6 +136,8 @@ class ProfileReview(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='reviews')
     comment = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_edited = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('reviewer', 'profile')
@@ -176,3 +186,22 @@ class UserActivity(models.Model):
 
     def __str__(self):
         return f"{self.get_action_display()} {self.get_target_type_display()}: '{self.target_title}' ({self.user.username})"
+
+class FavoriteGuide(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_guides')
+    guide = models.ForeignKey(Guide, on_delete=models.CASCADE, related_name='favorited_by')
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'guide')
+        ordering = ['-added_at']
+
+
+class FavoriteAnnouncement(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_announcements')
+    announcement = models.ForeignKey(Announcement, on_delete=models.CASCADE, related_name='favorited_by')
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'announcement')
+        ordering = ['-added_at']

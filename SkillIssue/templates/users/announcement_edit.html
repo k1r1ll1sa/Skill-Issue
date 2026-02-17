@@ -20,11 +20,15 @@
                     <div class="search-dropdown" id="searchDropdown">
                     </div>
                 </div>
-                <a class="nav-links" data-lang-ru="избранное" data-lang-en="favorites">избранное</a>
+                <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему">🌙</button>
                 <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
                 <div class="menu-container">
                     {% if user.is_authenticated %}
-                        <a class="nav-links" href="{% url 'logout_page' %}" data-lang-ru="выйти" data-lang-en="log out">выйти</a>
+                        <a class="nav-links"
+                           href="{% url 'profile_page' user.username %}"
+                           data-lang-ru="профиль"
+                           data-lang-en="profile"
+                           style="margin-right: 24px;">профиль</a>
                     {% else %}
                         <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
                         <div class="context-menu">
@@ -44,7 +48,7 @@
             {% csrf_token %}
 
             <div class="editor-container">
-                <div class="profile-row-container" style="gap: 20px">
+                <div class="profile-row-container" style="gap: 20px; flex-wrap: nowrap">
                     <div class="profile-column-container">
                         <div style="display: flex; justify-content: center; margin-top: 20px;">
                             <label for="image-upload" style="cursor: pointer;">
@@ -86,6 +90,14 @@
             <div class="actions">
                 <button type="button" class="profile-button" onclick="clearEditor()" data-lang-ru="Очистить" data-lang-en="Clear">Очистить</button>
                 <button type="submit" class="profile-button" data-lang-ru="Сохранить изменения" data-lang-en="Save changes">Сохранить изменения</button>
+                <button type="button"
+                        id="delete-announcement-btn"
+                        class="profile-button"
+                        style="background-color:#ff5c5c; border:none;"
+                        data-lang-ru="Удалить объявление"
+                        data-lang-en="Delete announcement">
+                    Удалить объявление
+                </button>
             </div>
         </form>
     </div>
@@ -153,6 +165,13 @@
             }
         }
 
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
         // Валидация формы перед отправкой
         document.querySelector('form').addEventListener('submit', function(event) {
             const title = document.querySelector('input[name="title"]').value.trim();
@@ -168,8 +187,36 @@
                 return false;
             }
         });
+
+        const deleteBtn = document.getElementById('delete-announcement-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', async () => {
+                const lang = localStorage.getItem('lang') || 'RU';
+                const confirmMsg = lang === 'RU'
+                    ? 'Удалить это объявление? Действие необратимо.'
+                    : 'Delete this announcement? This action cannot be undone.';
+                if (!confirm(confirmMsg)) return;
+
+                try {
+                    const res = await fetch(`/api/announcements/{{ announcement.id }}/`, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRFToken': getCookie('csrftoken') || '' },
+                        credentials: 'same-origin'
+                    });
+
+                    if (!res.ok) {
+                        throw new Error(lang === 'RU' ? 'Не удалось удалить объявление' : 'Failed to delete announcement');
+                    }
+
+                    window.location.href = "{% url 'announcements_list' %}";
+                } catch (err) {
+                    alert(err.message || (lang === 'RU' ? 'Ошибка при удалении' : 'Error deleting'));
+                }
+            });
+        }
     </script>
     <script src="{% static 'js/search.js' %}"></script>
     <script src="{% static 'js/toggle_language.js' %}"></script>
+    <script src="{% static 'js/theme.js' %}"></script>
 </body>
 </html>

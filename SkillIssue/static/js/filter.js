@@ -10,6 +10,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const pathname = window.location.pathname;
     let isAnnouncementsPage = pathname.includes('/announcements') && !pathname.match(/\/announcements\/\d+/);
     let isGuidesPage = pathname.includes('/guides') && !pathname.match(/\/guides\/\d+/);
+    let isMainPage = pathname === '/' || pathname === '' || pathname.match(/^\/$/);
+    
+    // Если это главная страница или нет формы фильтрации, не выполняем код фильтрации
+    if (isMainPage || (!isAnnouncementsPage && !isGuidesPage)) {
+        if (isMainPage) {
+            console.log('Главная страница, фильтрация не требуется');
+        }
+        return;
+    }
     
     console.log('Определение страницы:', { pathname, isAnnouncementsPage, isGuidesPage });
     
