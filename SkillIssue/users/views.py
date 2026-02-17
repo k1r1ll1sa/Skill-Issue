@@ -1663,7 +1663,12 @@ class ChatContactsView(APIView):
             )
 
             if not data["last_message_at"] or msg.created_at > data["last_message_at"]:
-                data["last_message"] = msg.message[:200]
+                if msg.message.strip():
+                    data["last_message"] = msg.message[:200]
+                elif msg.image:
+                    data["last_message"] = "Картинка"
+                else:
+                    data["last_message"] = "Без сообщений"
                 data["last_message_at"] = msg.created_at
 
             if msg.receiver_id == user.id and not msg.is_read:
@@ -1706,6 +1711,7 @@ class ChatMessagesView(APIView):
 
 class ChatSendMessageView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
         """
@@ -1713,10 +1719,11 @@ class ChatSendMessageView(APIView):
         """
         receiver_id = request.data.get("receiver_id")
         text = (request.data.get("message") or "").strip()
+        image = request.FILES.get("image")
 
         if not receiver_id:
             return Response({"error": "Не указан получатель"}, status=status.HTTP_400_BAD_REQUEST)
-        if not text:
+        if not text and not image:
             return Response({"error": "Сообщение не может быть пустым"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
@@ -1732,6 +1739,7 @@ class ChatSendMessageView(APIView):
             sender=request.user,
             receiver=receiver,
             message=text,
+            image=image,
         )
 
         serializer = ChatMessageSerializer(message, context={"request": request})

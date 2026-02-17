@@ -50,7 +50,7 @@ class AuthManager {
         const headers = {
             'Content-Type': 'application/json',
         };
-        
+
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
         }
@@ -94,6 +94,10 @@ class AuthManager {
             ...(options.headers || {}),
         };
 
+        if (options.body instanceof FormData) {
+            delete headers['Content-Type'];
+        };
+        
         let response = await fetch(url, {
             ...options,
             headers,

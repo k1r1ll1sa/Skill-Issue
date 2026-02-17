@@ -74,6 +74,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     sender_username = serializers.CharField(source="sender.username", read_only=True)
     receiver_username = serializers.CharField(source="receiver.username", read_only=True)
     direction = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
@@ -84,17 +85,35 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             "sender_username",
             "receiver_username",
             "message",
+            "image",
+            "image_url",
             "created_at",
             "is_read",
             "direction",
         ]
-        read_only_fields = ["id", "sender", "receiver", "created_at", "is_read", "direction"]
+        read_only_fields = ["id", "sender", "receiver", "created_at", "is_read", "direction", "image_url"]
 
     def get_direction(self, obj):
         request = self.context.get("request")
         if request and hasattr(request, "user") and request.user.is_authenticated:
             return "outgoing" if obj.sender_id == request.user.id else "incoming"
         return "incoming"
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+
+    def validate(self, data):
+        # Проверка: должно быть хотя бы одно из полей
+        if not data.get('message') and not self.context.get('request').FILES.get('image'):
+            raise serializers.ValidationError({
+                'error': 'Сообщение должно содержать текст или изображение'
+            })
+        return data
 
 
 class ChatContactSerializer(serializers.Serializer):
