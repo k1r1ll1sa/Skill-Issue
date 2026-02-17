@@ -11,6 +11,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const messageForm = document.getElementById('message-form');
     const messageInput = document.getElementById('message-input');
 
+    // Превью изображения
+    let currentImageFile = null;
+    const attachButton = document.getElementById('attach-button');
+    const imageUploadInput = document.getElementById('image-upload');
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const removeImageButton = document.getElementById('remove-image');
+
     if (!modal || !button) return; // Если элементов нет, выходим
 
     let currentReceiverId = null;
@@ -111,6 +119,10 @@ document.addEventListener('DOMContentLoaded', function () {
        ОТКРЫТИЕ ДИАЛОГА
     ───────────────────────────────────────────── */
     async function openDialog(userId, username) {
+        if (imagePreviewContainer) imagePreviewContainer.style.display = 'none';
+        if (imagePreview) imagePreview.src = '';
+        if (imageUploadInput) imageUploadInput.value = '';
+        currentImageFile = null;
         if (!authManager || !authManager.isAuthenticated()) {
             alert('Войдите, чтобы использовать чат');
             return;
@@ -216,7 +228,57 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log('Прокрутка выполнена, scrollTop:', messagesContainer.scrollTop, 'scrollHeight:', messagesContainer.scrollHeight);
             }
         });
-        
+
+        if (attachButton && imageUploadInput) {
+    attachButton.addEventListener('click', () => {
+        imageUploadInput.click();
+    });
+
+    imageUploadInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Проверка типа файла
+        if (!file.type.match('image.*')) {
+            alert('Пожалуйста, выберите изображение (PNG, JPG, JPEG)');
+            imageUploadInput.value = '';
+            return;
+        }
+
+        // Проверка размера (опционально, например до 5МБ)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Размер изображения не должен превышать 5 МБ');
+            imageUploadInput.value = '';
+            return;
+        }
+
+        // Создание превью
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            if (imagePreview) {
+                imagePreview.src = event.target.result;
+                imagePreviewContainer.style.display = 'block';
+                currentImageFile = file;
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+        // Удаление изображения из превью
+        if (removeImageButton) {
+            removeImageButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Сброс всех значений
+                if (imagePreview) imagePreview.src = '';
+                if (imagePreviewContainer) imagePreviewContainer.style.display = 'none';
+                if (imageUploadInput) imageUploadInput.value = '';
+                currentImageFile = null;
+            });
+        }
+
         console.log('Сообщение добавлено в интерфейс:', { 
             type, 
             text, 
