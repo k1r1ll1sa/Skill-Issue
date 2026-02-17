@@ -2,8 +2,19 @@ from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import User
 
+ACTION_CHOICES = [
+    ('CREATE', 'Создание'),
+    ('UPDATE', 'Обновление'),
+    ('DELETE', 'Удаление'),
+]
+
+TARGET_TYPE_CHOICES = [
+    ('GUIDE', 'Руководство'),
+    ('ANNOUNCEMENT', 'Объявление'),
+]
 
 class Profile(models.Model):
+    """Модель профиля"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     bio = models.TextField(blank=True)
@@ -19,6 +30,7 @@ class Profile(models.Model):
 
 
 class Announcement(models.Model):
+    """Модель объявления"""
     title = models.CharField(max_length=255)
     description = models.TextField()
     image = models.ImageField(upload_to='announcements/', blank=True, null=True)
@@ -32,6 +44,7 @@ class Announcement(models.Model):
 
 
 class ChatMessage(models.Model):
+    """Модель сообщения в чате"""
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
     message = models.TextField()
@@ -43,6 +56,7 @@ class ChatMessage(models.Model):
 
 
 class Guide(models.Model):
+    """Модель руководства"""
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='guides')
     title = models.CharField(max_length=200)
     content = models.TextField(blank=True)
@@ -57,6 +71,7 @@ class Guide(models.Model):
 
 
 class GuideComment(models.Model):
+    """Модель комментария к профилю"""
     guide = models.ForeignKey(Guide, on_delete=models.CASCADE, related_name='comments')
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
@@ -69,6 +84,7 @@ class GuideComment(models.Model):
 
 
 class AnnouncementComment(models.Model):
+    """Модель комментария к объявлению"""
     announcement = models.ForeignKey(Announcement, on_delete=models.CASCADE, related_name='comments')
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='commented_announcements')
     content = models.TextField()
@@ -81,6 +97,7 @@ class AnnouncementComment(models.Model):
 
 
 class Review(models.Model):
+    """Модель комментария к руководству"""
     guide = models.ForeignKey(Guide, on_delete=models.CASCADE, related_name="reviews")
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     text = models.TextField()
@@ -92,6 +109,7 @@ class Review(models.Model):
 
 
 class GuideRating(models.Model):
+    """Модель оценки руководства"""
     guide = models.ForeignKey(Guide, on_delete=models.CASCADE, related_name='ratings')
     reviewer = models.ForeignKey(User, on_delete=models.CASCADE)
     rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])  # 1–5 звёзд
@@ -105,6 +123,7 @@ class GuideRating(models.Model):
 
 
 class ProfileReview(models.Model):
+    """Модель комментария к профилю"""
     reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='given_reviews')
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='reviews')
     comment = models.TextField(blank=True, null=True)
@@ -137,23 +156,8 @@ class EmailVerificationCode(models.Model):
         from django.utils import timezone
         return timezone.now() > self.expires_at
 
-ACTION_CHOICES = [
-    ('CREATE', 'Создание'),
-    ('UPDATE', 'Обновление'),
-    ('DELETE', 'Удаление'),
-]
-
-TARGET_TYPE_CHOICES = [
-    ('GUIDE', 'Руководство'),
-    ('ANNOUNCEMENT', 'Объявление'),
-]
-
-
 class UserActivity(models.Model):
-    """
-    Модель для хранения истории действий пользователя.
-    Фиксирует создание, обновление и удаление руководств и объявлений.
-    """
+    """Модель для хранения истории действий пользователя"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
     action = models.CharField(max_length=10, choices=ACTION_CHOICES, verbose_name="Действие")
     target_type = models.CharField(max_length=15, choices=TARGET_TYPE_CHOICES, verbose_name="Тип объекта")

@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from django.db.models import Avg
 from .models import Profile, GuideRating, Announcement, UserActivity, Guide
@@ -21,20 +21,39 @@ def update_profile_rating(sender, instance, **kwargs):
     profile.rating = round(avg_rating or 0.00, 2)
     profile.save(update_fields=['rating'])
 
+@receiver(pre_save, sender=Guide)
+def detect_guide_update(sender, instance, **kwargs):
+    if instance.pk is None:
+        return  # Это создание — будет обработано post_save
+
+    try:
+        old = Guide.objects.get(pk=instance.pk)
+        # Проверяем, изменились ли значимые поля
+        fields_to_watch = ['title', 'content', 'tags', 'image']
+        has_significant_change = any(
+            getattr(old, f) != getattr(instance, f)
+            for f in fields_to_watch
+        )
+        instance._significant_change = has_significant_change
+    except Guide.DoesNotExist:
+        instance._significant_change = True
+
 @receiver(post_save, sender=Guide)
 def log_guide_creation_update(sender, instance, created, **kwargs):
-    """
-    Логирует создание или обновление руководства.
-    """
-    action = 'CREATE' if created else 'UPDATE'
+    if created:
+        action = 'CREATE'
+    elif getattr(instance, '_significant_change', True):
+        action = 'UPDATE'
+    else:
+        return  # Не логируем, если изменение — только рейтинг
+
     UserActivity.objects.create(
         user=instance.author,
         action=action,
         target_type='GUIDE',
         target_title=instance.title,
-        guide=instance  # Опциональная ссылка на объект
+        guide=instance
     )
-
 
 @receiver(post_delete, sender=Guide)
 def log_guide_deletion(sender, instance, **kwargs):
