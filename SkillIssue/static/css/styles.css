@@ -1,11 +1,58 @@
+:root {
+    /* Светлая тема */
+    --bg-primary: ghostwhite;
+    --bg-secondary: white;
+    --bg-tertiary: #fafafa;
+    --bg-header: #424242;
+    --bg-footer: #424242;
+    --text-primary: black;
+    --text-secondary: #333;
+    --text-tertiary: #666;
+    --text-header: white;
+    --border-color: #ddd;
+    --border-color-dark: #424242;
+    --accent-color: #00BFFF;
+    --accent-hover: #0088cc;
+    --shadow-color: rgba(0,0,0,0.1);
+    --shadow-color-dark: rgba(0,0,0,0.15);
+    --input-bg: ghostwhite;
+    --input-bg-focus: aliceblue;
+    --card-bg: white;
+    --card-shadow: 0px 1px 3px #424242;
+}
+
+[data-theme="dark"] {
+    /* Темная тема */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #252525;
+    --bg-header: #1a1a1a;
+    --bg-footer: #1a1a1a;
+    --text-primary: #e0e0e0;
+    --text-secondary: #c0c0c0;
+    --text-tertiary: #a0a0a0;
+    --text-header: #e0e0e0;
+    --border-color: #444;
+    --border-color-dark: #555;
+    --accent-color: #00BFFF;
+    --accent-hover: #00d4ff;
+    --shadow-color: rgba(0,0,0,0.3);
+    --shadow-color-dark: rgba(0,0,0,0.5);
+    --input-bg: #333;
+    --input-bg-focus: #3a3a3a;
+    --card-bg: #2d2d2d;
+    --card-shadow: 0px 1px 3px rgba(0,0,0,0.5);
+}
+
 body, html {
     margin: 0;
     padding: 0;
-    background-color: ghostwhite;
+    background-color: var(--bg-primary);
     display: flex;
     flex-direction: column;
     min-height: 100vh;
     width: 100%;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 a {
@@ -13,11 +60,12 @@ a {
 }
 
 .header {
-    background-color: #424242;
+    background-color: var(--bg-header);
     height: 40px;
-    box-shadow: 0px 1px 5px #00BFFF;
+    box-shadow: 0px 1px 5px var(--accent-color);
     display: flex;
     justify-content: center;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .header-container {
@@ -48,16 +96,17 @@ a {
     font-size: 2rem;
     font-family: 'Cascadia Code';
     font-weight: bold;
-    color: white;
+    color: var(--text-header);
     margin: 0;
     line-height: 50px;
     text-decoration: none;
+    transition: color 0.3s ease;
 }
 
 .nav-links {
     font-size: 1rem;
     font-family: 'Cascadia Code';
-    color: white;
+    color: var(--text-header);
     text-decoration: none;
     white-space: nowrap;
     text-decoration: none;
@@ -65,7 +114,7 @@ a {
 }
 
 .nav-links:hover {
-    color: #00BFFF
+    color: var(--accent-color);
 }
 
 .search {
@@ -81,18 +130,18 @@ a {
     flex-shrink: 0;
     white-space: nowrap;
     background-color: transparent;
-    border-bottom: 1px solid white;
+    border-bottom: 1px solid var(--text-header);
     border-top: none;
     border-right: none;
     border-left: none;
-    color: white;
-    transition: border-bottom-color 0.3s ease;
+    color: var(--text-header);
+    transition: border-bottom-color 0.3s ease, color 0.3s ease;
 }
 
 .search:focus {
     outline: none;
-    border-bottom-color: #00BFFF;
-    color: white;
+    border-bottom-color: var(--accent-color);
+    color: var(--text-header);
 }
 
 .body-background {
@@ -100,29 +149,32 @@ a {
     max-width: 95%;
     align-items: center;
     justify-content: flex-start;
-    background-color: white;
-    box-shadow: 0px 0px 1px gray;
+    background-color: var(--bg-secondary);
+    box-shadow: 0px 0px 1px var(--border-color-dark);
     margin: 0 auto;
     margin-top: 40px;
     margin-bottom: 40px;
     text-align: center;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .simple-text {
     display: block;
     font-family: 'Cascadia Code';
-    color: black;
+    color: var(--text-primary);
     font-size: 1.2rem;
+    transition: color 0.3s ease;
 }
 
 .footer {
-    background-color: #424242;
+    background-color: var(--bg-footer);
     height: 80px;
     width: 100%;
-    box-shadow: 0px -1px 5px #00BFFF;
+    box-shadow: 0px -1px 5px var(--accent-color);
     display: flex;
     justify-content: center;
     margin-top: auto;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .footer-container {
@@ -145,9 +197,10 @@ a {
     align-items: center;
     display: flex;
     flex-direction: column;
-    background-color: white;
-    box-shadow: 0px 0px 1px gray;
+    background-color: var(--bg-secondary);
+    box-shadow: 0px 0px 1px var(--border-color-dark);
     gap: 30px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .register-container {
@@ -155,14 +208,14 @@ a {
 }
 
 .register_input {
-    color: black;
+    color: var(--text-primary);
     height: 50px;
-    background-color: ghostwhite;
+    background-color: var(--input-bg);
     text-align: center;
-    box-shadow: 0px 0px 1px gray;
+    box-shadow: 0px 0px 1px var(--border-color-dark);
     font-family: 'Times New Roman';
     font-size: 1.4rem;
-    border: 1px solid gray;
+    border: 1px solid var(--border-color-dark);
     min-width: 400px;
     transition: all 0.3s ease;
     border-radius: 10px;
@@ -170,18 +223,18 @@ a {
 
 .register_input:focus {
     outline: none;
-    box-shadow: 0px 1px 3px #00BFFF;
+    box-shadow: 0px 1px 3px var(--accent-color);
 }
 
 .register_button {
     margin-top: 10px;
-    color: black;
+    color: white;
     height: 50px;
-    background-color: #00BFFF;
+    background-color: var(--accent-color);
     text-align: center;
     font-family: 'Times New Roman';
     font-size: 1.4rem;
-    border: 1px solid gray;
+    border: 1px solid var(--border-color-dark);
     min-width: 300px;
     transition: all 0.3s ease;
     border-radius: 10px;
@@ -189,12 +242,13 @@ a {
 
 .register_button:hover {
     min-width: 400px;
+    background-color: var(--accent-hover);
 }
 
 .register_button:active {
     min-width: 380px;
     min-height: 45px;
-    background-color: #08F;
+    background-color: var(--accent-hover);
 }
 
 .menu-container {
@@ -217,13 +271,13 @@ a {
     right: 0;
     z-index: 10;
     max-width: 200px;
-    background-color: white;
-    border: 1px solid #ddd;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px var(--shadow-color);
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
+    transition: opacity 0.3s, visibility 0.3s, background-color 0.3s ease;
 }
         
 .context-menu a {
@@ -231,13 +285,14 @@ a {
     font-family: 'Cascadia Code';
     font-size: 1rem;
     padding: 10px 2px;
-    color: black;
+    color: var(--text-primary);
     text-decoration: none;
-    border-bottom: 1px solid ghostwhite;
+    border-bottom: 1px solid var(--bg-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .context-menu a:hover {
-    background-color: #f8f9fa;
+    background-color: var(--bg-tertiary);
 }
 
 .context-menu a:last-child {
@@ -313,9 +368,9 @@ a {
     text-align: left;
     flex-direction: column;
     width: 225px;
-    background-color: ghostwhite;
+    background-color: var(--bg-primary);
     border-radius: 5px;
-    box-shadow: 0px 1px 3px #424242;
+    box-shadow: var(--card-shadow);
     transition: all 0.3s ease;
 }
 
@@ -390,18 +445,18 @@ a {
     flex-shrink: 0;
     white-space: nowrap;
     background-color: transparent;
-    border-bottom: 1px solid #424242;
+    border-bottom: 1px solid var(--border-color-dark);
     border-top: none;
     border-right: none;
     border-left: none;
-    color: black;
-    transition: border-bottom-color 0.3s ease;
+    color: var(--text-primary);
+    transition: border-bottom-color 0.3s ease, color 0.3s ease;
 }
 
 .search-guides:focus {
     outline: none;
-    border-bottom-color: #00BFFF;
-    color: black;
+    border-bottom-color: var(--accent-color);
+    color: var(--text-primary);
 }
 
 .editor-container {
@@ -414,10 +469,11 @@ a {
 
 .editor-section, .preview-section {
     flex: 1;
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 10px;
     padding: 20px;
-    box-shadow: 0px 1px 3px #424242
+    box-shadow: var(--card-shadow);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .editor-header, .preview-header {
@@ -431,8 +487,8 @@ a {
 textarea {
     width: 100%;
     height: 400px;
-    background-color: aliceblue;
-    border: 1px solid #ddd;
+    background-color: var(--input-bg-focus);
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     padding: 15px;
     font-family: 'Courier New', monospace;
@@ -440,19 +496,23 @@ textarea {
     resize: vertical;
     box-sizing: border-box;
     overflow-y: auto;
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .preview-content {
     min-height: 100px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 5px;
     padding: 15px;
-    background: aliceblue;
+    background: var(--input-bg-focus);
     text-align: left;
     overflow-y: auto;
     resize: none;
     box-sizing: border-box;
     font-size: 18px;
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .toolbar {
@@ -464,16 +524,17 @@ textarea {
 
 .toolbar-btn {
     padding: 8px 12px;
-    border: 1px solid #ddd;
-    background: white;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
     border-radius: 5px;
     cursor: pointer;
     font-size: 12px;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    color: var(--text-primary);
 }
 
 .toolbar-btn:hover {
-    background: #f0f0f0;
+    background: var(--bg-tertiary);
 }
 
 .file-input {
@@ -483,11 +544,13 @@ textarea {
 .file-label {
     display: inline-block;
     padding: 8px 12px;
-    border: 1px solid #ddd;
-    background: white;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
     border-radius: 5px;
     cursor: pointer;
     font-size: 12px;
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .actions {
@@ -499,31 +562,33 @@ textarea {
 
 .preview-content h1, .preview-content h2, .preview-content h3 {
     margin-top: 0;
-    color: #333;
+    color: var(--text-secondary);
     text-align: left;
 }
 
 .preview-content code {
-    background: #f4f4f4;
+    background: var(--bg-tertiary);
     padding: 2px 4px;
     border-radius: 3px;
     font-family: 'Courier New', monospace;
     text-align: left;
+    color: var(--text-primary);
 }
 
 .preview-content pre {
-    background: #f4f4f4;
+    background: var(--bg-tertiary);
     padding: 15px;
     border-radius: 5px;
     overflow-x: auto;
     text-align: left;
+    color: var(--text-primary);
 }
 
 .preview-content blockquote {
-    border-left: 4px solid #ddd;
+    border-left: 4px solid var(--border-color);
     padding-left: 15px;
     margin-left: 0;
-    color: #666;
+    color: var(--text-tertiary);
     text-align: left;
 }
 
@@ -538,11 +603,13 @@ textarea {
     height: 25px; 
     width: 200px; 
     margin: auto; 
-    border: 1px solid #424242; 
+    border: 1px solid var(--border-color-dark); 
     border-top: none; 
     border-right: none; 
     border-left: none;
     transition: all 3ms ease;
+    background-color: transparent;
+    color: var(--text-primary);
 }
 
 .guide_name_input:focus {
@@ -550,7 +617,7 @@ textarea {
     border-right: none; 
     border-left: none;
     outline: none;
-    border-bottom-color:#00BFFF
+    border-bottom-color: var(--accent-color);
 }
 
 [hidden] {
@@ -560,10 +627,12 @@ textarea {
 .profile-input {
     display: block;
     font-family: 'Cascadia Code';
-    color: black;
+    color: var(--text-primary);
     font-size: 1.2rem;
     border: none;
     outline: none;
+    background-color: transparent;
+    transition: color 0.3s ease;
 }
 
 .guide-link {
@@ -584,10 +653,11 @@ textarea {
     width: 90%;
     margin: auto;
     padding: 15px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    box-shadow: 0px 1px 3px rgba(0,0,0,0.15);
-    background-color: #fafafa;
+    box-shadow: var(--shadow-color);
+    background-color: var(--bg-tertiary);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .review-block .simple-text {
@@ -604,14 +674,16 @@ textarea {
     min-width: auto;
     height: 28px;
     line-height: 26px;
-    background-color: #f4f4f4;
+    background-color: var(--bg-primary);
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9rem;
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .edit-review-btn:hover {
-    background-color: #e1e1e1;
+    background-color: var(--bg-secondary);
 }
 
 .edit-review-btn:active {
@@ -652,15 +724,16 @@ textarea {
     top: 100%;
     left: 0;
     right: 0;
-    background: white;
-    border: 1px solid #ddd;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-top: none;
     width: 150%;
     max-height: 200px;
     overflow-y: auto;
     display: none;
     z-index: 1000;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px var(--shadow-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .search-dropdown.active {
@@ -670,11 +743,13 @@ textarea {
 .search-dropdown-item {
     padding: 8px 12px;
     cursor: pointer;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .search-dropdown-item:hover {
-    background-color: #f5f5f5;
+    background-color: var(--bg-tertiary);
 }
 
 .search-dropdown-item:last-child {
@@ -713,12 +788,12 @@ textarea {
     right: -400px;
     width: 380px;
     height: 90vh;
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 12px 0 0 12px;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+    box-shadow: -4px 0 20px var(--shadow-color-dark);
     z-index: 1000;
     overflow: hidden;
-    transition: right 0.3s ease;
+    transition: right 0.3s ease, background-color 0.3s ease;
     display: flex;
     flex-direction: column;
 }
@@ -765,14 +840,14 @@ textarea {
     gap: 12px;
     padding: 12px 20px;
     text-decoration: none;
-    color: #333;
+    color: var(--text-secondary);
     border-left: 3px solid transparent;
-    transition: background 0.2s, border-left 0.2s;
+    transition: background 0.2s, border-left 0.2s, color 0.3s ease;
 }
 
 .chat-item:hover {
-    background: #e9ecef;
-    border-left-color: #00BFFF;
+    background: var(--bg-tertiary);
+    border-left-color: var(--accent-color);
 }
 
 #chat-dialog {
@@ -818,28 +893,32 @@ textarea {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background-color: #f9f9f9;
+    background-color: var(--bg-primary);
+    transition: background-color 0.3s ease;
 }
 
 .message-received {
     max-width: 70%;
-    background: white;
+    background: var(--bg-secondary);
     padding: 10px 15px;
     border-radius: 18px 18px 18px 4px;
     align-self: flex-start;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px var(--shadow-color);
+    transition: background-color 0.3s ease;
 }
 
 .message-text {
     font-size: 0.95rem;
-    color: #333;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
 }
 
 .message-time {
     font-size: 0.75rem;
-    color: #999;
+    color: var(--text-tertiary);
     text-align: right;
     margin-top: 4px;
+    transition: color 0.3s ease;
 }
 
 .message-sent {
@@ -868,33 +947,71 @@ textarea {
 
 #language-toggle {
     font-weight: bold;
-    color: #00BFFF !important; /* Синий акцент */
+    color: var(--accent-color) !important;
     transition: color 0.3s ease;
 }
 
 #language-toggle:hover {
-    color: #0088cc !important;
+    color: var(--accent-hover) !important;
+}
+
+button#theme-toggle {
+    font-size: 1.2rem;
+    cursor: pointer;
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-header) !important;
+    padding: 0 !important;
+    margin: 0 5px !important;
+    transition: color 0.3s ease, transform 0.2s ease;
+    font-family: 'Cascadia Code' !important;
+    text-decoration: none !important;
+    white-space: nowrap;
+    display: inline-block !important;
+    line-height: 1 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    vertical-align: middle;
+}
+
+button#theme-toggle:hover {
+    color: var(--accent-color) !important;
+    transform: scale(1.1);
+    background: transparent !important;
+}
+
+button#theme-toggle:active {
+    transform: scale(0.95);
+    background: transparent !important;
+}
+
+button#theme-toggle:focus {
+    outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
 #activity-container{
     height: 300px;
     overflow-y: auto;
-    background-color: ghostwhite;
+    background-color: var(--bg-primary);
     border-radius: 8px;
-    box-shadow: 0 1px 3px #424242;
+    box-shadow: var(--card-shadow);
     padding: 15px 20px;
     font-family: 'Cascadia Code';
     font-size: 0.95rem;
-    color: #333;
+    color: var(--text-secondary);
     line-height: 1.5;
     scrollbar-width: thin;
-    scrollbar-color: #ccc ghostwhite;
+    scrollbar-color: var(--border-color) var(--bg-primary);
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .activity-item {
     margin-bottom: 12px;
-    border-left: 3px solid #00BFFF;
+    border-left: 3px solid var(--accent-color);
     padding-left: 10px;
+    transition: border-color 0.3s ease;
 }
 
 #activity-container::-webkit-scrollbar {
@@ -902,16 +1019,16 @@ textarea {
 }
 
 #activity-container::-webkit-scrollbar-track {
-    background: ghostwhite;
+    background: var(--bg-primary);
 }
 
 #activity-container::-webkit-scrollbar-thumb {
-    background: #ccc;
+    background: var(--border-color);
     border-radius: 3px;
 }
 
 #activity-container::-webkit-scrollbar-thumb:hover {
-    background: #999;
+    background: var(--text-tertiary);
 }
 
 .carousel-container {
@@ -952,19 +1069,22 @@ textarea {
 .slide-title {
     font-weight: bold;
     font-size: 1.3rem;
-    color: #2c3e50;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
 }
 
 .slide-author {
-    color: #7f8c8d;
+    color: var(--text-tertiary);
     font-size: 1rem;
+    transition: color 0.3s ease;
 }
 
 .carousel-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.8);
+    background: var(--bg-secondary);
+    opacity: 0.8;
     border: none;
     font-size: 1.5rem;
     width: 40px;
@@ -972,6 +1092,13 @@ textarea {
     border-radius: 50%;
     cursor: pointer;
     z-index: 10;
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.carousel-btn:hover {
+    opacity: 1;
+    background: var(--bg-secondary);
 }
 
 .carousel-btn.prev {
@@ -995,10 +1122,34 @@ textarea {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.5);
+    background: var(--bg-secondary);
+    opacity: 0.5;
     cursor: pointer;
+    transition: opacity 0.3s ease, background-color 0.3s ease;
 }
 
 .carousel-indicators .indicator.active {
-    background: white;
+    opacity: 1;
+    background: var(--bg-secondary);
+}
+
+/* Стили для комментариев к объявлениям */
+.comment-block {
+    background-color: var(--bg-primary) !important;
+    transition: background-color 0.3s ease;
+}
+
+.comment-content {
+    color: var(--text-primary) !important;
+    transition: color 0.3s ease;
+}
+
+.comment-date {
+    color: var(--text-tertiary) !important;
+    transition: color 0.3s ease;
+}
+
+.comment-edited {
+    color: var(--text-tertiary) !important;
+    transition: color 0.3s ease;
 }

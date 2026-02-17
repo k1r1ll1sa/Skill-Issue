@@ -21,6 +21,7 @@
                     <div class="search-dropdown" id="searchDropdown">
                     </div>
                 </div>
+                <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему">🌙</button>
                 <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
                 <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
                 <div class="context-menu">
@@ -131,4 +132,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script src="{% static 'js/search.js' %}"></script>
+<script src="{% static 'js/theme.js' %}"></script>
+</body>
 </html>

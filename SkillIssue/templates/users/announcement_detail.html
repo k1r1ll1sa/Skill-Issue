@@ -20,6 +20,7 @@
                            data-placeholder-en="search guides, profiles and announcements">
                     <div class="search-dropdown" id="searchDropdown"></div>
                 </div>
+                <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему">🌙</button>
                 <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
                 <div class="menu-container">
                     {% if user.is_authenticated %}
@@ -41,7 +42,7 @@
     </header>
 
     <div class="body-background">
-        <div class="profile-row-container" style="justify-content: space-around; margin-top: 0px; gap: 5px; width: 100%; margin: 5px 5px">
+        <div class="profile-row-container" style="flex-wrap: nowrap; justify-content: space-around; margin-top: 0px; gap: 5px; width: 100%; margin: 5px 5px">
             <div style="margin-bottom: 20px; margin-right: 5px; display: flex; justify-content: center;">
                 {% if announcement.image %}
                     <img src="{{ announcement.image.url }}" alt="{{ announcement.title }}" style="max-width: 100%; border-radius: 8px; box-shadow: 0px 2px 6px rgba(0,0,0,0.1);">
@@ -85,7 +86,7 @@
             {% for comment in comments %}
             <div class="profile-column-container comment-block"
                  data-comment-id="{{ comment.id }}"
-                 style="justify-content: left; padding: 10px 20px; background-color: ghostwhite; border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto">
+                 style="justify-content: left; padding: 10px 20px; background-color: var(--bg-primary); border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto">
                 <div class="profile-row-container" style="gap: 5px; justify-content: flex-start;">
                     {% if comment.author.profile.avatar %}
                         <img src="{{ comment.author.profile.avatar.url }}" class="rec_avatar" alt="{{ comment.author.username }}">
@@ -98,10 +99,10 @@
                            style="text-align: left; font-size: 1rem; margin-top: auto; margin-bottom: auto; padding-left: 10px">
                             {{ comment.author.username }}
                         </a>
-                        <a class="simple-text" style="text-align: left; font-size: 0.8rem; color: #444; margin-top: auto; margin-bottom: auto; padding-left: 10px">
+                        <a class="simple-text comment-date" style="text-align: left; font-size: 0.8rem; margin-top: auto; margin-bottom: auto; padding-left: 10px">
                             {{ comment.created_at|date:"d.m.Y H:i" }}
                             {% if comment.is_edited %}
-                            <span class="edited-label" style="color: #666; font-style: italic;">(редактировано)</span>
+                            <span class="edited-label comment-edited" style="font-style: italic;">(редактировано)</span>
                             {% endif %}
                         </a>
                     </div>
@@ -122,11 +123,11 @@
                                 title="Удалить">🗑</button>
                     {% endif %}
                 </div>
-                <a class="simple-text comment-content" style="text-align: left; font-size: 1rem; padding-top: 5px; white-space: pre-wrap;">{{ comment.content }}</a>
+                <a class="simple-text comment-content" style="text-align: left; font-size: 1rem; padding-top: 5px; white-space: pre-wrap; color: var(--text-primary);">{{ comment.content }}</a>
             </div>
             {% empty %}
-            <div class="profile-column-container" style="justify-content: center; padding: 20px; background-color: ghostwhite; border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto">
-                <a class="simple-text" style="font-size: 1rem; color: #666; text-align: center;" data-lang-ru="Пока нет комментариев. Будьте первым!" data-lang-en="No comments yet. Be the first!">Пока нет комментариев. Будьте первым!</a>
+            <div class="profile-column-container" style="justify-content: center; padding: 20px; background-color: var(--bg-primary); border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto">
+                <a class="simple-text" style="font-size: 1rem; color: var(--text-tertiary); text-align: center;" data-lang-ru="Пока нет комментариев. Будьте первым!" data-lang-en="No comments yet. Be the first!">Пока нет комментариев. Будьте первым!</a>
             </div>
             {% endfor %}
         </div>
@@ -204,12 +205,12 @@
                 <a id="profile-link" href="#">Никнейм</a>
             </div>
 
-            <div id="messages-container" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background-color: #f9f9f9;"></div>
+            <div id="messages-container" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px;"></div>
 
-            <div style="padding: 15px 20px; background: #f8f9fa; border-top: 1px solid #eee;">
+            <div style="padding: 15px 20px; background: var(--bg-secondary); border-top: 1px solid var(--border-color);">
                 <form id="message-form" style="display: flex; gap: 10px; align-items: center;">
                     <input type="text" id="message-input" placeholder="Написать сообщение..." 
-                           style="flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 0.95rem;" autocomplete="off"
+                           style="flex: 1; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 20px; outline: none; font-size: 0.95rem; background: var(--bg-primary); color: var(--text-primary);" autocomplete="off"
                            data-placeholder-ru="Написать сообщение..."
                            data-placeholder-en="Write a message...">
                     <button type="submit" style="
@@ -478,11 +479,11 @@
                                 <img src="${escapeHtml(avatarUrl)}" class="rec_avatar" alt="${escapedAuthor}">
                                 <div class="profile-column-container">
                                     <a href="/users/${escapedAuthor}/" class="simple-text" style="text-align: left; font-size: 1rem; margin-top: auto; margin-bottom: auto; padding-left: 10px">${escapedAuthor}</a>
-                                    <a class="simple-text" style="text-align: left; font-size: 0.8rem; color: #444; margin-top: auto; margin-bottom: auto; padding-left: 10px">${escapedCreatedAt}</a>
+                                    <a class="simple-text comment-date" style="text-align: left; font-size: 0.8rem; margin-top: auto; margin-bottom: auto; padding-left: 10px">${escapedCreatedAt}</a>
                                 </div>
                                 ${buttonsHtml}
                             </div>
-                            <a class="simple-text comment-content" style="text-align: left; font-size: 1rem; padding-top: 5px; white-space: pre-wrap;">${escapedContent}</a>
+                            <a class="simple-text comment-content" style="text-align: left; font-size: 1rem; padding-top: 5px; white-space: pre-wrap; color: var(--text-primary);">${escapedContent}</a>
                         `;
                         
                         // Добавляем обработчик ошибки загрузки изображения
@@ -604,5 +605,6 @@
             });
         });
     </script>
+<script src="{% static 'js/theme.js' %}"></script>
 </body>
 </html>

@@ -20,6 +20,7 @@
                     <div class="search-dropdown" id="searchDropdown">
                     </div>
                 </div>
+                <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему">🌙</button>
                 <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
                 <div class="menu-container">
                     {% if user.is_authenticated %}
@@ -183,9 +184,9 @@
                 <a id="profile-link" href="#">Никнейм</a>
             </div>
 
-            <div id="messages-container" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background-color: #f9f9f9;"></div>
+            <div id="messages-container" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px;"></div>
 
-            <div style="padding: 15px 20px; background: #f8f9fa; border-top: 1px solid #eee;">
+            <div style="padding: 15px 20px; background: var(--bg-secondary); border-top: 1px solid var(--border-color);">
             <!-- превью изображения -->
                 <div id="image-preview-container" style="display: none; margin-bottom: 10px; position: relative; max-width: 100%;">
                     <img id="image-preview" src="" alt="Предпросмотр"
@@ -199,7 +200,7 @@
 
                 <form id="message-form" style="display: flex; gap: 10px; align-items: center; flex-wrap: nowrap;">
                     <input type="text" id="message-input" placeholder="Написать сообщение..."
-                           style="flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 0.95rem;" autocomplete="off">
+                           style="flex: 1; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 20px; outline: none; font-size: 0.95rem; background: var(--bg-primary); color: var(--text-primary);" autocomplete="off">
                     <button type="button" id="attach-button" style="
                         background: linear-gradient(135deg, #00BFFF 0%, #0099CC 100%);
                         color: white;
@@ -270,5 +271,6 @@
 <script src="{% static 'js/toggle_language.js' %}"></script>
 <script src="{% static 'js/auth.js' %}"></script>
 <script src="{% static 'js/toggle_chat.js' %}"></script>
+<script src="{% static 'js/theme.js' %}"></script>
 </body>
 </html>

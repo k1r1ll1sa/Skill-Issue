@@ -20,6 +20,7 @@
                     <div class="search-dropdown" id="searchDropdown">
                     </div>
                 </div>
+                <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему">🌙</button>
                 <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
                 <div class="menu-container">
                     {% if user.is_authenticated %}
@@ -47,7 +48,7 @@
             {% csrf_token %}
 
             <div class="editor-container">
-                <div class="profile-row-container" style="gap: 20px">
+                <div class="profile-row-container" style="gap: 20px; flex-wrap: nowrap">
                     <div class="profile-column-container">
                         <div style="display: flex; justify-content: center; margin-top: 20px;">
                             <label for="image-upload" style="cursor: pointer;">
@@ -216,5 +217,6 @@
     </script>
     <script src="{% static 'js/search.js' %}"></script>
     <script src="{% static 'js/toggle_language.js' %}"></script>
+    <script src="{% static 'js/theme.js' %}"></script>
 </body>
 </html>

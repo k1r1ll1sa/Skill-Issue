@@ -21,6 +21,7 @@
                     <div class="search-dropdown" id="searchDropdown">
                     </div>
                 </div>
+                <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему">🌙</button>
                 <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
                 <div class="menu-container" id="menu-container">
                     <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
@@ -37,9 +38,9 @@
         <img src="{% static 'images/logo.png' %}" alt="Skill Issue logo"
              style="width: 40%; height: auto; margin-top: 50px;">
         <br><br>
-        <hr style="width: 50%; color: ghostwhite">
-        <p class="logo" style="color: black; font-size: 2.5rem">Skill Issue</p>
-        <hr style="width: 40%; color: ghostwhite">
+        <hr style="width: 50%; color: var(--bg-primary)">
+        <p class="logo" style="font-size: 2.5rem; color: var(--accent-color) !important;">Skill Issue</p>
+        <hr style="width: 40%; color: var(--bg-primary)">
         <p class="simple-text" style="margin-top: 5px" data-lang-ru="проект для поиска и обмена навыками" data-lang-en="project for finding and sharing skills">проект для поиска и обмена навыками</p>
         <div class="carousel-container">
             <div class="carousel" id="carousel">
@@ -90,12 +91,12 @@
                 <a id="profile-link" href="#">Никнейм</a>
             </div>
 
-            <div id="messages-container" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background-color: #f9f9f9;"></div>
+            <div id="messages-container" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px;"></div>
 
-            <div style="padding: 15px 20px; background: #f8f9fa; border-top: 1px solid #eee;">
+            <div style="padding: 15px 20px; background: var(--bg-secondary); border-top: 1px solid var(--border-color);">
                 <form id="message-form" style="display: flex; gap: 10px; align-items: center;">
                     <input type="text" id="message-input" placeholder="Написать сообщение..." 
-                           style="flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 0.95rem;" autocomplete="off">
+                           style="flex: 1; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 20px; outline: none; font-size: 0.95rem; background: var(--bg-primary); color: var(--text-primary);" autocomplete="off">
                     <button type="submit" style="
                         background: linear-gradient(135deg, #00BFFF 0%, #0099CC 100%);
                         color: white;
@@ -150,6 +151,7 @@
 <script src="{% static 'js/toggle_chat.js' %}"></script>
 <script src="{% static 'js/toggle_language.js' %}"></script>
 <script src="{% static 'js/filter.js' %}"></script>
+<script src="{% static 'js/theme.js' %}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
     const menuContainer = document.querySelector(".menu-container");
@@ -228,12 +230,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateCarousel();
     }
 
-    function updateCarousel() {
+     function updateCarousel() {
         if (!carousel || totalSlides === 0) return;
         carousel.style.transform = `translateX(-${currentSlide * 100}%)`;
         const indicators = document.querySelectorAll('.indicator');
         indicators.forEach((ind, idx) => {
-            ind.classList.toggle('active', idx === currentSlide);
+        ind.classList.toggle('active', idx === currentSlide);
         });
     }
 

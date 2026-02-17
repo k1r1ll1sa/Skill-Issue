@@ -1172,7 +1172,7 @@ class AnnouncementCommentCreateView(APIView):
         author_avatar = None
         if hasattr(comment.author, 'profile') and comment.author.profile.avatar:
             author_avatar = comment.author.profile.avatar.url
-        
+
         return Response({
             "id": comment.id,
             "content": comment.content,
