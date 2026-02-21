@@ -30,6 +30,7 @@ urlpatterns = [
     path("", views.main_page, name="main_page"),
     path("register-page/", views.register_page, name="register_page"),
     path("login-page/", views.login_page, name="login_page"),
+    path("favorites/", views.favorites_page, name="favorites_page"),
 
     # --- Профили ---
     path("users/edit/", views.profile_edit, name='profile_edit'),

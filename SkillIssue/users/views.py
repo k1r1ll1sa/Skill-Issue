@@ -71,6 +71,13 @@ def logout_view(request):
     return redirect("main_page")
 
 
+def favorites_page(request):
+    return render(request, "users/favorites.html", {
+        "favorite_guides": [],
+        "favorite_announcements": [],
+    })
+
+
 def profile_guides_api(username):
     user_obj = get_object_or_404(User, username=username)
     guides = Guide.objects.filter(author=user_obj).order_by('-created_at')
