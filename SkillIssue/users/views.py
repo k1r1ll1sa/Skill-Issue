@@ -1,3 +1,4 @@
+import json
 import re
 
 from django.contrib.auth.decorators import login_required
@@ -6,6 +7,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.middleware.csrf import get_token
+from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 from rest_framework.decorators import action
 from rest_framework import status, permissions, generics, viewsets, serializers
@@ -30,7 +32,8 @@ import random
 import string
 
 
-from .models import Profile, GuideRating, Review, Guide, ProfileReview, Announcement, AnnouncementComment, EmailVerificationCode, ChatMessage, UserActivity
+from .models import Profile, GuideRating, Review, Guide, ProfileReview, Announcement, AnnouncementComment, \
+                     EmailVerificationCode, ChatMessage, UserActivity, FavoriteAnnouncement, FavoriteGuide
 from .serializers import RegisterSerializer, UserProfileSerializer, ReviewSerializer, GuideSerializer, \
     AnnouncementSerializer, ChatMessageSerializer, ChatContactSerializer, ProfileCommentSerializer
 from .forms import GuideForm
@@ -213,21 +216,36 @@ def guide_detail(request, pk):
     guide_content_html = mark_safe(html)
     reviews = guide.reviews.select_related("author", "author__profile").order_by("-created_at")
 
+    is_favorited = False
+    if request.user.is_authenticated:
+        is_favorited = FavoriteGuide.objects.filter(
+            user=request.user,
+            guide=guide
+        ).exists()
+
     return render(request, 'users/guide_detail.html', {
         'guide': guide,
         'guide_content_html': guide_content_html,
         'reviews': reviews,
+        'is_favorited': is_favorited,
     })
-
 
 def announcement_detail(request, announcement_id):
     announcement = get_object_or_404(Announcement, id=announcement_id)
     comments = announcement.comments.all().select_related('author')
 
+    is_favorited = False
+    if request.user.is_authenticated:
+        is_favorited = FavoriteAnnouncement.objects.filter(
+            user=request.user,
+            announcement=announcement
+        ).exists()
+
     context = {
         'announcement_id': announcement_id,
         'announcement': announcement,
         'comments': comments,
+        'is_favorited': is_favorited,
     }
     return render(request, 'users/announcement_detail.html', context)
 
@@ -1866,3 +1884,86 @@ def set_language(request):
     )
     
     return response
+
+
+@login_required
+def favorites_page(request):
+    favorite_announcements = FavoriteAnnouncement.objects.filter(
+        user=request.user
+    ).select_related('announcement', 'announcement__author').order_by('-added_at')
+
+    favorite_guides = FavoriteGuide.objects.filter(
+        user=request.user
+    ).select_related('guide', 'guide__author').order_by('-added_at')
+
+    context = {
+        'favorite_announcements': favorite_announcements,
+        'favorite_guides': favorite_guides,
+    }
+
+    return render(request, 'users/favorites.html', context)
+
+
+@login_required
+@require_POST
+def toggle_favorite_announcement(request, announcement_id):
+    try:
+        data = json.loads(request.body)
+        announcement = get_object_or_404(Announcement, id=announcement_id)
+
+        favorite, created = FavoriteAnnouncement.objects.get_or_create(
+            user=request.user,
+            announcement=announcement
+        )
+
+        if created:
+            return JsonResponse({
+                'success': True,
+                'added': True,
+                'message': 'Объявление добавлено в избранное'
+            })
+        else:
+            favorite.delete()
+            return JsonResponse({
+                'success': True,
+                'added': False,
+                'message': 'Объявление удалено из избранного'
+            })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+@login_required
+@require_POST
+def toggle_favorite_guide(request, guide_id):
+    try:
+        data = json.loads(request.body)
+        guide = get_object_or_404(Guide, id=guide_id)
+
+        favorite, created = FavoriteGuide.objects.get_or_create(
+            user=request.user,
+            guide=guide
+        )
+
+        if created:
+            return JsonResponse({
+                'success': True,
+                'added': True,
+                'message': 'Руководство добавлено в избранное'
+            })
+        else:
+            favorite.delete()
+            return JsonResponse({
+                'success': True,
+                'added': False,
+                'message': 'Руководство удалено из избранного'
+            })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)

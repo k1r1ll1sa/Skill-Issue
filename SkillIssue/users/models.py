@@ -198,10 +198,10 @@ class FavoriteGuide(models.Model):
 
 
 class FavoriteAnnouncement(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_announcements')
-    announcement = models.ForeignKey(Announcement, on_delete=models.CASCADE, related_name='favorited_by')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    announcement = models.ForeignKey('Announcement', on_delete=models.CASCADE)
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'announcement')
+        unique_together = ['user', 'announcement']
         ordering = ['-added_at']

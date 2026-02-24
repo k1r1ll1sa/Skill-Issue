@@ -86,6 +86,12 @@ urlpatterns = [
     path('api/popular-items/', views.popular_items, name='popular_items'),
     path('api/users/<str:username>/activities/', views.user_activities, name='user_activities'),
     path('api/set-language/', views.set_language, name='set_language'),
+
+    # --- Избранное ---
+    path('announcements/<int:announcement_id>/toggle-favorite/', views.toggle_favorite_announcement,
+         name='toggle_favorite_announcement'),
+    path('guides/<int:guide_id>/toggle-favorite/', views.toggle_favorite_guide,
+         name='toggle_favorite_guide'),
 ]
 
 if settings.DEBUG:

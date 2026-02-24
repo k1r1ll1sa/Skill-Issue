@@ -101,44 +101,47 @@
                     </div>
                 </div>
 
-                <div class="tab-content" id="tab-announcements">
-                    <div class="favorites-section">
-                        <div class="section-header">
-                            <h2 class="section-title" data-lang-ru="Избранные объявления" data-lang-en="Favorite Announcements">Избранные объявления</h2>
-                            <span class="section-count" id="announcements-count">
-                                {% if favorite_announcements %}
-                                    {{ favorite_announcements|length }}
-                                {% else %}
-                                    0
-                                {% endif %}
-                            </span>
-                        </div>
-
-                        {% if favorite_announcements %}
-                            <div class="favorites-grid">
-                                {% for favorite in favorite_announcements %}
-                                    <a href="{% url 'announcement_detail' favorite.announcement.id %}" class="favorite-card">
-                                        <img src="{% if favorite.announcement.image %}{{ favorite.announcement.image.url }}{% else %}{% static 'images/default-announcement.png' %}{% endif %}"
-                                             alt="{{ favorite.announcement.title }}"
-                                             class="favorite-card-image">
-                                        <div class="favorite-card-content">
-                                            <h3 class="favorite-card-title">{{ favorite.announcement.title }}</h3>
-                                            <div class="favorite-card-meta">
-                                                <span class="favorite-card-author">{{ favorite.announcement.author.username }}</span>
-                                            </div>
-                                        </div>
-                                    </a>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="empty-state">
-                                <div class="empty-state-icon">📢</div>
-                                <div class="empty-state-text" data-lang-ru="Нет избранных объявлений" data-lang-en="No favorite announcements">Нет избранных объявлений</div>
-                                <div class="empty-state-subtext" data-lang-ru="Добавьте объявления в избранное, чтобы они отображались здесь" data-lang-en="Add announcements to favorites to see them here">Добавьте объявления в избранное, чтобы они отображались здесь</div>
-                            </div>
-                        {% endif %}
+                <div id="tab-announcements" class="tab-content">
+                <div class="favorites-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Избранные объявления</h2>
+                        <span class="section-count">
+                            {% if favorite_announcements %}
+                                {{ favorite_announcements|length }}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </span>
                     </div>
+
+                    {% if favorite_announcements %}
+                        <div class="favorites-grid">
+                            {% for favorite in favorite_announcements %}
+                                <a href="{% url 'announcement_detail' favorite.announcement.id %}" class="favorite-card">
+                                    {% if favorite.announcement.image %}
+                                        <img src="{{ favorite.announcement.image.url }}" class="favorite-card-image">
+                                    {% else %}
+                                        <div class="favorite-card-image">📢</div>
+                                    {% endif %}
+                                    <div class="favorite-card-content">
+                                        <h3 class="favorite-card-title">{{ favorite.announcement.title }}</h3>
+                                        <div class="favorite-card-meta">
+                                            <span class="favorite-card-author">👤 {{ favorite.announcement.author.username }}</span>
+                                            <span class="favorite-card-rating">📅 {{ favorite.added_at|date:"d.m.Y" }}</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📢</div>
+                            <div class="empty-state-text">Нет избранных объявлений</div>
+                            <div class="empty-state-subtext">Добавьте объявления в избранное, чтобы они отображались здесь</div>
+                        </div>
+                    {% endif %}
                 </div>
+            </div>
             {% else %}
                 <div class="empty-state">
                     <div class="empty-state-icon">🔒</div>

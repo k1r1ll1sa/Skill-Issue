@@ -71,7 +71,15 @@
                 data-lang-ru="редактировать" data-lang-en="edit">редактировать</button>
     </form>
     {% endif %}
-
+    {% if user.is_authenticated and user != guide.author %}
+            <button id="add-favorite"
+                data-guide-id="{{ guide.id }}"
+                class="register_button"
+                style="margin-top: 20px; min-width: 250px;">
+            {% if is_favorited %}★ В избранном{% else %}☆ Добавить в избранное
+            {% endif %}
+            </button>
+        {% endif %}
     <hr style="color: black; width: 96%; margin: 20px auto;">
     <a class="simple-text" style="line-height: 20px; padding-bottom: 20px;">Отзывы к руководству</a>
 
@@ -239,7 +247,6 @@
     <!-- Конец чата -->
 
 <footer class="footer"></footer>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const stars = document.querySelectorAll('.star-button');
@@ -390,5 +397,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="{% static 'js/toggle_chat.js' %}"></script>
 <script src="{% static 'js/toggle_language.js' %}"></script>
 <script src="{% static 'js/theme.js' %}"></script>
+<script src="{% static 'js/favorite_guide.js' %}"></script>
 </body>
 </html>
