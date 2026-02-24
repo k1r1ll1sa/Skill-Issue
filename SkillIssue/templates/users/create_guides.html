@@ -61,18 +61,66 @@
         </a>
 
         <div class="editor-container">
-            <input id="titleInput" type="text" class="guide_name_input"
-                   placeholder="Введите название руководства"
-                   data-placeholder-ru="Введите название руководства"
-                   data-placeholder-en="Enter guide title"
-                   value="{% if guide %}{{ guide.title|escape }}{% endif %}">
-            
-            <input id="tagsInput" type="text" class="guide_name_input"
-                   placeholder="Введите теги через запятую (например: Python, Django, программирование)"
-                   data-placeholder-ru="Введите теги через запятую (например: Python, Django, программирование)"
-                   data-placeholder-en="Enter tags separated by commas (e.g. Python, Django, programming)"
-                   value="{% if guide %}{{ guide.tags|join:', ' }}{% endif %}"
-                   style="margin-top: 10px;">
+            <div class="profile-row-container" style="gap: 20px; flex-wrap: nowrap; align-items: stretch; justify-content: flex-start;">
+                <div class="profile-column-container" style="max-width: 360px;">
+                    <div style="display: flex; justify-content: center; margin-left: 100px;">
+                        <label for="guide-image-upload" style="cursor: pointer;">
+                            <div style="
+                        width: 360px;
+                        height: 240px;
+                        border: 2px dashed #bbb;
+                        border-radius: 10px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        background: var(--bg-secondary);
+                        position: relative;
+                        overflow: hidden;
+                    ">
+                        <img id="guide-preview-image"
+                            style="
+                                display: none;
+                                width: 100%;
+                                height: 100%;
+                                object-fit: cover;
+                            ">
+
+                        <span id="guide-image-placeholder"
+                            style="
+                                color: #888;
+                                font-size: 0.9rem;
+                                text-align: center;
+                                pointer-events: none;
+                            "
+                            data-lang-ru="Нажмите чтобы загрузить изображение"
+                            data-lang-en="Click to upload image">
+                            Нажмите чтобы<br>загрузить изображение
+                        </span>
+                    </div>
+                        </label>
+                        <input type="file" id="guide-image-upload" class="file-input" accept="image/*">
+                    </div>
+                    <a class="simple-text" style="font-size: 1.1rem; margin: 0 auto; margin-top: 8px; margin-left: 120px;"
+                       data-lang-ru="Изображение карточки" data-lang-en="Card image">
+                        Изображение карточки
+                    </a>
+                </div>
+
+                <div class="profile-column-container" style="flex: 1; width: 100%; justify-content: center; align-items: flex-start;">
+                    <input id="titleInput" type="text" class="guide_name_input"
+                           placeholder="Введите название руководства"
+                           data-placeholder-ru="Введите название руководства"
+                           data-placeholder-en="Enter guide title"
+                           value="{% if guide %}{{ guide.title|escape }}{% endif %}">
+                    
+                    <input id="tagsInput" type="text" class="guide_name_input"
+                           placeholder="Введите теги через запятую"
+                           data-placeholder-ru="Введите теги через запятую"
+                           data-placeholder-en="Enter tags separated by commas"
+                           value="{% if guide %}{{ guide.tags|join:', ' }}{% endif %}"
+                           style="margin-top: 10px;">
+                </div>
+            </div>
 
             <div class="editor-section">
                 <div class="editor-header">
@@ -175,6 +223,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     tagsInput.value = data.tags.join(', ');
                 }
 
+                if (data.image) {
+                    const guidePreview = document.getElementById('guide-preview-image');
+                    const placeholder = document.getElementById('guide-image-placeholder');
+
+                    if (guidePreview) {
+                        guidePreview.src = data.image;
+                        guidePreview.style.display = 'block';
+                        guidePreview.style.objectFit = 'cover';
+                    }
+
+                    if (placeholder) {
+                        placeholder.style.display = 'none';
+                    }
+                }
+
                 const imageRegex = /!\[(.*?)\]\((.*?)\)/g;
                 let match;
                 while ((match = imageRegex.exec(data.content)) !== null) {
@@ -269,6 +332,21 @@ function handleImageUpload() {
     }
 }
 
+document.getElementById('guide-image-upload').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const previewImage = document.getElementById('guide-preview-image');
+            if (previewImage) {
+                previewImage.src = e.target.result;
+                previewImage.style.objectFit = 'cover';
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
 function updatePreview() {
     const markdownText = editor.value;
     const html = markdownToHtml(markdownText);
@@ -326,6 +404,15 @@ function clearEditor() {
         tagsInput.value = '';
         imageStorage.clear();
         imageCounter = 0;
+        const guidePreview = document.getElementById('guide-preview-image');
+        if (guidePreview) {
+            guidePreview.src = "{% static 'images/default-guide.png' %}";
+            guidePreview.style.objectFit = 'cover';
+        }
+        const guideImageInput = document.getElementById('guide-image-upload');
+        if (guideImageInput) {
+            guideImageInput.value = '';
+        }
         updatePreview();
     }
 }
@@ -350,10 +437,9 @@ async function saveGuide() {
     formData.append("content", content);
     formData.append("tags", tags);
 
-    for (const [fileName, value] of imageStorage.entries()) {
-        if (value.file) {
-            formData.append("image", value.file);
-        }
+    const guideImageInput = document.getElementById('guide-image-upload');
+    if (guideImageInput && guideImageInput.files.length > 0) {
+        formData.append("image", guideImageInput.files[0]);
     }
 
     const urlParams = new URLSearchParams(window.location.search);

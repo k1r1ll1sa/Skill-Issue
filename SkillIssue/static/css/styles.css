@@ -59,6 +59,10 @@ a {
     text-decoration: none;
 }
 
+h3 {
+    color: var(--text-header)
+}
+
 .header {
     background-color: var(--bg-header);
     height: 40px;
@@ -354,6 +358,7 @@ a {
     height: 30px;
     font-family: "Cascadia Code";
     font-size: 1rem;
+    color: var(--text-primary);
     line-height: 0.95rem;
     text-align: center;
     text-overflow: ellipsis;
@@ -421,6 +426,40 @@ a {
 
 .star-button:active {
     transform: scale(0.95);
+}
+
+.favorite-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 18px;
+    min-width: 220px;
+    border-radius: 999px;
+    border: 1px solid var(--accent-color);
+    background: transparent;
+    color: var(--accent-color);
+    font-family: "Cascadia Code";
+    font-size: 0.95rem;
+    cursor: pointer;
+    box-shadow: 0 2px 6px var(--shadow-color);
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.favorite-btn:hover {
+    background-color: var(--accent-color);
+    color: #ffffff;
+    box-shadow: 0 4px 10px var(--shadow-color-dark);
+}
+
+.favorite-btn:active {
+    transform: scale(0.97);
+}
+
+.favorite-btn--active {
+    background-color: var(--accent-color);
+    color: #ffffff;
+    border-color: var(--accent-color);
 }
 
 .scroll-area {

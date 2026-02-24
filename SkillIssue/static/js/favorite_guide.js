@@ -22,21 +22,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
 
                 const data = await response.json();
+                const lang = localStorage.getItem('lang') || 'RU';
 
                 if (response.ok) {
                     if (data.added) {
-                        alert('Объявление добавлено в избранное ✓');
-                        this.textContent = '★ В избранном';
+                        const msg = lang === 'RU'
+                            ? 'Руководство добавлено в избранное ✓'
+                            : 'Guide added to favorites ✓';
+                        alert(msg);
+                        this.classList.add('favorite-btn--active');
+                        this.dataset.langRu = '★ В избранном';
+                        this.dataset.langEn = '★ In favorites';
+                        this.textContent = lang === 'RU' ? this.dataset.langRu : this.dataset.langEn;
                     } else {
-                        alert('Объявление удалено из избранного');
-                        this.textContent = '☆ Добавить в избранное';
+                        const msg = lang === 'RU'
+                            ? 'Руководство удалено из избранного'
+                            : 'Guide removed from favorites';
+                        alert(msg);
+                        this.classList.remove('favorite-btn--active');
+                        this.dataset.langRu = '☆ Добавить в избранное';
+                        this.dataset.langEn = '☆ Add to favorites';
+                        this.textContent = lang === 'RU' ? this.dataset.langRu : this.dataset.langEn;
                     }
                 } else {
-                    alert('Ошибка: ' + (data.error || 'Не удалось изменить избранное'));
+                    const baseError = data.error || 'Не удалось изменить избранное';
+                    const msg = lang === 'RU'
+                        ? `Ошибка: ${baseError}`
+                        : `Error: ${baseError}`;
+                    alert(msg);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Произошла ошибка при работе с избранным');
+                const lang = localStorage.getItem('lang') || 'RU';
+                const msg = lang === 'RU'
+                    ? 'Произошла ошибка при работе с избранным'
+                    : 'An error occurred while processing favorites';
+                alert(msg);
             }
         });
     }
