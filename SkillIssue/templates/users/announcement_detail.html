@@ -77,11 +77,20 @@
         <hr style="color: black; width: 96%; margin: 20px auto;">
         <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 30px;">
             <a class="simple-text" style="font-size: 1.1rem; text-align: center;" data-lang-ru="Заинтересовало? Напишите автору!" data-lang-en="Interested? Write to the author!">Заинтересовало? Напишите автору!</a>
-            <button id="write-message" class="profile-button" 
-                    data-user-id="{{ announcement.author.id }}" 
+            <button id="write-message" class="profile-button"
+                    data-user-id="{{ announcement.author.id }}"
                     data-username="{{ announcement.author.username }}"
                     style="height: 40px; width: 200px; border:none; box-shadow: 0px 1px 3px #424242;"
                     data-lang-ru="Написать в чат" data-lang-en="Write to chat">Написать в чат</button>
+            {% if user.is_authenticated and user != announcement.author %}
+            <button id="add-favorite"
+                data-announcement-id="{{ announcement.id }}"
+                class="register_button"
+                style="margin-top: 20px; min-width: 250px;">
+            {% if is_favorited %}★ В избранном{% else %}☆ Добавить в избранное
+            {% endif %}
+            </button>
+        {% endif %}
         </div>
         {% endif %}
 
@@ -279,6 +288,7 @@
     <script src="{% static 'js/toggle_language.js' %}"></script>
     <script src="{% static 'js/toggle_chat.js' %}"></script>
     <script src="{% static 'js/toggle_language.js' %}"></script>
+    <script src="{% static 'js/favorite_announce.js' %}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Функция для безопасного получения элемента
