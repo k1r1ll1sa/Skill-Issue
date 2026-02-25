@@ -80,6 +80,9 @@
                         <img id="guide-preview-image"
                             style="
                                 display: none;
+                                position: absolute;
+                                top: 0;
+                                left: 0;
                                 width: 100%;
                                 height: 100%;
                                 object-fit: cover;
@@ -340,7 +343,11 @@ document.getElementById('guide-image-upload').addEventListener('change', functio
             const previewImage = document.getElementById('guide-preview-image');
             if (previewImage) {
                 previewImage.src = e.target.result;
+                previewImage.style.display = 'block';
                 previewImage.style.objectFit = 'cover';
+            }
+            if (placeholder) {
+                placeholder.style.display = 'none';
             }
         };
         reader.readAsDataURL(file);
