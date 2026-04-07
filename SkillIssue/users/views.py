@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.middleware.csrf import get_token
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.http import require_POST
@@ -125,13 +125,35 @@ class GuideListView(ListView):
         search_query = self.request.GET.get('search')
 
         if search_query:
-            # Фильтруем по названию руководства
-            queryset = queryset.filter(title__icontains=search_query)
-        else:
-            # Если нет поиска, показываем популярные (с высоким рейтингом)
-            queryset = queryset.order_by('-rating')[:6]
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(content__icontains=search_query)
+            )
 
-        return queryset
+            query_lower = search_query.lower()
+            guides = list(queryset)
+
+            for guide in guides:
+                relevance = 0
+                title_lower = guide.title.lower()
+                content_lower = (guide.content or '').lower()
+
+                # +5 за совпадение в начале названия
+                if title_lower.startswith(query_lower):
+                    relevance += 5
+                # +3 за совпадение в названии
+                elif query_lower in title_lower:
+                    relevance += 3
+                # +1 за совпадение в содержании
+                if query_lower in content_lower:
+                    relevance += 1
+
+                guide.relevance = relevance
+
+            guides.sort(key=lambda x: x.relevance, reverse=True)
+            return guides[:20]
+
+        return queryset.order_by('-rating')[:6]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -151,10 +173,37 @@ class AnnouncementListView(ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
         search_query = self.request.GET.get('search')
-        if search_query:
-            queryset = queryset.filter(title__icontains=search_query)
-        return queryset
 
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
+
+            query_lower = search_query.lower()
+            announcements = list(queryset)
+
+            for ann in announcements:
+                relevance = 0
+                title_lower = ann.title.lower()
+                desc_lower = (ann.description or '').lower()
+
+                # +5 за совпадение в начале названия
+                if title_lower.startswith(query_lower):
+                    relevance += 5
+                # +3 за совпадение в названии
+                elif query_lower in title_lower:
+                    relevance += 3
+                # +1 за совпадение в описании
+                if query_lower in desc_lower:
+                    relevance += 1
+
+                ann.relevance = relevance
+
+            announcements.sort(key=lambda x: x.relevance, reverse=True)
+            return announcements[:20]
+
+        return queryset.order_by('-created_at')
 
 @login_required
 @xframe_options_exempt
@@ -1899,57 +1948,113 @@ def search_all_items(request):
 )
 @api_view(['GET'])
 def search_items(request):
-    """Поиск по всем моделям"""
     query = request.GET.get('q', '').strip()
-
     if not query:
         return Response([])
 
     try:
         results = []
+        query_lower = query.lower()
 
-        # Поиск в профилях
+        # === ПОИСК В ПРОФИЛЯХ ===
         profiles = Profile.objects.filter(
             Q(user__first_name__icontains=query) |
             Q(user__last_name__icontains=query) |
-            Q(user__username__icontains=query)
-        ).select_related('user')[:10]
+            Q(user__username__icontains=query) |
+            Q(bio__icontains=query)
+        ).select_related('user')[:30]
 
         for profile in profiles:
-            full_name = f"{profile.user.first_name} {profile.user.last_name}".strip()
+            full_name = f"{profile.user.first_name} {profile.user.last_name}".strip().lower()
+            username = profile.user.username.lower()
+            bio = (profile.bio or '').lower()
+
+            relevance = 0
+            # +3 за совпадение в никнейме
+            if query_lower in username:
+                relevance += 3
+                if username.startswith(query_lower):
+                    relevance += 2
+            # +2 за совпадение в ФИО
+            if query_lower in full_name:
+                relevance += 2
+                if full_name.startswith(query_lower):
+                    relevance += 1
+            # +1 за совпадение в описании
+            if query_lower in bio:
+                relevance += 1
+
             results.append({
-                'title': full_name or profile.user.username,
+                'title': full_name.title() or profile.user.username,
                 'type': 'профиль',
-                'url': f'/profiles/{profile.user.id}/',
+                'url': f'/users/{profile.user.username}/',
+                'relevance': relevance
             })
 
-        # Поиск в объявлениях
+        # === ПОИСК В ОБЪЯВЛЕНИЯХ ===
         announcements = Announcement.objects.filter(
             Q(title__icontains=query) |
             Q(description__icontains=query)
-        )[:10]
+        )[:30]
 
-        for announcement in announcements:
+        for ann in announcements:
+            title = ann.title.lower()
+            desc = (ann.description or '').lower()
+
+            relevance = 0
+            if query_lower in title:
+                # +3 за совпадение в названии
+                relevance += 3
+                if title.startswith(query_lower):
+                    # +2 за то, что начинается с запроса
+                    relevance += 2
+            if query_lower in desc:
+                # +1 за то, что есть в описании
+                relevance += 1
+
             results.append({
-                'title': announcement.title,
+                'title': ann.title,
                 'type': 'объявление',
-                'url': f'/announcements/{announcement.id}/',
+                'url': f'/announcements/{ann.id}/',
+                'relevance': relevance
             })
 
-        # Поиск в руководствах
+        # === ПОИСК В РУКОВОДСТВАХ ===
         guides = Guide.objects.filter(
             Q(title__icontains=query) |
             Q(content__icontains=query)
-        )[:10]
+        )[:30]
 
         for guide in guides:
+            title = guide.title.lower()
+            content = (guide.content or '').lower()
+
+            relevance = 0
+            if query_lower in title:
+                # +3 за совпадение в названии
+                relevance += 3
+                if title.startswith(query_lower):
+                    # +2 за то, что начинается с запроса
+                    relevance += 2
+            if query_lower in content:
+                # +1 за то, что есть в описании
+                relevance += 1
+
             results.append({
                 'title': guide.title,
                 'type': 'руководство',
                 'url': f'/guides/{guide.id}/',
+                'relevance': relevance
             })
 
-        return Response(results[:20])
+        results.sort(key=lambda x: x['relevance'], reverse=True)
+
+        final_results = [
+            {'title': r['title'], 'type': r['type'], 'url': r['url']}
+            for r in results[:20]
+        ]
+
+        return Response(final_results)
 
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -1957,11 +2062,11 @@ def search_items(request):
 
 @swagger_auto_schema(
     method='get',
-    operation_description="Фильтрация объявлений по названию, тегам и дате",
+    operation_description="Фильтрация объявлений по названию, описанию, тегам и дате с ранжированием по релевантности",
     manual_parameters=[
         openapi.Parameter('search', openapi.IN_QUERY, description="Поиск по названию", type=openapi.TYPE_STRING),
         openapi.Parameter('tags', openapi.IN_QUERY, description="Теги через запятую", type=openapi.TYPE_STRING),
-        openapi.Parameter('date_filter', openapi.IN_QUERY, description="today/week/month", type=openapi.TYPE_STRING),
+        openapi.Parameter('date_filter', openapi.IN_QUERY, description="Количество дней для фильтрации", type=openapi.TYPE_STRING),
     ],
     tags=['Объявления']
 )
@@ -1972,7 +2077,10 @@ def filter_announcements(request):
 
         search_query = request.GET.get('search', '').strip()
         if search_query:
-            queryset = queryset.filter(title__icontains=search_query)
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
 
         tags_query = request.GET.get('tags', '').strip()
         if tags_query:
@@ -1993,16 +2101,43 @@ def filter_announcements(request):
             start_date = today - timedelta(days=days)
             queryset = queryset.filter(created_at__date__gte=start_date)
 
-        queryset = queryset.order_by('-created_at')
-        serializer = AnnouncementSerializer(queryset, many=True, context={'request': request})
-        return Response({'count': queryset.count(), 'results': serializer.data})
+        if search_query:
+            announcements = list(queryset)
+            query_lower = search_query.lower()
+
+            for ann in announcements:
+                relevance = 0
+                title_lower = ann.title.lower()
+                desc_lower = (ann.description or '').lower()
+
+                # +5 за совпадение в начале названия
+                if title_lower.startswith(query_lower):
+                    relevance += 5
+                # +3 за совпадение в названии (не в начале)
+                elif query_lower in title_lower:
+                    relevance += 3
+                # +1 за совпадение в описании
+                if query_lower in desc_lower:
+                    relevance += 1
+
+                ann.relevance = relevance
+
+            announcements.sort(key=lambda x: x.relevance, reverse=True)
+            announcements = announcements[:20]
+
+            serializer = AnnouncementSerializer(announcements, many=True, context={'request': request})
+            return Response({'count': len(announcements), 'results': serializer.data})
+        else:
+            queryset = queryset.order_by('-created_at')
+            serializer = AnnouncementSerializer(queryset, many=True, context={'request': request})
+            return Response({'count': queryset.count(), 'results': serializer.data})
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @swagger_auto_schema(
     method='get',
-    operation_description="Фильтрация руководств по названию, тегам и дате",
+    operation_description="Фильтрация руководств по названию, содержанию, тегам и дате с ранжированием по релевантности",
     manual_parameters=[
         openapi.Parameter('search', openapi.IN_QUERY, description="Поиск по названию", type=openapi.TYPE_STRING),
         openapi.Parameter('tags', openapi.IN_QUERY, description="Теги через запятую", type=openapi.TYPE_STRING),
@@ -2017,7 +2152,10 @@ def filter_guides(request):
 
         search_query = request.GET.get('search', '').strip()
         if search_query:
-            queryset = queryset.filter(title__icontains=search_query)
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(content__icontains=search_query)
+            )
 
         tags_query = request.GET.get('tags', '').strip()
         if tags_query:
@@ -2038,9 +2176,36 @@ def filter_guides(request):
             start_date = today - timedelta(days=days)
             queryset = queryset.filter(created_at__date__gte=start_date)
 
-        queryset = queryset.order_by('-rating', '-created_at')
-        serializer = GuideSerializer(queryset, many=True, context={'request': request})
-        return Response({'count': queryset.count(), 'results': serializer.data})
+        if search_query:
+            guides = list(queryset)
+            query_lower = search_query.lower()
+
+            for guide in guides:
+                relevance = 0
+                title_lower = guide.title.lower()
+                content_lower = (guide.content or '').lower()
+
+                # +5 за совпадение в начале названия
+                if title_lower.startswith(query_lower):
+                    relevance += 5
+                # +3 за совпадение в названии
+                elif query_lower in title_lower:
+                    relevance += 3
+                # +1 за совпадение в содержании
+                if query_lower in content_lower:
+                    relevance += 1
+
+                guide.relevance = relevance
+
+            guides.sort(key=lambda x: x.relevance, reverse=True)
+            guides = guides[:20]
+
+            serializer = GuideSerializer(guides, many=True, context={'request': request})
+            return Response({'count': len(guides), 'results': serializer.data})
+        else:
+            queryset = queryset.order_by('-rating', '-created_at')
+            serializer = GuideSerializer(queryset, many=True, context={'request': request})
+            return Response({'count': queryset.count(), 'results': serializer.data})
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
