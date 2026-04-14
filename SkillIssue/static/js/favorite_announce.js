@@ -40,8 +40,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             : 'Announcement removed from favorites';
                         alert(msg);
                         this.classList.remove('favorite-btn--active');
-                        this.dataset.langRu = '☆ Добавить в избранное';
-                        this.dataset.langEn = '☆ Add to favorites';
+                        this.dataset.langRu = '☆ В избранное';
+                        this.dataset.langEn = '☆ Favorite';
                         this.textContent = lang === 'RU' ? this.dataset.langRu : this.dataset.langEn;
                     }
                 } else {

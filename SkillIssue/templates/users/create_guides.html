@@ -149,21 +149,42 @@
 
         <!-- ── PREVIEW PANEL ── -->
         <div class="editor-tab-panel" id="tab-panel-preview">
-            <div class="form-card">
-                <div class="form-card-header">
-                    <h2 class="form-card-title"
-                        data-lang-ru="Предпросмотр содержимого"
-                        data-lang-en="Content preview">
-                        Предпросмотр содержимого
-                    </h2>
-                </div>
-                <div class="form-card-body guide-preview-page">
-                    <a id="guide-preview-title" class="simple-text guide-preview-page-title"></a>
-                    <div id="guide-preview-body" class="preview-content guide-preview-page-content">
-                        <em data-lang-ru="Содержимое появится здесь..." data-lang-en="Content will appear here...">Содержимое появится здесь...</em>
+
+            <div class="guide-detail-header">
+                <h1 id="guide-preview-title" class="guide-detail-title">(Название не указано)</h1>
+                <div class="guide-meta-divider"></div>
+                <div class="guide-detail-meta">
+                    <span class="guide-author-chip" style="cursor:default;">
+                        {% if request.user.profile.avatar %}
+                            <img src="{{ request.user.profile.avatar.url }}"
+                                 class="guide-author-chip-avatar" alt="{{ request.user.username }}">
+                        {% else %}
+                            <img src="{% static 'images/default-avatar.jpg' %}"
+                                 class="guide-author-chip-avatar" alt="{{ request.user.username }}">
+                        {% endif %}
+                        <div class="guide-author-chip-info">
+                            <span class="guide-author-chip-label"
+                                  data-lang-ru="Автор" data-lang-en="Author">Автор</span>
+                            <span class="guide-author-chip-name">{{ request.user.username }}</span>
+                        </div>
+                    </span>
+                    <div class="guide-rating-chip">
+                        <span class="guide-rating-chip-label"
+                              data-lang-ru="Рейтинг" data-lang-en="Rating">Рейтинг</span>
+                        <span class="guide-rating-chip-star">★</span>
+                        <span class="guide-rating-chip-value">—</span>
                     </div>
                 </div>
             </div>
+
+            <div class="guide-detail-content-card">
+                <div id="guide-preview-body" class="preview-content"
+                     style="border:none;background:transparent;padding:0;min-height:80px;">
+                    <em data-lang-ru="Содержимое появится здесь..."
+                        data-lang-en="Content will appear here...">Содержимое появится здесь...</em>
+                </div>
+            </div>
+
         </div>
         <!-- ── END PREVIEW PANEL ── -->
 
@@ -540,11 +561,14 @@ function updateGuidePreviewPanel() {
     const titleEl = document.getElementById('guide-preview-title');
     if (titleEl) {
         const lang = localStorage.getItem('lang') || 'RU';
-        titleEl.textContent = titleInput.value.trim() ||
-            (lang === 'EN' ? '(No title)' : '(Название не указано)');
+        const placeholder = lang === 'EN' ? '(No title)' : '(Название не указано)';
+        titleEl.textContent = titleInput.value.trim() || placeholder;
     }
     const bodyEl = document.getElementById('guide-preview-body');
-    if (bodyEl) bodyEl.innerHTML = markdownToHtml(editor.value);
+    if (bodyEl) {
+        const html = markdownToHtml(editor.value);
+        bodyEl.innerHTML = html;
+    }
 }
 </script>
 <script src="{% static 'js/search.js' %}"></script>

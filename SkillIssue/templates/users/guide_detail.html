@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ guide.title }} — Skill Issue</title>
     <script>
         (function() {
@@ -15,38 +16,62 @@
 <body>
 {% include 'users/header.html' %}
 
-<div class="body-background">
-    <a class="simple-text" style="font-size: 2rem; margin: 10px 0;">{{ guide.title }}</a>
+<div class="guide-detail-wrapper">
 
-    <div class="profile-row-container" style="margin: 10px 0; gap: 20px; justify-content: center;">
-        <a class="simple-text" style="font-size: 1.5rem" href="{% url 'profile_page' guide.author.username %}">
-            {{ guide.author.username }}
-        </a>
-        <a class="simple-text" id="guide-rating" style="font-size: 1.5rem">
-            <span data-lang-ru="Рейтинг: " data-lang-en="Rating: ">Рейтинг: </span>{{ guide.rating }}/5
-        </a>
+    <!-- ── Заголовок руководства ── -->
+    <div class="guide-detail-header">
+        <h1 class="guide-detail-title">{{ guide.title }}</h1>
+        <div class="guide-detail-meta">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                 stroke-linejoin="round" style="color:var(--text-tertiary);flex-shrink:0;">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <a class="guide-detail-author"
+               href="{% url 'profile_page' guide.author.username %}">{{ guide.author.username }}</a>
+
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"
+                 style="color:#f4b400;flex-shrink:0;margin-left:4px;">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <span class="guide-detail-rating" id="guide-rating">{{ guide.rating }}/5</span>
+        </div>
     </div>
 
-    <div id="preview" class="preview-content"
-         style="width: 95%; margin: auto; box-shadow: 0px 1px 3px #424242; padding: 20px;">
-        {% if guide_content_html %}
-            {{ guide_content_html|safe }}
-        {% else %}
-            <em style="color: #666;">Контент руководства отсутствует</em>
-        {% endif %}
+    <!-- ── Контент руководства ── -->
+    <div class="guide-detail-content-card">
+        <div id="preview" class="preview-content"
+             style="border:none;background:transparent;padding:0;min-height:unset;">
+            {% if guide_content_html %}
+                {{ guide_content_html|safe }}
+            {% else %}
+                <div class="preview-empty-state">
+                    <div class="preview-empty-icon">📄</div>
+                    <em style="color:var(--text-tertiary);">Контент руководства отсутствует</em>
+                </div>
+            {% endif %}
+        </div>
     </div>
 
-    <div class="profile-row-container" style="justify-content: center; gap: 16px; margin-top: 20px;">
-        {% if user.is_authenticated and user == guide.author %}
-        <form action="{% url 'create_guide' %}" method="get" style="margin: 0;">
+    {% if user.is_authenticated %}
+    <div class="guide-detail-actions">
+        {% if user == guide.author %}
+        <form action="{% url 'create_guide' %}" method="get" style="margin:0;">
             <input type="hidden" name="id" value="{{ guide.id }}">
-            <button class="profile-button"
-                    style="height: 40px; width: 200px; border:none; box-shadow: 0px 1px 3px #424242;"
-                    data-lang-ru="редактировать" data-lang-en="edit">редактировать</button>
+            <button class="guide-detail-edit-btn" type="submit">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                     stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                <span data-lang-ru="редактировать" data-lang-en="edit">редактировать</span>
+            </button>
         </form>
         {% endif %}
 
-        {% if user.is_authenticated and user != guide.author %}
+        {% if user != guide.author %}
         <button id="add-favorite"
                 data-guide-id="{{ guide.id }}"
                 class="favorite-btn {% if is_favorited %}favorite-btn--active{% endif %}"
@@ -56,106 +81,111 @@
         </button>
         {% endif %}
     </div>
-    <hr style="color: black; width: 96%; margin: 20px auto;">
-    <a class="simple-text" style="line-height: 20px; padding-bottom: 20px;">Отзывы к руководству</a>
+    {% endif %}
 
-    <div id="reviews-container" class="profile-column-container" style="gap: 20px;">
-        {% for review in reviews %}
-        <div class="profile-column-container review-block"
-             data-review-id="{{ review.id }}">
-            <div class="profile-row-container">
-                {% if review.author.profile.avatar %}
-                    <img src="{{ review.author.profile.avatar.url }}" class="rec_avatar">
-                {% else %}
-                    <img src="{% static 'images/default-avatar.jpg' %}" class="rec_avatar">
-                {% endif %}
-                <div class="profile-column-container">
-                    <a href="{% url 'profile_page' review.author.username %}"
-                       class="simple-text"
-                       style="font-size: 1rem; padding-left: 10px">
-                        {{ review.author.username }}
-                    </a>
-                    <a class="simple-text" style="font-size: 0.8rem; color: #444; padding-left: 10px">
-                        {{ review.created_at|date:"d.m.Y" }}
-                    </a>
+    <!-- ── Отзывы ── -->
+    <div class="guide-detail-reviews-card">
+        <p class="guide-detail-reviews-title"
+           data-lang-ru="Отзывы к руководству"
+           data-lang-en="Guide reviews">Отзывы к руководству</p>
+
+        <div id="reviews-container" class="profile-column-container guide-reviews-list">
+            {% for review in reviews %}
+            <div class="review-block profile-column-container"
+                 data-review-id="{{ review.id }}">
+
+                <div class="profile-row-container review-block-header">
+                    {% if review.author.profile.avatar %}
+                        <img src="{{ review.author.profile.avatar.url }}" class="rec_avatar">
+                    {% else %}
+                        <img src="{% static 'images/default-avatar.jpg' %}" class="rec_avatar">
+                    {% endif %}
+
+                    <div class="profile-column-container review-author-info">
+                        <a href="{% url 'profile_page' review.author.username %}"
+                           class="simple-text"
+                           style="font-size:0.95rem;">{{ review.author.username }}</a>
+                        <span class="simple-text"
+                              style="font-size:0.8rem;color:var(--text-tertiary);">{{ review.created_at|date:"d.m.Y" }}</span>
+                    </div>
+
+                    <span class="simple-text review-stars review-stars-badge">⭐ {{ review.stars }}</span>
+
+                    {% if review.author == user %}
+                        <button class="btn-secondary edit-review-btn"
+                                data-review-id="{{ review.id }}"
+                                data-review-stars="{{ review.stars }}"
+                                data-review-text="{{ review.text|escapejs }}"
+                                style="padding:6px 12px;font-size:0.85rem;min-width:auto;">✎</button>
+                        <button class="btn-danger delete-review-btn"
+                                data-review-id="{{ review.id }}"
+                                style="padding:6px 12px;font-size:0.85rem;min-width:auto;">🗑</button>
+                    {% endif %}
                 </div>
 
-                <a class="simple-text review-stars" style="font-size:1rem; margin-left:auto;">⭐ {{ review.stars }}</a>
+                <p class="simple-text review-text review-text-content">{{ review.text }}</p>
 
-                {% if review.author == user %}
-                    <button class="profile-button edit-review-btn"
-                            data-review-id="{{ review.id }}"
-                            data-review-stars="{{ review.stars }}"
-                            data-review-text="{{ review.text|escapejs }}"
-                            style="margin-left:10px; height:30px;">
-                        ✎
-                    </button>
-                    <button class="profile-button delete-review-btn"
-                            data-review-id="{{ review.id }}"
-                            style="margin-left:5px; height:30px; background-color:#FF6347; color:white; min-width: auto; padding: 0 10px">
-                        🗑
-                    </button>
-                {% endif %}
-            </div>
-
-            <a class="simple-text review-text" style="text-align: left; font-size:1rem; padding-top:5px;">{{ review.text }}</a>
-            <div class="review-rating-container" data-review-id="{{ review.id }}">
-            {% if user.is_authenticated and user != review.author %}
-                <button class="review-rate-btn rate-like {% if review.id in user_liked %}active{% endif %}" data-type="like" title="Нравится">
-                    👍 <span class="rate-count">{{ review.likes_count|default:0 }}</span>
-                </button>
-                <button class="review-rate-btn rate-dislike {% if review.id in user_disliked %}active{% endif %}" data-type="dislike" title="Не нравится">
-                    👎 <span class="rate-count">{{ review.dislikes_count|default:0 }}</span>
-                </button>
-            {% else %}
-                <div class="review-stats-only">
-                    👍 <span class="stat-count">{{ review.likes_count|default:0 }}</span>
-                    👎 <span class="stat-count">{{ review.dislikes_count|default:0 }}</span>
+                <div class="review-rating-container"
+                     data-review-id="{{ review.id }}"
+                     style="display:flex;gap:8px;margin-top:8px;">
+                    {% if user.is_authenticated and user != review.author %}
+                        <button class="review-rate-btn rate-like {% if review.id in user_liked %}active{% endif %}"
+                                data-type="like" title="Нравится">
+                            👍 <span class="rate-count">{{ review.likes_count|default:0 }}</span>
+                        </button>
+                        <button class="review-rate-btn rate-dislike {% if review.id in user_disliked %}active{% endif %}"
+                                data-type="dislike" title="Не нравится">
+                            👎 <span class="rate-count">{{ review.dislikes_count|default:0 }}</span>
+                        </button>
+                    {% else %}
+                        <div class="review-stats-only">
+                            👍 <span class="stat-count">{{ review.likes_count|default:0 }}</span>
+                            👎 <span class="stat-count">{{ review.dislikes_count|default:0 }}</span>
+                        </div>
+                    {% endif %}
                 </div>
-            {% endif %}
             </div>
+            {% empty %}
+            <p class="simple-text reviews-empty"
+               style="text-align:center;"
+               data-lang-ru="Пока нет отзывов."
+               data-lang-en="No reviews yet.">Пока нет отзывов.</p>
+            {% endfor %}
         </div>
-        {% empty %}
-        <p class="simple-text" style="text-align:center;">Пока нет отзывов.</p>
-        {% endfor %}
     </div>
 
     {% if user.is_authenticated and user != guide.author %}
-        <hr style="color: black; width: 96%; margin: 20px auto;">
-        <a class="simple-text" id="form-title">Напишите свой отзыв</a>
+    <div class="guide-review-form-card">
+        <p class="guide-review-form-title" id="form-title">Напишите свой отзыв</p>
 
-        <form id="review-form" method="POST" style="width:80%; margin:auto;">
+        <form id="review-form" method="POST">
             {% csrf_token %}
             <input type="hidden" id="review-id-edit" value="">
-            <textarea id="review-text" name="text" class="textarea_profile"
+
+            <textarea id="review-text" name="text"
+                      class="guide-review-textarea"
                       placeholder="Начните печатать здесь"></textarea>
 
-            <a id="error" hidden class="simple-text"
-               style="font-size:1rem; margin:10px auto; margin-top:-10px; color:red;">
-                Отзыв не может быть пустым!
-            </a>
+            <p id="error" hidden class="guide-error-msg">Отзыв не может быть пустым!</p>
 
-            <div id="rating-container" class="profile-row-container" style="margin:auto; gap:10px;">
+            <div class="guide-stars-row">
                 <button class="star-button" data-value="1">★</button>
                 <button class="star-button" data-value="2">★</button>
                 <button class="star-button" data-value="3">★</button>
                 <button class="star-button" data-value="4">★</button>
                 <button class="star-button" data-value="5">★</button>
 
-                <button id="response-btn" class="profile-button"
-                        style="width:20%; height:40px; border:none; box-shadow:0px 1px 3px #424242;"
-                        type="submit">
-                    Отправить
-                </button>
+                <button id="response-btn" class="guide-submit-btn" type="submit">Отправить</button>
             </div>
         </form>
+    </div>
     {% endif %}
+
 </div>
 
-    <!-- Чат -->
 {% include 'users/chat.html' %}
-
 {% include 'users/footer.html' %}
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const stars = document.querySelectorAll('.star-button');
@@ -223,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   block.remove();
 
                   if (data.guide_average_rating !== undefined) {
-                      document.getElementById('guide-rating').textContent = `Рейтинг: ${Math.floor(data.guide_average_rating)}/5`;
+                      document.getElementById('guide-rating').textContent = `${Math.floor(data.guide_average_rating)}/5`;
                   }
 
                   const profileRatingEl = document.querySelector('.profile-rating');
@@ -274,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
               }
 
               if (data.guide_average_rating !== undefined) {
-                  document.getElementById('guide-rating').textContent = `Рейтинг: ${Math.floor(data.guide_average_rating)}/5`;
+                  document.getElementById('guide-rating').textContent = `${Math.floor(data.guide_average_rating)}/5`;
               }
 
               const profileRatingEl = document.querySelector('.profile-rating');

@@ -139,31 +139,41 @@
 
         <!-- ── PREVIEW PANEL (outside form — no submit risk) ── -->
         <div class="editor-tab-panel" id="tab-panel-preview">
-            <div class="form-card">
-                <div class="form-card-header">
-                    <h2 class="form-card-title"
-                        data-lang-ru="Предпросмотр объявления"
-                        data-lang-en="Announcement preview">
-                        Предпросмотр объявления
-                    </h2>
-                </div>
-                <div class="form-card-body">
-                    <div class="ann-preview-wrap">
-                        <div class="ann-preview-layout">
-                            <div class="ann-preview-img-col">
-                                <div class="ann-preview-img-wrap">
-                                    <div class="ann-preview-img-placeholder" id="ann-preview-placeholder">🖼</div>
-                                    <img id="ann-preview-img" class="ann-preview-img" src="" alt="" hidden>
-                                </div>
-                            </div>
-                            <div class="ann-preview-body">
-                                <a id="ann-preview-title" class="simple-text ann-preview-title">{{ announcement.title }}</a>
-                            </div>
-                        </div>
-                        <div id="ann-preview-desc" class="ann-preview-desc">{{ announcement.description }}</div>
+
+            <div class="ann-detail-hero">
+                <div class="ann-detail-img-col">
+                    <div class="ann-preview-img-wrap">
+                        <div class="ann-preview-img-placeholder" id="ann-preview-placeholder">🖼</div>
+                        <img id="ann-preview-img" class="ann-preview-img" src="" alt="" hidden>
                     </div>
                 </div>
+                <div class="ann-detail-info-col">
+                    <h1 id="ann-preview-title" class="ann-detail-title">{{ announcement.title }}</h1>
+                    <span class="ann-author-chip" style="cursor:default;">
+                        {% if announcement.author.profile.avatar %}
+                            <img src="{{ announcement.author.profile.avatar.url }}"
+                                 class="ann-author-chip-avatar" alt="{{ announcement.author.username }}">
+                        {% else %}
+                            <img src="{% static 'images/default-avatar.jpg' %}"
+                                 class="ann-author-chip-avatar" alt="{{ announcement.author.username }}">
+                        {% endif %}
+                        <div class="ann-author-chip-info">
+                            <span class="ann-author-chip-label"
+                                  data-lang-ru="Автор" data-lang-en="Author">Автор</span>
+                            <span class="ann-author-chip-name">{{ announcement.author.username }}</span>
+                        </div>
+                    </span>
+                </div>
             </div>
+
+            <div class="ann-desc-card">
+                <div class="ann-desc-card-header">
+                    <p class="ann-desc-card-label"
+                       data-lang-ru="Описание" data-lang-en="Description">Описание</p>
+                </div>
+                <div id="ann-preview-desc" class="ann-desc-card-body">{{ announcement.description }}</div>
+            </div>
+
         </div>
         <!-- ── END PREVIEW PANEL ── -->
 

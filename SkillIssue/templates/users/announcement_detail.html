@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skill Issue — {{ announcement.title }}</title>
     <script>
         (function() {
@@ -15,617 +16,450 @@
 <body>
     {% include 'users/header.html' %}
 
-    <div class="body-background">
-        <div class="profile-row-container" style="
-                flex-wrap: nowrap;
-                justify-content: flex-start;
-                align-items: stretch;
-                gap: 24px;
-                width: 100%;
-                padding: 24px 32px 16px;
-                box-sizing: border-box;
-        ">
-            <div style="
-                    flex: 0 1 55%;
-                    max-width: 55%;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-            ">
-                <div style="
-                        width: 100%;
-                        aspect-ratio: 16 / 9;
-                        overflow: hidden;
-                        border-radius: 12px;
-                        box-shadow: 0 6px 18px rgba(0,0,0,0.18);
-                        background: var(--bg-tertiary);
-                ">
+    <div class="ann-detail-wrapper">
+
+        <!-- ── Hero: image + info ── -->
+        <div class="ann-detail-hero">
+
+            <div class="ann-detail-img-col">
+                <div class="ann-detail-img-wrap">
                     {% if announcement.image %}
-                        <img src="{{ announcement.image.url }}" alt="{{ announcement.title }}"
-                             style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="{{ announcement.image.url }}" alt="{{ announcement.title }}">
                     {% else %}
-                        <img src="{% static 'images/default-announcement.png' %}" alt="{{ announcement.title }}"
-                             style="width: 100%; height: 100%; object-fit: cover;">
+                        <img src="{% static 'images/default-announcement.png' %}" alt="{{ announcement.title }}">
                     {% endif %}
                 </div>
             </div>
-            <div class="profile-column-container" style="
-                    flex: 1;
-                    justify-content: center;
-                    align-items: center;
-                    text-align: center;
-                    gap: 12px;
-                    padding: 8px 8px 8px 0;
-            ">
-                <a class="simple-text" style="
-                        font-size: 2rem;
-                        line-height: 2.2rem;
-                        margin-bottom: 4px;
-                        word-break: break-word;
-                ">{{ announcement.title }}</a>
-                <a class="simple-text" href="{% url 'profile_page' announcement.author.username %}" style="
-                        font-size: 1.25rem;
-                        color: var(--accent-color);
-                ">{{ announcement.author.username }}</a>
-            </div>
-        </div>
 
-        <div id="preview" class="preview-content" style="width: 95%; margin: auto; box-shadow: 0px 1px 3px #424242">
-            {{ announcement.description|default:"Описание отсутствует" }}
-        </div>
+            <div class="ann-detail-info-col">
+                <h1 class="ann-detail-title">{{ announcement.title }}</h1>
 
-        {% if user.is_authenticated and user == announcement.author %}
-        <form action="{% url 'edit_announcement' announcement.id %}" method="get" style="margin: 0; margin-left: auto; display: inline-block;">
-            <button class="profile-button" style="height: 40px; width: 200px; border:none; box-shadow: 0px 1px 3px #424242; margin-top: 20px;" data-lang-ru="редактировать" data-lang-en="edit">редактировать</button>
-        </form>
-        {% endif %}
-
-        {% if user.is_authenticated and user != announcement.author %}
-        <hr style="color: black; width: 96%; margin: 20px auto;">
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 30px;">
-            <a class="simple-text" style="font-size: 1.1rem; text-align: center;"
-               data-lang-ru="Заинтересовало? Напишите автору!"
-               data-lang-en="Interested? Write to the author!">
-                Заинтересовало? Напишите автору!
-            </a>
-            <div class="profile-row-container" style="gap: 16px; justify-content: center;">
-                <button id="write-message" class="profile-button"
-                        data-user-id="{{ announcement.author.id }}"
-                        data-username="{{ announcement.author.username }}"
-                        style="height: 40px; width: 200px; border:none; box-shadow: 0px 1px 3px #424242;"
-                        data-lang-ru="Написать в чат" data-lang-en="Write to chat">Написать в чат</button>
-
-                <button id="add-favorite"
-                        data-announcement-id="{{ announcement.id }}"
-                        class="favorite-btn {% if is_favorited %}favorite-btn--active{% endif %}"
-                        data-lang-ru="{% if is_favorited %}★ В избранном{% else %}☆ Добавить в избранное{% endif %}"
-                        data-lang-en="{% if is_favorited %}★ In favorites{% else %}☆ Add to favorites{% endif %}">
-                    {% if is_favorited %}★ В избранном{% else %}☆ Добавить в избранное{% endif %}
-                </button>
-            </div>
-        </div>
-        {% endif %}
-
-        <hr style="width: 95%;">
-        <a class="simple-text" style="line-height: 20px; padding-bottom: 20px;" data-lang-ru="Комментарии к объявлению" data-lang-en="Comments on the announcement">Комментарии к объявлению</a>
-
-        <!-- Блок комментариев -->
-        <div id="comments-container" class="profile-column-container" style="gap: 20px;">
-            {% for comment in comments %}
-            <div class="profile-column-container comment-block"
-                 data-comment-id="{{ comment.id }}"
-                 style="justify-content: left; padding: 10px 20px; background-color: var(--bg-primary); border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto">
-                <div class="profile-row-container" style="gap: 5px; justify-content: flex-start;">
-                    {% if comment.author.profile.avatar %}
-                        <img src="{{ comment.author.profile.avatar.url }}" class="rec_avatar" alt="{{ comment.author.username }}">
+                <a class="ann-author-chip"
+                   href="{% url 'profile_page' announcement.author.username %}">
+                    {% if announcement.author.profile.avatar %}
+                        <img src="{{ announcement.author.profile.avatar.url }}"
+                             class="ann-author-chip-avatar"
+                             alt="{{ announcement.author.username }}">
                     {% else %}
-                        <img src="{% static 'images/default-avatar.jpg' %}" class="rec_avatar" alt="{{ comment.author.username }}">
+                        <img src="{% static 'images/default-avatar.jpg' %}"
+                             class="ann-author-chip-avatar"
+                             alt="{{ announcement.author.username }}">
                     {% endif %}
-                    <div class="profile-column-container">
-                        <a href="{% url 'profile_page' comment.author.username %}"
-                           class="simple-text"
-                           style="text-align: left; font-size: 1rem; margin-top: auto; margin-bottom: auto; padding-left: 10px">
-                            {{ comment.author.username }}
-                        </a>
-                        <a class="simple-text comment-date" style="text-align: left; font-size: 0.8rem; margin-top: auto; margin-bottom: auto; padding-left: 10px">
-                            {{ comment.created_at|date:"d.m.Y H:i" }}
-                            {% if comment.is_edited %}
-                            <span class="edited-label comment-edited" style="font-style: italic;">(редактировано)</span>
-                            {% endif %}
-                        </a>
+                    <div class="ann-author-chip-info">
+                        <span class="ann-author-chip-label"
+                              data-lang-ru="Автор" data-lang-en="Author">Автор</span>
+                        <span class="ann-author-chip-name">{{ announcement.author.username }}</span>
+                    </div>
+                </a>
+
+                {% if user.is_authenticated and user != announcement.author %}
+                <div class="ann-cta-section">
+                    <div class="ann-detail-divider"></div>
+                    <p class="ann-cta-headline"
+                       data-lang-ru="Заинтересовало? Напишите автору!"
+                       data-lang-en="Interested? Write to the author!">Заинтересовало? Напишите автору!</p>
+                    <div class="ann-cta-buttons">
+                        <button id="write-message"
+                                class="ann-cta-btn"
+                                data-user-id="{{ announcement.author.id }}"
+                                data-username="{{ announcement.author.username }}"
+                                data-lang-ru="Написать в чат"
+                                data-lang-en="Write to chat">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            Написать в чат
+                        </button>
+                        <button id="add-favorite"
+                                data-announcement-id="{{ announcement.id }}"
+                                class="favorite-btn {% if is_favorited %}favorite-btn--active{% endif %}"
+                                data-lang-ru="{% if is_favorited %}★ В избранном{% else %}☆ В избранное{% endif %}"
+                                data-lang-en="{% if is_favorited %}★ In favorites{% else %}☆ Favorite{% endif %}">
+                            {% if is_favorited %}★ В избранном{% else %}☆ В избранное{% endif %}
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if user.is_authenticated and user == announcement.author %}
+                <form action="{% url 'edit_announcement' announcement.id %}" method="get"
+                      style="margin:0; margin-top:auto;">
+                    <button class="ann-edit-btn" type="submit">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        <span data-lang-ru="редактировать" data-lang-en="edit">редактировать</span>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- ── Description ── -->
+        <div class="ann-desc-card">
+            <div class="ann-desc-card-header">
+                <p class="ann-desc-card-label"
+                   data-lang-ru="Описание" data-lang-en="Description">Описание</p>
+            </div>
+            <div class="ann-desc-card-body">{{ announcement.description|default:"Описание отсутствует" }}</div>
+        </div>
+
+        <!-- ── Comments ── -->
+        <div class="ann-comments-card">
+            <p class="ann-comments-title"
+               data-lang-ru="Комментарии к объявлению"
+               data-lang-en="Comments on the announcement">Комментарии к объявлению</p>
+
+            <div id="comments-container" class="ann-comments-list">
+                {% for comment in comments %}
+                <div class="ann-comment-block comment-block"
+                     data-comment-id="{{ comment.id }}">
+
+                    <div class="ann-comment-header">
+                        {% if comment.author.profile.avatar %}
+                            <img src="{{ comment.author.profile.avatar.url }}"
+                                 class="rec_avatar" alt="{{ comment.author.username }}">
+                        {% else %}
+                            <img src="{% static 'images/default-avatar.jpg' %}"
+                                 class="rec_avatar" alt="{{ comment.author.username }}">
+                        {% endif %}
+
+                        <div class="ann-comment-meta">
+                            <a href="{% url 'profile_page' comment.author.username %}"
+                               class="ann-comment-author">{{ comment.author.username }}</a>
+                            <span class="ann-comment-date comment-date">
+                                {{ comment.created_at|date:"d.m.Y H:i" }}
+                                {% if comment.is_edited %}
+                                <span class="edited-label ann-comment-edited">(редактировано)</span>
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        {% if comment.author == user %}
+                        <div class="p-review-actions">
+                            <button class="p-icon-btn edit-comment-btn"
+                                    data-comment-id="{{ comment.id }}"
+                                    data-comment-content="{{ comment.content|escapejs }}"
+                                    data-lang-ru-title="Редактировать"
+                                    data-lang-en-title="Edit"
+                                    title="Редактировать">✎</button>
+                            <button class="p-icon-btn danger delete-comment-btn"
+                                    data-comment-id="{{ comment.id }}"
+                                    data-lang-ru-title="Удалить"
+                                    data-lang-en-title="Delete"
+                                    title="Удалить">🗑</button>
+                        </div>
+                        {% endif %}
                     </div>
 
-                    {% if comment.author == user %}
-                        <button class="profile-button edit-comment-btn"
-                                data-comment-id="{{ comment.id }}"
-                                data-comment-content="{{ comment.content|escapejs }}"
-                                style="margin-left: auto; height: 30px; min-width: auto; padding: 0 10px;"
-                                data-lang-ru-title="Редактировать"
-                                data-lang-en-title="Edit"
-                                title="Редактировать">✎</button>
-                        <button class="profile-button delete-comment-btn"
-                                data-comment-id="{{ comment.id }}"
-                                style="margin-left: 5px; height: 30px; background-color: #FF6347; color: white; min-width: auto; padding: 0 10px"
-                                data-lang-ru-title="Удалить"
-                                data-lang-en-title="Delete"
-                                title="Удалить">🗑</button>
-                    {% endif %}
+                    <p class="ann-comment-body comment-content">{{ comment.content }}</p>
+
+                    <div class="review-rating-container"
+                         data-comment-id="{{ comment.id }}"
+                         style="display:flex;gap:8px;margin-top:10px;">
+                        {% if user.is_authenticated and user != comment.author %}
+                            <button class="review-rate-btn rate-like {% if comment.id in user_liked %}active{% endif %}"
+                                    data-type="like" title="Нравится">
+                                👍 <span class="rate-count">{{ comment.likes_count|default:0 }}</span>
+                            </button>
+                            <button class="review-rate-btn rate-dislike {% if comment.id in user_disliked %}active{% endif %}"
+                                    data-type="dislike" title="Не нравится">
+                                👎 <span class="rate-count">{{ comment.dislikes_count|default:0 }}</span>
+                            </button>
+                        {% else %}
+                            <div class="review-stats-only">
+                                👍 <span class="stat-count">{{ comment.likes_count|default:0 }}</span>
+                                👎 <span class="stat-count">{{ comment.dislikes_count|default:0 }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-                <a class="simple-text comment-content" style="text-align: left; font-size: 1rem; padding-top: 5px; white-space: pre-wrap; color: var(--text-primary);">{{ comment.content }}</a>
-                <div class="review-rating-container" data-comment-id="{{ comment.id }}">
-                    {% if user.is_authenticated and user != comment.author %}
-                        <button class="review-rate-btn rate-like {% if comment.id in user_liked %}active{% endif %}" data-type="like" title="Нравится">
-                            👍 <span class="rate-count">{{ comment.likes_count|default:0 }}</span>
-                        </button>
-                        <button class="review-rate-btn rate-dislike {% if comment.id in user_disliked %}active{% endif %}" data-type="dislike" title="Не нравится">
-                            👎 <span class="rate-count">{{ comment.dislikes_count|default:0 }}</span>
-                        </button>
-                    {% else %}
-                        <div class="review-stats-only">
-                            👍 <span class="stat-count">{{ comment.likes_count|default:0 }}</span>
-                            👎 <span class="stat-count">{{ comment.dislikes_count|default:0 }}</span>
-                        </div>
-                    {% endif %}
-                </div>
+                {% empty %}
+                <div class="ann-empty-comments"
+                     data-lang-ru="Пока нет комментариев. Будьте первым!"
+                     data-lang-en="No comments yet. Be the first!">Пока нет комментариев. Будьте первым!</div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <div class="profile-column-container" style="justify-content: center; padding: 20px; background-color: var(--bg-primary); border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto">
-                <a class="simple-text" style="font-size: 1rem; color: var(--text-tertiary); text-align: center;" data-lang-ru="Пока нет комментариев. Будьте первым!" data-lang-en="No comments yet. Be the first!">Пока нет комментариев. Будьте первым!</a>
-            </div>
-            {% endfor %}
         </div>
 
-        <!-- Форма добавления/редактирования комментария -->
+        <!-- ── Comment form ── -->
         {% if user.is_authenticated and user != announcement.author %}
-        <hr style="color: black; width: 96%; margin: auto; margin-bottom: 20px; margin-top: 20px;">
-        <a class="simple-text" id="form-title" data-lang-ru="Напишите свой комментарий" data-lang-en="Write your comment">Напишите свой комментарий</a>
+        <div class="ann-form-card">
+            <p class="ann-form-title" id="form-title"
+               data-lang-ru="Напишите свой комментарий"
+               data-lang-en="Write your comment">Напишите свой комментарий</p>
 
-        <form id="comment-form" method="POST" class="profile-column-container" action="#" onsubmit="return false;">
-            {% csrf_token %}
-            <input type="hidden" id="comment-id-edit" name="comment_id" value="">
-            <textarea id="comment-text" name="content" class="textarea_profile" placeholder="Поделитесь своим мнением об этом объявлении..."
-                      data-placeholder-ru="Поделитесь своим мнением об этом объявлении..."
-                      data-placeholder-en="Share your opinion about this announcement..."></textarea>
-            <a id="error" hidden class="simple-text" style="font-size: 1rem; margin: 10px auto; margin-top: -10px; color: red"
-               data-lang-ru="Комментарий не может быть пустым!"
-               data-lang-en="Comment cannot be empty!">Комментарий не может быть пустым!</a>
+            <form id="comment-form" method="POST" action="#" onsubmit="return false;">
+                {% csrf_token %}
+                <input type="hidden" id="comment-id-edit" name="comment_id" value="">
+                <textarea id="comment-text" name="content"
+                          class="ann-form-textarea"
+                          placeholder="Поделитесь своим мнением об этом объявлении..."
+                          data-placeholder-ru="Поделитесь своим мнением об этом объявлении..."
+                          data-placeholder-en="Share your opinion about this announcement..."></textarea>
+                <p id="error" hidden class="ann-form-error"
+                   data-lang-ru="Комментарий не может быть пустым!"
+                   data-lang-en="Comment cannot be empty!">Комментарий не может быть пустым!</p>
+                <div class="ann-form-actions">
+                    <button id="response-btn" class="ann-submit-btn" type="submit"
+                            data-lang-ru="Отправить" data-lang-en="Send">Отправить</button>
+                </div>
+            </form>
+        </div>
 
-            <button id="response-btn" class="profile-button" style="width: 20%; margin-bottom: 20px; height: 40px; margin: auto; border: none; box-shadow: 0px 1px 3px #424242;" type="submit"
-                    data-lang-ru="Отправить" data-lang-en="Send">Отправить</button>
-        </form>
         {% elif not user.is_authenticated %}
-        <hr style="color: black; width: 96%; margin: auto; margin-bottom: 20px; margin-top: 20px;">
-        <div class="profile-column-container" style="justify-content: center; padding: 20px;">
-            <a class="simple-text" style="font-size: 1rem; color: #666; text-align: center;">
-                <span data-lang-ru="Войдите" data-lang-en="Log in">Войдите</span>, <span data-lang-ru="чтобы оставить комментарий" data-lang-en="to leave a comment">чтобы оставить комментарий</span>
-            </a>
+        <div class="ann-form-card">
+            <p class="ann-login-hint">
+                <span data-lang-ru="Войдите" data-lang-en="Log in">Войдите</span>,
+                <span data-lang-ru="чтобы оставить комментарий"
+                      data-lang-en="to leave a comment">чтобы оставить комментарий</span>
+            </p>
         </div>
         {% endif %}
+
     </div>
 
     {% include 'users/footer.html' %}
-
-    <!-- Чат -->
     {% include 'users/chat.html' %}
 
     <script src="{% static 'js/auth.js' %}"></script>
     <script src="{% static 'js/search.js' %}"></script>
     <script src="{% static 'js/toggle_language.js' %}"></script>
     <script src="{% static 'js/toggle_chat.js' %}"></script>
-    <script src="{% static 'js/toggle_language.js' %}"></script>
     <script src="{% static 'js/favorite_announce.js' %}"></script>
+    <script src="{% static 'js/theme.js' %}"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Функция для безопасного получения элемента
             function getElement(id) {
                 const element = document.getElementById(id);
-                if (!element) {
-                    console.warn(`Элемент с id "${id}" не найден`);
-                }
+                if (!element) console.warn(`Элемент с id "${id}" не найден`);
                 return element;
             }
-    
-            // Получаем элементы с проверкой
+
             const form = getElement('comment-form');
-            if (!form) {
-                console.log('Форма не найдена');
-                return;
-            }
-            
-            const textarea = getElement('comment-text');
-            const commentIdInput = getElement('comment-id-edit');
-            const errorEl = getElement('error');
-            const formTitle = getElement('form-title');
-            const submitBtn = getElement('response-btn');
-            const csrfTokenElement = document.querySelector('[name=csrfmiddlewaretoken]');
-    
-            // Если нет основных элементов, выходим
-            if (!textarea || !form || !csrfTokenElement) {
-                console.log('Форма комментариев не найдена на странице. Возможно, пользователь не авторизован или является автором объявления.');
-                return;
-            }
-    
-            const csrfToken = csrfTokenElement.value;
+            if (!form) return;
+
+            const textarea        = getElement('comment-text');
+            const commentIdInput  = getElement('comment-id-edit');
+            const errorEl         = getElement('error');
+            const formTitle       = getElement('form-title');
+            const submitBtn       = getElement('response-btn');
+            const csrfTokenEl     = document.querySelector('[name=csrfmiddlewaretoken]');
+
+            if (!textarea || !form || !csrfTokenEl) return;
+
+            const csrfToken      = csrfTokenEl.value;
             const announcementId = "{{ announcement.id }}";
-    
-            // Редактирование существующего комментария
+
+            /* ── Edit existing comment ── */
             document.querySelectorAll('.edit-comment-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const commentId = btn.dataset.commentId;
-                    const content = btn.dataset.commentContent;
-    
-                    textarea.value = content;
-                    if (commentIdInput) commentIdInput.value = commentId;
-    
+                    textarea.value = btn.dataset.commentContent;
+                    if (commentIdInput) commentIdInput.value = btn.dataset.commentId;
                     const lang = localStorage.getItem('lang') || 'RU';
                     if (submitBtn) submitBtn.textContent = lang === 'RU' ? "Сохранить изменения" : "Save changes";
                     if (formTitle) formTitle.textContent = lang === 'RU' ? "Редактировать комментарий" : "Edit comment";
                     textarea.focus();
                 });
             });
-    
-            // Удаление комментария - ИСПРАВЛЕННЫЙ КОД
-            document.querySelectorAll('.delete-comment-btn').forEach(btn => {
+
+            /* ── Delete comment ── */
+            function bindDeleteBtn(btn) {
                 btn.addEventListener('click', () => {
                     const commentId = btn.dataset.commentId;
                     const lang = localStorage.getItem('lang') || 'RU';
-                    const confirmMsg = lang === 'RU' ? "Вы уверены, что хотите удалить этот комментарий?" : "Are you sure you want to delete this comment?";
-                    if (!confirm(confirmMsg)) return;
-    
+                    if (!confirm(lang === 'RU' ? "Вы уверены, что хотите удалить этот комментарий?" : "Are you sure you want to delete this comment?")) return;
+
                     fetch(`/api/announcements/comments/${commentId}/delete/`, {
                         method: "DELETE",
-                        headers: {
-                            "X-CSRFToken": csrfToken,
-                            "Content-Type": "application/json"
-                        }
+                        headers: { "X-CSRFToken": csrfToken, "Content-Type": "application/json" }
                     }).then(res => {
-                        if (!res.ok) {
-                            return res.json().then(data => { 
-                                const errorMsg = data.error || data.detail || 'Неизвестная ошибка';
-                                throw new Error(errorMsg);
-                            });
-                        }
+                        if (!res.ok) return res.json().then(d => { throw new Error(d.error || d.detail || 'Неизвестная ошибка'); });
                         return res.json();
-                    })
-                    .then(data => {
-                        // Удаляем блок комментария со страницы
+                    }).then(() => {
                         const block = document.querySelector(`.comment-block[data-comment-id="${commentId}"]`);
-                        if (block) {
-                            block.remove();
-                            
-                            // Если комментариев не осталось, показываем сообщение
-                            const commentsContainer = document.getElementById('comments-container');
-                            const remainingComments = commentsContainer.querySelectorAll('.comment-block');
-                            if (remainingComments.length === 0) {
-                                commentsContainer.innerHTML = `
-                                    <div class="profile-column-container" style="justify-content: center; padding: 20px; background-color: ghostwhite; border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto">
-                                        <a class="simple-text" style="font-size: 1rem; color: #666; text-align: center;" data-lang-ru="Пока нет комментариев. Будьте первым!" data-lang-en="No comments yet. Be the first!">Пока нет комментариев. Будьте первым!</a>
-                                    </div>
-                                `;
-                            }
+                        if (block) block.remove();
+                        const container = document.getElementById('comments-container');
+                        if (container && container.querySelectorAll('.comment-block').length === 0) {
+                            const lang2 = localStorage.getItem('lang') || 'RU';
+                            container.innerHTML = `<div class="ann-empty-comments">${lang2 === 'RU' ? 'Пока нет комментариев. Будьте первым!' : 'No comments yet. Be the first!'}</div>`;
                         }
-                    })
-                    .catch(error => {
-                        const errorMsg = localStorage.getItem('lang') === 'RU' 
-                            ? 'Ошибка при удалении комментария: ' 
-                            : 'Error deleting comment: ';
-                        alert(errorMsg + error.message);
-                    });
-                }); // Закрытие обработчика события
-            });
-    
-            // Отправка формы комментария
+                    }).catch(err => alert((localStorage.getItem('lang') === 'RU' ? 'Ошибка: ' : 'Error: ') + err.message));
+                });
+            }
+
+            document.querySelectorAll('.delete-comment-btn').forEach(bindDeleteBtn);
+
+            /* ── Submit form ── */
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                console.log('Форма отправлена!', e);
-    
-                const commentContent = textarea.value.trim();
-                
-                if (!commentContent) {
-                    console.log('Комментарий пустой, показываем ошибку');
-                    if (errorEl) errorEl.hidden = false;
-                    return;
-                }
+                const content = textarea.value.trim();
+                if (!content) { if (errorEl) errorEl.hidden = false; return; }
                 if (errorEl) errorEl.hidden = true;
-    
+
                 const commentId = commentIdInput ? commentIdInput.value : "";
-                const isUpdate = commentId !== "";
-                console.log('Режим:', isUpdate ? 'Обновление' : 'Создание', 'ID комментария:', commentId);
-    
-                const url = isUpdate
-                    ? `/api/announcements/comments/${commentId}/update/`
-                    : `/api/announcements/comments/create/`;
-    
-                const method = isUpdate ? "PUT" : "POST";
-                console.log('Отправка запроса:', method, url);
-    
+                const isUpdate  = commentId !== "";
+                const url       = isUpdate ? `/api/announcements/comments/${commentId}/update/` : `/api/announcements/comments/create/`;
+
                 fetch(url, {
-                    method: method,
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": csrfToken
-                    },
-                    body: JSON.stringify({
-                        announcement_id: announcementId,
-                        content: commentContent
-                    })
+                    method: isUpdate ? "PUT" : "POST",
+                    headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
+                    body: JSON.stringify({ announcement_id: announcementId, content })
                 }).then(res => {
-                    if (!res.ok) {
-                        return res.json().then(data => { 
-                            const errorMsg = data.error || data.detail || 'Неизвестная ошибка';
-                            throw new Error(errorMsg);
-                        }).catch(err => {
-                            // Если не удалось распарсить JSON, используем текст ошибки
-                            if (err instanceof SyntaxError) {
-                                throw new Error(`Ошибка сервера: ${res.status} ${res.statusText}`);
-                            }
-                            throw err;
-                        });
-                    }
+                    if (!res.ok) return res.json().then(d => { throw new Error(d.error || d.detail || 'Неизвестная ошибка'); });
                     return res.json();
-                })
-                .then(data => {
+                }).then(data => {
                     if (isUpdate) {
-                        // Обновляем текст комментария на странице
                         const block = document.querySelector(`.comment-block[data-comment-id="${commentId}"]`);
                         if (block) {
-                            const contentElement = block.querySelector('.comment-content');
-                            if (contentElement) {
-                                contentElement.textContent = commentContent;
-                            }
-    
-                            // Показываем метку "редактировано"
-                            const editedLabel = block.querySelector('.edited-label');
-                            if (editedLabel) {
-                                editedLabel.style.display = 'inline';
+                            const contentEl = block.querySelector('.comment-content');
+                            if (contentEl) contentEl.textContent = content;
+
+                            const existingLabel = block.querySelector('.edited-label');
+                            if (existingLabel) {
+                                existingLabel.style.display = 'inline';
                             } else {
-                                // Создаем метку если её нет
-                                const dateElement = block.querySelector('.simple-text[style*="font-size: 0.8rem"]');
-                                if (dateElement) {
+                                const dateEl = block.querySelector('.comment-date');
+                                if (dateEl) {
                                     const lang = localStorage.getItem('lang') || 'RU';
-                                    const editedText = lang === 'RU' ? '(редактировано)' : '(edited)';
-                                    dateElement.innerHTML += ` <span class="edited-label" style="color: #666; font-style: italic;">${editedText}</span>`;
+                                    dateEl.innerHTML += ` <span class="edited-label ann-comment-edited">${lang === 'RU' ? '(редактировано)' : '(edited)'}</span>`;
                                 }
                             }
                         }
-    
-                        // Сбрасываем форму
-                        textarea.value = "";
-                        if (commentIdInput) commentIdInput.value = "";
-                        const lang = localStorage.getItem('lang') || 'RU';
-                        if (submitBtn) submitBtn.textContent = lang === 'RU' ? "Отправить" : "Send";
-                        if (formTitle) formTitle.textContent = lang === 'RU' ? "Напишите свой комментарий" : "Write your comment";
                     } else {
-                        // Добавляем новый комментарий в DOM без перезагрузки страницы
-                        const commentsContainer = document.getElementById('comments-container');
-                        if (!commentsContainer) {
-                            location.reload();
-                            return;
-                        }
-                        
-                        // Удаляем сообщение "Пока нет комментариев"
-                        const noCommentsMsg = commentsContainer.querySelector('.profile-column-container:not(.comment-block)');
-                        if (noCommentsMsg && (noCommentsMsg.textContent.includes('Пока нет комментариев') || noCommentsMsg.textContent.includes('No comments yet'))) {
-                            noCommentsMsg.remove();
-                        }
-                        
-                        // Экранирование HTML
-                        function escapeHtml(text) {
-                            const div = document.createElement('div');
-                            div.textContent = text;
-                            return div.innerHTML;
-                        }
-                        
-                        const currentUser = "{{ user.username|default:'' }}";
-                        const isAuthor = data.author === currentUser;
-                        
-                        const avatarUrl = data.author_avatar || "{% static 'images/default-avatar.jpg' %}";
-                        const escapedAuthor = escapeHtml(data.author);
-                        const escapedContent = escapeHtml(data.content);
-                        const escapedCreatedAt = escapeHtml(data.created_at || new Date().toLocaleString('ru-RU'));
-                        
-                        const newComment = document.createElement('div');
-                        newComment.className = 'profile-column-container comment-block';
-                        newComment.dataset.commentId = data.id;
-                        newComment.style.cssText = 'justify-content: left; padding: 10px 20px; background-color: ghostwhite; border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto';
-                        
+                        const container = document.getElementById('comments-container');
+                        if (!container) { location.reload(); return; }
+
+                        /* Remove empty-state placeholder */
+                        const emptyEl = container.querySelector('.ann-empty-comments');
+                        if (emptyEl) emptyEl.remove();
+
+                        function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+                        const avatarUrl       = data.author_avatar || "{% static 'images/default-avatar.jpg' %}";
+                        const escapedAuthor   = escapeHtml(data.author);
+                        const escapedContent  = escapeHtml(data.content);
+                        const escapedDate     = escapeHtml(data.created_at || new Date().toLocaleString('ru-RU'));
+                        const currentUser     = "{{ user.username|default:'' }}";
+                        const isAuthor        = data.author === currentUser;
+
                         let buttonsHtml = '';
                         if (isAuthor) {
+                            const safeContent = escapedContent.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                             buttonsHtml = `
-                                <button class="profile-button edit-comment-btn"
-                                        data-comment-id="${data.id}"
-                                        data-comment-content="${escapedContent.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
-                                        style="margin-left: auto; height: 30px; min-width: auto; padding: 0 10px;"
-                                        title="Редактировать">✎</button>
-                                <button class="profile-button delete-comment-btn"
-                                        data-comment-id="${data.id}"
-                                        style="margin-left: 5px; height: 30px; background-color: #FF6347; color: white; min-width: auto; padding: 0 10px"
-                                        title="Удалить">🗑</button>
-                            `;
+                                <div class="p-review-actions">
+                                    <button class="p-icon-btn edit-comment-btn"
+                                            data-comment-id="${data.id}"
+                                            data-comment-content="${safeContent}"
+                                            title="Редактировать">✎</button>
+                                    <button class="p-icon-btn danger delete-comment-btn"
+                                            data-comment-id="${data.id}"
+                                            title="Удалить">🗑</button>
+                                </div>`;
                         }
-                        
+
                         const defaultAvatar = "{% static 'images/default-avatar.jpg' %}";
+                        const newComment = document.createElement('div');
+                        newComment.className = 'ann-comment-block comment-block';
+                        newComment.dataset.commentId = data.id;
                         newComment.innerHTML = `
-                            <div class="profile-row-container" style="gap: 5px; justify-content: flex-start;">
-                                <img src="${escapeHtml(avatarUrl)}" class="rec_avatar" alt="${escapedAuthor}">
-                                <div class="profile-column-container">
-                                    <a href="/users/${escapedAuthor}/" class="simple-text" style="text-align: left; font-size: 1rem; margin-top: auto; margin-bottom: auto; padding-left: 10px">${escapedAuthor}</a>
-                                    <a class="simple-text comment-date" style="text-align: left; font-size: 0.8rem; margin-top: auto; margin-bottom: auto; padding-left: 10px">${escapedCreatedAt}</a>
+                            <div class="ann-comment-header">
+                                <img src="${escapeHtml(avatarUrl)}" class="rec_avatar" alt="${escapedAuthor}"
+                                     onerror="this.src='${defaultAvatar}'">
+                                <div class="ann-comment-meta">
+                                    <a href="/users/${escapedAuthor}/" class="ann-comment-author">${escapedAuthor}</a>
+                                    <span class="ann-comment-date comment-date">${escapedDate}</span>
                                 </div>
                                 ${buttonsHtml}
                             </div>
-                            <a class="simple-text comment-content" style="text-align: left; font-size: 1rem; padding-top: 5px; white-space: pre-wrap; color: var(--text-primary);">${escapedContent}</a>
-                        `;
-                        
-                        // Добавляем обработчик ошибки загрузки изображения
-                        const img = newComment.querySelector('img');
-                        if (img) {
-                            img.addEventListener('error', function() {
-                                this.src = defaultAvatar;
-                            });
-                        }
-                        
-                        // Добавляем комментарий в начало списка
-                        commentsContainer.insertBefore(newComment, commentsContainer.firstChild);
-                        
-                        // Добавляем обработчики для новых кнопок
+                            <p class="ann-comment-body comment-content">${escapedContent}</p>`;
+
                         if (isAuthor) {
-                            const editBtn = newComment.querySelector('.edit-comment-btn');
-                            const deleteBtn = newComment.querySelector('.delete-comment-btn');
-                            
-                            if (editBtn) {
-                                editBtn.addEventListener('click', () => {
-                                    const commentId = editBtn.dataset.commentId;
-                                    const content = editBtn.dataset.commentContent;
-                                    textarea.value = content;
-                                    if (commentIdInput) commentIdInput.value = commentId;
-                                    const lang = localStorage.getItem('lang') || 'RU';
-                                    if (submitBtn) submitBtn.textContent = lang === 'RU' ? "Сохранить изменения" : "Save changes";
-                                    if (formTitle) formTitle.textContent = lang === 'RU' ? "Редактировать комментарий" : "Edit comment";
-                                    textarea.focus();
-                                });
-                            }
-                            
-                            if (deleteBtn) {
-                                deleteBtn.addEventListener('click', () => {
-                                    const commentId = deleteBtn.dataset.commentId;
-                                    const lang = localStorage.getItem('lang') || 'RU';
-                                    const confirmMsg = lang === 'RU' ? "Вы уверены, что хотите удалить этот комментарий?" : "Are you sure you want to delete this comment?";
-                                    if (!confirm(confirmMsg)) return;
-                                    
-                                    fetch(`/api/announcements/comments/${commentId}/delete/`, {
-                                        method: "DELETE",
-                                        headers: {
-                                            "X-CSRFToken": csrfToken,
-                                            "Content-Type": "application/json"
-                                        }
-                                    }).then(res => {
-                                        if (!res.ok) {
-                                            return res.json().then(data => { 
-                                                const errorMsg = data.error || data.detail || 'Неизвестная ошибка';
-                                                throw new Error(errorMsg);
-                                            }).catch(err => {
-                                                if (err instanceof SyntaxError) {
-                                                    throw new Error(`Ошибка сервера: ${res.status} ${res.statusText}`);
-                                                }
-                                                throw err;
-                                            });
-                                        }
-                                        return res.json();
-                                    })
-                                    .then(() => {
-                                        const block = document.querySelector(`.comment-block[data-comment-id="${commentId}"]`);
-                                        if (block) {
-                                            block.remove();
-                                        }
-                                        // Если комментариев не осталось, показываем сообщение
-                                        const remainingComments = commentsContainer.querySelectorAll('.comment-block');
-                                        if (remainingComments.length === 0) {
-                                            commentsContainer.innerHTML = `
-                                                <div class="profile-column-container" style="justify-content: center; padding: 20px; background-color: ghostwhite; border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto">
-                                                    <a class="simple-text" style="font-size: 1rem; color: #666; text-align: center;" data-lang-ru="Пока нет комментариев. Будьте первым!" data-lang-en="No comments yet. Be the first!">Пока нет комментариев. Будьте первым!</a>
-                                                </div>
-                                            `;
-                                        }
-                                    })
-                                    .catch(error => {
-                                        const errorMsg = localStorage.getItem('lang') === 'RU' 
-                                            ? 'Ошибка при удалении комментария: ' 
-                                            : 'Error deleting comment: ';
-                                        alert(errorMsg + error.message);
-                                    });
-                                });
-                            }
+                            newComment.querySelector('.edit-comment-btn')?.addEventListener('click', () => {
+                                textarea.value = newComment.querySelector('.comment-content').textContent;
+                                if (commentIdInput) commentIdInput.value = data.id;
+                                const lang = localStorage.getItem('lang') || 'RU';
+                                if (submitBtn) submitBtn.textContent = lang === 'RU' ? "Сохранить изменения" : "Save changes";
+                                if (formTitle) formTitle.textContent = lang === 'RU' ? "Редактировать комментарий" : "Edit comment";
+                                textarea.focus();
+                            });
+                            bindDeleteBtn(newComment.querySelector('.delete-comment-btn'));
                         }
-                        
-                        // Сбрасываем форму
-                        textarea.value = "";
-                        if (commentIdInput) commentIdInput.value = "";
-                        const lang = localStorage.getItem('lang') || 'RU';
-                        if (submitBtn) submitBtn.textContent = lang === 'RU' ? "Отправить" : "Send";
-                        if (formTitle) formTitle.textContent = lang === 'RU' ? "Напишите свой комментарий" : "Write your comment";
+
+                        container.insertBefore(newComment, container.firstChild);
                     }
-                })
-                .catch(error => {
-                    const errorMsg = localStorage.getItem('lang') === 'RU' 
-                        ? 'Ошибка при сохранении комментария: ' 
-                        : 'Error saving comment: ';
-                    alert(errorMsg + error.message);
-                });
+
+                    /* Reset form */
+                    textarea.value = "";
+                    if (commentIdInput) commentIdInput.value = "";
+                    const lang = localStorage.getItem('lang') || 'RU';
+                    if (submitBtn) submitBtn.textContent = lang === 'RU' ? "Отправить" : "Send";
+                    if (formTitle) formTitle.textContent = lang === 'RU' ? "Напишите свой комментарий" : "Write your comment";
+
+                }).catch(err => alert((localStorage.getItem('lang') === 'RU' ? 'Ошибка: ' : 'Error: ') + err.message));
             });
-    
-            // Скрытие ошибки при вводе
+
             textarea.addEventListener('input', function() {
                 if (errorEl) errorEl.hidden = true;
-            });
-    
-            // Автоматическое увеличение высоты textarea
-            textarea.addEventListener('input', function() {
                 this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
+                this.style.height = this.scrollHeight + 'px';
             });
-    
-            // Поддержка смены языка после загрузки
+
             window.addEventListener('languageChanged', () => {
                 const lang = localStorage.getItem('lang') || 'RU';
                 const isRu = lang === 'RU';
-    
                 if (formTitle) formTitle.textContent = isRu ? "Напишите свой комментарий" : "Write your comment";
-                if (errorEl) errorEl.textContent = isRu ? "Комментарий не может быть пустым!" : "Comment cannot be empty!";
-                if (submitBtn) submitBtn.textContent = isRu ? "Отправить" : "Send";
+                if (errorEl)   errorEl.textContent   = isRu ? "Комментарий не может быть пустым!" : "Comment cannot be empty!";
+                if (submitBtn) submitBtn.textContent  = isRu ? "Отправить" : "Send";
             });
         });
     </script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // Надёжное получение CSRF токена (из формы или cookie)
-    function getCsrfToken() {
-        const input = document.querySelector('[name=csrfmiddlewaretoken]');
-        if (input) return input.value;
 
-        const match = document.cookie.match(/csrftoken=([^;]+)/);
-        return match ? match[1] : '';
-    }
-    const csrfToken = getCsrfToken();
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        function getCsrfToken() {
+            const input = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (input) return input.value;
+            const match = document.cookie.match(/csrftoken=([^;]+)/);
+            return match ? match[1] : '';
+        }
+        const csrfToken = getCsrfToken();
 
-    document.querySelectorAll('[data-comment-id] .review-rate-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const container = btn.closest('[data-comment-id]');
-            const commentId = container.dataset.commentId;
-            const isLike = btn.dataset.type === 'like';
-
-            try {
-                const response = await fetch(`/api/announcements/comments/${commentId}/rate/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify({ is_like: isLike })
-                });
-                const data = await response.json();
-
-                if (response.ok) {
-                    container.querySelector('.rate-like .rate-count').textContent = data.likes;
-                    container.querySelector('.rate-dislike .rate-count').textContent = data.dislikes;
-
-                    const likeBtn = container.querySelector('.rate-like');
-                    const dislikeBtn = container.querySelector('.rate-dislike');
-                    likeBtn.classList.toggle('active', data.user_action === true);
-                    dislikeBtn.classList.toggle('active', data.user_action === false);
-                } else {
-                    alert(data.error || 'Ошибка при оценке комментария');
+        document.querySelectorAll('[data-comment-id] .review-rate-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const container = btn.closest('[data-comment-id]');
+                const commentId = container.dataset.commentId;
+                const isLike    = btn.dataset.type === 'like';
+                try {
+                    const response = await fetch(`/api/announcements/comments/${commentId}/rate/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                        body: JSON.stringify({ is_like: isLike })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        container.querySelector('.rate-like .rate-count').textContent  = data.likes;
+                        container.querySelector('.rate-dislike .rate-count').textContent = data.dislikes;
+                        container.querySelector('.rate-like').classList.toggle('active',    data.user_action === true);
+                        container.querySelector('.rate-dislike').classList.toggle('active', data.user_action === false);
+                    } else {
+                        alert(data.error || 'Ошибка при оценке комментария');
+                    }
+                } catch (err) {
+                    console.error('Ошибка сети:', err);
+                    alert('Произошла ошибка сети');
                 }
-            } catch (err) {
-                console.error('Ошибка сети:', err);
-                alert('Произошла ошибка сети');
-            }
+            });
         });
     });
-});
-</script>
-<script src="{% static 'js/auth.js' %}"></script>
-<script src="{% static 'js/theme.js' %}"></script>
+    </script>
 </body>
 </html>
