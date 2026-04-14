@@ -10,6 +10,7 @@ from django.middleware.csrf import get_token
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework import status, permissions, generics, viewsets, serializers
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -180,6 +181,7 @@ class GuideListView(ListView):
 
 
 class GuideReviewRatingView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
@@ -193,7 +195,12 @@ class GuideReviewRatingView(APIView):
     )
     def post(self, request, review_id):
         review = get_object_or_404(Review, id=review_id)
-        if review.author == request.user:
+        print(f"Review ID: {review_id}")
+        print(f"Review author: {review.author.username} (ID: {review.author.id})")
+        print(f"Current user: {request.user.username} (ID: {request.user.id})")
+        print(f"Guide author: {review.guide.author.username} (ID: {review.guide.author.id})")
+        print(f"Is review author == current user: {review.author == request.user}")
+        if review.author.id == request.user.id:
             return Response({"error": "Нельзя оценивать свой отзыв"}, status=status.HTTP_403_FORBIDDEN)
 
         is_like = request.data.get('is_like')
@@ -864,6 +871,7 @@ class UserProfileDetailView(generics.RetrieveAPIView):
 
 
 class ProfileReviewRatingView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
@@ -1476,6 +1484,7 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
 
 
 class AnnouncementCommentRatingView(APIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
