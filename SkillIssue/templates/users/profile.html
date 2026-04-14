@@ -209,6 +209,21 @@
                           style="font-size:0.9rem; padding-top:10px; text-align:left; display:block; color:var(--text-secondary);">
                         {{ review.comment }}
                     </span>
+                    <div class="review-rating-container" data-review-id="{{ review.id }}">
+                        {% if user.is_authenticated and user != review.reviewer %}
+                            <button class="review-rate-btn rate-like {% if review.id in user_liked %}active{% endif %}" data-type="like" title="Нравится">
+                                👍 <span class="rate-count">{{ review.likes_count|default:0 }}</span>
+                            </button>
+                            <button class="review-rate-btn rate-dislike {% if review.id in user_disliked %}active{% endif %}" data-type="dislike" title="Не нравится">
+                                👎 <span class="rate-count">{{ review.dislikes_count|default:0 }}</span>
+                            </button>
+                        {% else %}
+                            <div class="review-stats-only">
+                                👍 <span class="stat-count">{{ review.likes_count|default:0 }}</span>
+                                👎 <span class="stat-count">{{ review.dislikes_count|default:0 }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
 
                 {% empty %}
@@ -577,6 +592,53 @@ document.addEventListener('DOMContentLoaded', function() {
 
     bioEl.innerHTML = markdownToHtml(raw);
 })();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    function getCsrfToken() {
+        const input = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (input) return input.value;
+        const match = document.cookie.match(/csrftoken=([^;]+)/);
+        return match ? match[1] : '';
+    }
+    const csrfToken = getCsrfToken();
+
+    document.querySelectorAll('[data-review-id] .review-rate-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const container = btn.closest('[data-review-id]');
+            const reviewId = container.dataset.reviewId;
+            const isLike = btn.dataset.type === 'like';
+
+            try {
+                const response = await fetch(`/api/profile/reviews/${reviewId}/rate/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ is_like: isLike })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    container.querySelector('.rate-like .rate-count').textContent = data.likes;
+                    container.querySelector('.rate-dislike .rate-count').textContent = data.dislikes;
+
+                    const likeBtn = container.querySelector('.rate-like');
+                    const dislikeBtn = container.querySelector('.rate-dislike');
+                    likeBtn.classList.toggle('active', data.user_action === true);
+                    dislikeBtn.classList.toggle('active', data.user_action === false);
+                } else {
+                    alert(data.error || 'Ошибка при оценке отзыва');
+                }
+            } catch (err) {
+                console.error('Ошибка сети:', err);
+                alert('Произошла ошибка сети');
+            }
+        });
+    });
+});
 </script>
 </body>
 </html>
