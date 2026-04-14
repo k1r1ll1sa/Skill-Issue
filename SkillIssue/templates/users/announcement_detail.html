@@ -152,6 +152,21 @@
                     {% endif %}
                 </div>
                 <a class="simple-text comment-content" style="text-align: left; font-size: 1rem; padding-top: 5px; white-space: pre-wrap; color: var(--text-primary);">{{ comment.content }}</a>
+                <div class="review-rating-container" data-comment-id="{{ comment.id }}">
+                    {% if user.is_authenticated and user != comment.author %}
+                        <button class="review-rate-btn rate-like {% if comment.id in user_liked %}active{% endif %}" data-type="like" title="Нравится">
+                            👍 <span class="rate-count">{{ comment.likes_count|default:0 }}</span>
+                        </button>
+                        <button class="review-rate-btn rate-dislike {% if comment.id in user_disliked %}active{% endif %}" data-type="dislike" title="Не нравится">
+                            👎 <span class="rate-count">{{ comment.dislikes_count|default:0 }}</span>
+                        </button>
+                    {% else %}
+                        <div class="review-stats-only">
+                            👍 <span class="stat-count">{{ comment.likes_count|default:0 }}</span>
+                            👎 <span class="stat-count">{{ comment.dislikes_count|default:0 }}</span>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
             {% empty %}
             <div class="profile-column-container" style="justify-content: center; padding: 20px; background-color: var(--bg-primary); border-radius: 5px; box-shadow: 0px 1px 2px; width: 75%; margin: auto">
@@ -561,6 +576,55 @@
             });
         });
     </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Надёжное получение CSRF токена (из формы или cookie)
+    function getCsrfToken() {
+        const input = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (input) return input.value;
+
+        const match = document.cookie.match(/csrftoken=([^;]+)/);
+        return match ? match[1] : '';
+    }
+    const csrfToken = getCsrfToken();
+
+    document.querySelectorAll('[data-comment-id] .review-rate-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const container = btn.closest('[data-comment-id]');
+            const commentId = container.dataset.commentId;
+            const isLike = btn.dataset.type === 'like';
+
+            try {
+                const response = await fetch(`/api/announcements/comments/${commentId}/rate/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ is_like: isLike })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    container.querySelector('.rate-like .rate-count').textContent = data.likes;
+                    container.querySelector('.rate-dislike .rate-count').textContent = data.dislikes;
+
+                    const likeBtn = container.querySelector('.rate-like');
+                    const dislikeBtn = container.querySelector('.rate-dislike');
+                    likeBtn.classList.toggle('active', data.user_action === true);
+                    dislikeBtn.classList.toggle('active', data.user_action === false);
+                } else {
+                    alert(data.error || 'Ошибка при оценке комментария');
+                }
+            } catch (err) {
+                console.error('Ошибка сети:', err);
+                alert('Произошла ошибка сети');
+            }
+        });
+    });
+});
+</script>
 <script src="{% static 'js/auth.js' %}"></script>
 <script src="{% static 'js/theme.js' %}"></script>
 </body>

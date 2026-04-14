@@ -2570,3 +2570,53 @@ svg.social-label-icon {
     border: 0;
 }
 @import url('./editor.css');
+
+/* Оценки отзывов (лайк/дизлайк) */
+.review-rating-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+}
+.review-rate-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-family: 'Cascadia Code', monospace;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.review-rate-btn:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-color);
+    transform: translateY(-1px);
+}
+.review-rate-btn:active {
+    transform: scale(0.97);
+}
+.review-rate-btn.active {
+    background: var(--accent-color);
+    color: #ffffff;
+    border-color: var(--accent-color);
+    box-shadow: 0 2px 6px var(--shadow-color);
+}
+.review-stats-only {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Cascadia Code', monospace;
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+    padding: 6px 12px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    border: 1px solid transparent;
+}

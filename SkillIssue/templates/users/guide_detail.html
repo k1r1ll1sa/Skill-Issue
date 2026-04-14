@@ -99,6 +99,21 @@
             </div>
 
             <a class="simple-text review-text" style="text-align: left; font-size:1rem; padding-top:5px;">{{ review.text }}</a>
+            <div class="review-rating-container" data-review-id="{{ review.id }}">
+            {% if user.is_authenticated and user != review.author %}
+                <button class="review-rate-btn rate-like {% if review.id in user_liked %}active{% endif %}" data-type="like" title="Нравится">
+                    👍 <span class="rate-count">{{ review.likes_count|default:0 }}</span>
+                </button>
+                <button class="review-rate-btn rate-dislike {% if review.id in user_disliked %}active{% endif %}" data-type="dislike" title="Не нравится">
+                    👎 <span class="rate-count">{{ review.dislikes_count|default:0 }}</span>
+                </button>
+            {% else %}
+                <div class="review-stats-only">
+                    👍 <span class="stat-count">{{ review.likes_count|default:0 }}</span>
+                    👎 <span class="stat-count">{{ review.dislikes_count|default:0 }}</span>
+                </div>
+            {% endif %}
+            </div>
         </div>
         {% empty %}
         <p class="simple-text" style="text-align:center;">Пока нет отзывов.</p>
@@ -285,5 +300,46 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="{% static 'js/toggle_language.js' %}"></script>
 <script src="{% static 'js/theme.js' %}"></script>
 <script src="{% static 'js/favorite_guide.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+    document.querySelectorAll('.review-rate-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const container = btn.closest('.review-rating-container');
+            const reviewId = container.dataset.reviewId;
+            const isLike = btn.dataset.type === 'like';
+
+            try {
+                const response = await fetch(`/api/reviews/${reviewId}/rate/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ is_like: isLike })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    container.querySelector('.rate-like .rate-count').textContent = data.likes;
+                    container.querySelector('.rate-dislike .rate-count').textContent = data.dislikes;
+
+                    const likeBtn = container.querySelector('.rate-like');
+                    const dislikeBtn = container.querySelector('.rate-dislike');
+                    likeBtn.classList.toggle('active', data.user_action === true);
+                    dislikeBtn.classList.toggle('active', data.user_action === false);
+                } else {
+                    alert(data.error || 'Ошибка при оценке отзыва');
+                }
+            } catch (err) {
+                console.error('Ошибка сети:', err);
+                alert('Произошла ошибка сети');
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>

@@ -6,9 +6,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from .views import (GuideRateAPIView, ReviewCreateView, create_announcement_view,
-    ReviewUpdateView, ReviewDeleteView, AnnouncementListView, GuideListView, ProfileCommentCreateView,
+                    ReviewUpdateView, ReviewDeleteView, AnnouncementListView, GuideListView, ProfileCommentCreateView,
                     ProfileCommentUpdateView, ProfileCommentDeleteView, PasswordResetConfirmView,
-                    PasswordResetRequestView, delete_account, ChangePasswordView, blocked_page)
+                    PasswordResetRequestView, delete_account, ChangePasswordView, blocked_page,
+                    GuideReviewRatingView, AnnouncementCommentRatingView, ProfileReviewRatingView)
 
 router = DefaultRouter()
 router.register(r'guides', views.GuideViewSet, basename='guides')
@@ -107,6 +108,11 @@ urlpatterns = [
 
     # --- Блокировка пользователя ---
     path("blocked/", blocked_page, name="blocked_page"),
+
+    # --- Отзывы ---
+    path('api/reviews/<int:review_id>/rate/', GuideReviewRatingView.as_view(), name='review-rate'),
+    path('api/announcements/comments/<int:comment_id>/rate/', AnnouncementCommentRatingView.as_view(), name='announcement-comment-rate'),
+path('api/profile/reviews/<int:review_id>/rate/', ProfileReviewRatingView.as_view(), name='profile-review-rate'),
 ]
 
 if settings.DEBUG:

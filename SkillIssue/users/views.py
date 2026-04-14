@@ -20,7 +20,7 @@ from rest_framework.decorators import api_view
 import markdown
 from rest_framework.parsers import MultiPartParser, FormParser
 from .daos import GuideDAO
-from django.db.models import Avg
+from django.db.models import Avg, Count
 from django.db.models import Q
 from django.utils.safestring import mark_safe
 from drf_yasg.utils import swagger_auto_schema
@@ -35,7 +35,8 @@ import string
 
 
 from .models import Profile, GuideRating, Review, Guide, ProfileReview, Announcement, AnnouncementComment, \
-    EmailVerificationCode, ChatMessage, UserActivity, FavoriteAnnouncement, FavoriteGuide, GuideComment
+    EmailVerificationCode, ChatMessage, UserActivity, FavoriteAnnouncement, FavoriteGuide, GuideComment, \
+    GuideReviewRating, AnnouncementCommentRating, ProfileReviewRating
 from .serializers import RegisterSerializer, UserProfileSerializer, ReviewSerializer, GuideSerializer, \
     AnnouncementSerializer, ChatMessageSerializer, ChatContactSerializer, ProfileCommentSerializer
 from .forms import GuideForm
@@ -75,8 +76,19 @@ def profile_page(request, username):
     profile = user_obj.profile
     guides = Guide.objects.filter(author=user_obj).order_by('-created_at')
     announcements = Announcement.objects.filter(author=user_obj).order_by('-created_at')
-    reviews = ProfileReview.objects.filter(profile=profile).order_by('-created_at')
     activities = UserActivity.objects.filter(user=user_obj).order_by('-created_at')[:20]
+    reviews = ProfileReview.objects.filter(profile=profile).select_related('reviewer', 'reviewer__profile').annotate(
+        likes_count=Count('ratings', filter=Q(ratings__is_like=True)),
+        dislikes_count=Count('ratings', filter=Q(ratings__is_like=False))
+    ).order_by("-created_at")
+
+    user_liked = set()
+    user_disliked = set()
+    if request.user.is_authenticated:
+        ratings = ProfileReviewRating.objects.filter(review__in=reviews, user=request.user)
+        for r in ratings:
+            if r.is_like: user_liked.add(r.review_id)
+            else: user_disliked.add(r.review_id)
 
     return render(request, "users/profile.html", {
         "username": username,
@@ -85,6 +97,8 @@ def profile_page(request, username):
         "reviews": reviews,
         "announcements": announcements,
         "activities": activities,
+        "user_liked": user_liked,
+        "user_disliked": user_disliked,
     })
 
 
@@ -163,6 +177,48 @@ class GuideListView(ListView):
             context['top_guides'] = Guide.objects.order_by('-rating')[:6]
 
         return context
+
+
+class GuideReviewRatingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Оценить отзыв лайком или дизлайком",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['is_like'],
+            properties={'is_like': openapi.Schema(type=openapi.TYPE_BOOLEAN)}
+        ),
+        tags=['Отзывы']
+    )
+    def post(self, request, review_id):
+        review = get_object_or_404(Review, id=review_id)
+        if review.author == request.user:
+            return Response({"error": "Нельзя оценивать свой отзыв"}, status=status.HTTP_403_FORBIDDEN)
+
+        is_like = request.data.get('is_like')
+        if is_like is None:
+            return Response({"error": "Не указан тип оценки"}, status=status.HTTP_400_BAD_REQUEST)
+
+        rating = GuideReviewRating.objects.filter(review=review, user=request.user).first()
+
+        if rating and rating.is_like == is_like:
+            rating.delete()
+            user_action = None
+        else:
+            GuideReviewRating.objects.update_or_create(
+                review=review, user=request.user, defaults={'is_like': is_like}
+            )
+            user_action = is_like
+
+        likes = review.ratings.filter(is_like=True).count()
+        dislikes = review.ratings.filter(is_like=False).count()
+
+        return Response({
+            'likes': likes,
+            'dislikes': dislikes,
+            'user_action': user_action
+        })
 
 
 class AnnouncementListView(ListView):
@@ -310,40 +366,65 @@ def guide_detail(request, pk):
 
     guide_content_html = mark_safe(html)
 
-    reviews = guide.reviews.select_related("author", "author__profile").order_by("-created_at")
+    reviews = guide.reviews.select_related("author", "author__profile").annotate(
+        likes_count=Count('ratings', filter=Q(ratings__is_like=True)),
+        dislikes_count=Count('ratings', filter=Q(ratings__is_like=False))
+    ).order_by("-created_at")
 
     is_favorited = False
+
+    user_liked = set()
+    user_disliked = set()
     if request.user.is_authenticated:
-        is_favorited = FavoriteGuide.objects.filter(
-            user=request.user,
-            guide=guide
-        ).exists()
+        ratings = GuideReviewRating.objects.filter(review__in=reviews, user=request.user)
+        for r in ratings:
+            if r.is_like:
+                user_liked.add(r.review_id)
+            else:
+                user_disliked.add(r.review_id)
 
     return render(request, 'users/guide_detail.html', {
         'guide': guide,
         'guide_content_html': guide_content_html,
         'reviews': reviews,
         'is_favorited': is_favorited,
+        'user_liked': user_liked,
+        'user_disliked': user_disliked,
     })
+
 
 def announcement_detail(request, announcement_id):
     announcement = get_object_or_404(Announcement, id=announcement_id)
-    comments = announcement.comments.all().select_related('author')
+
+    # Аннотируем комментарии количеством лайков/дизлайков
+    comments = announcement.comments.select_related('author', 'author__profile').annotate(
+        likes_count=Count('ratings', filter=Q(ratings__is_like=True)),
+        dislikes_count=Count('ratings', filter=Q(ratings__is_like=False))
+    ).order_by("-created_at")
 
     is_favorited = False
+    user_liked = set()
+    user_disliked = set()
+
     if request.user.is_authenticated:
         is_favorited = FavoriteAnnouncement.objects.filter(
-            user=request.user,
-            announcement=announcement
+            user=request.user, announcement=announcement
         ).exists()
 
-    context = {
-        'announcement_id': announcement_id,
+        user_ratings = AnnouncementCommentRating.objects.filter(comment__in=comments, user=request.user)
+        for r in user_ratings:
+            if r.is_like:
+                user_liked.add(r.comment_id)
+            else:
+                user_disliked.add(r.comment_id)
+
+    return render(request, 'users/announcement_detail.html', {
         'announcement': announcement,
         'comments': comments,
         'is_favorited': is_favorited,
-    }
-    return render(request, 'users/announcement_detail.html', context)
+        'user_liked': user_liked,
+        'user_disliked': user_disliked,
+    })
 
 
 # users/views.py
@@ -780,6 +861,48 @@ class UserProfileDetailView(generics.RetrieveAPIView):
     def get_object(self):
         username = self.kwargs.get("username")
         return get_object_or_404(Profile, user__username=username)
+
+
+class ProfileReviewRatingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Оценить отзыв о профиле лайком или дизлайком",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['is_like'],
+            properties={'is_like': openapi.Schema(type=openapi.TYPE_BOOLEAN)}
+        ),
+        tags=['Отзывы']
+    )
+    def post(self, request, review_id):
+        review = get_object_or_404(ProfileReview, id=review_id)
+        if review.reviewer == request.user:
+            return Response({"error": "Нельзя оценивать свой отзыв"}, status=status.HTTP_403_FORBIDDEN)
+
+        is_like = request.data.get('is_like')
+        if is_like is None:
+            return Response({"error": "Не указан тип оценки"}, status=status.HTTP_400_BAD_REQUEST)
+
+        rating = ProfileReviewRating.objects.filter(review=review, user=request.user).first()
+
+        if rating and rating.is_like == is_like:
+            rating.delete()
+            user_action = None
+        else:
+            ProfileReviewRating.objects.update_or_create(
+                review=review, user=request.user, defaults={'is_like': is_like}
+            )
+            user_action = is_like
+
+        likes = review.ratings.filter(is_like=True).count()
+        dislikes = review.ratings.filter(is_like=False).count()
+
+        return Response({
+            'likes': likes,
+            'dislikes': dislikes,
+            'user_action': user_action
+        })
 
 
 class ReviewCreateView(generics.CreateAPIView):
@@ -1350,6 +1473,48 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+
+class AnnouncementCommentRatingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Оценить комментарий к объявлению лайком или дизлайком",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['is_like'],
+            properties={'is_like': openapi.Schema(type=openapi.TYPE_BOOLEAN)}
+        ),
+        tags=['Комментарии']
+    )
+    def post(self, request, comment_id):
+        comment = get_object_or_404(AnnouncementComment, id=comment_id)
+        if comment.author == request.user:
+            return Response({"error": "Нельзя оценивать свой комментарий"}, status=status.HTTP_403_FORBIDDEN)
+
+        is_like = request.data.get('is_like')
+        if is_like is None:
+            return Response({"error": "Не указан тип оценки"}, status=status.HTTP_400_BAD_REQUEST)
+
+        rating = AnnouncementCommentRating.objects.filter(comment=comment, user=request.user).first()
+
+        if rating and rating.is_like == is_like:
+            rating.delete()
+            user_action = None
+        else:
+            AnnouncementCommentRating.objects.update_or_create(
+                comment=comment, user=request.user, defaults={'is_like': is_like}
+            )
+            user_action = is_like
+
+        likes = comment.ratings.filter(is_like=True).count()
+        dislikes = comment.ratings.filter(is_like=False).count()
+
+        return Response({
+            'likes': likes,
+            'dislikes': dislikes,
+            'user_action': user_action
+        })
 
 
 class ReviewUpdateView(APIView):

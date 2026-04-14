@@ -60,6 +60,21 @@ class Announcement(models.Model):
         return self.title
 
 
+class AnnouncementCommentRating(models.Model):
+    """Модель оценки комментария к объявлению (лайк/дизлайк)"""
+    comment = models.ForeignKey('AnnouncementComment', on_delete=models.CASCADE, related_name='ratings')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_like = models.BooleanField(verbose_name="Лайк (True) / Дизлайк (False)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('comment', 'user')
+        verbose_name = "Оценка комментария"
+        verbose_name_plural = "Оценки комментариев"
+
+    def __str__(self):
+        return f"{'👍' if self.is_like else '👎'} от {self.user.username} на комментарий {self.comment.id}"
+
 class ChatMessage(models.Model):
     """Модель сообщения в чате"""
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
@@ -106,6 +121,22 @@ class GuideComment(models.Model):
 
     def __str__(self):
         return f"Комментарий от {self.author} к {self.guide}"
+
+
+class GuideReviewRating(models.Model):
+    """Модель оценки отзыва (лайк/дизлайк)"""
+    review = models.ForeignKey('Review', on_delete=models.CASCADE, related_name='ratings')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_like = models.BooleanField(verbose_name="Лайк (True) / Дизлайк (False)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('review', 'user')
+        verbose_name = "Оценка отзыва"
+        verbose_name_plural = "Оценки отзывов"
+
+    def __str__(self):
+        return f"{'👍' if self.is_like else '👎'} от {self.user.username} на отзыв {self.review.id}"
 
 
 class AnnouncementComment(models.Model):
@@ -161,6 +192,22 @@ class ProfileReview(models.Model):
 
     def __str__(self):
         return f"Отзыв от {self.reviewer} на {self.profile}"
+
+
+class ProfileReviewRating(models.Model):
+    """Модель оценки отзыва о профиле (лайк/дизлайк)"""
+    review = models.ForeignKey('ProfileReview', on_delete=models.CASCADE, related_name='ratings')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_like = models.BooleanField(verbose_name="Лайк (True) / Дизлайк (False)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('review', 'user')
+        verbose_name = "Оценка отзыва"
+        verbose_name_plural = "Оценки отзывов"
+
+    def __str__(self):
+        return f"{'👍' if self.is_like else '👎'} от {self.user.username} на отзыв {self.review.id}"
 
 
 class EmailVerificationCode(models.Model):
