@@ -112,7 +112,7 @@ urlpatterns = [
     # --- Отзывы ---
     path('api/reviews/<int:review_id>/rate/', GuideReviewRatingView.as_view(), name='review-rate'),
     path('api/announcements/comments/<int:comment_id>/rate/', AnnouncementCommentRatingView.as_view(), name='announcement-comment-rate'),
-path('api/profile/reviews/<int:review_id>/rate/', ProfileReviewRatingView.as_view(), name='profile-review-rate'),
+    path('api/profile/reviews/<int:review_id>/rate/', ProfileReviewRatingView.as_view(), name='profile-review-rate'),
 ]
 
 if settings.DEBUG:
