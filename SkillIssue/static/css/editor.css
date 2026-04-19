@@ -854,7 +854,6 @@
     transition: color 0.3s ease;
 }
 
-/* Review block refinements (scoped to guide detail) */
 .guide-detail-reviews-card .rec_avatar {
     object-fit: cover;
 }
@@ -933,10 +932,6 @@
     .guide-author-chip-avatar { width: 26px; height: 26px; }
 }
 
-/* ════════════════════════════════════════════
-   Announcement Detail Page
-   ════════════════════════════════════════════ */
-
 .ann-detail-wrapper {
     max-width: 960px;
     width: 95%;
@@ -946,7 +941,6 @@
     gap: 20px;
 }
 
-/* ── Hero ── */
 .ann-detail-hero {
     display: flex;
     gap: 24px;
@@ -1147,7 +1141,6 @@
 
 .ann-edit-btn:active { transform: scale(0.97); }
 
-/* ── Description card ── */
 .ann-desc-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
@@ -1185,7 +1178,6 @@
     transition: color 0.3s ease;
 }
 
-/* ── Comments card ── */
 .ann-comments-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
@@ -1214,7 +1206,6 @@
     gap: 12px;
 }
 
-/* ── Comment block ── */
 .ann-comment-block {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
@@ -1293,7 +1284,6 @@
     transition: color 0.3s ease;
 }
 
-/* ── Comment form card ── */
 .ann-form-card {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
@@ -1382,7 +1372,6 @@
     transition: color 0.3s ease;
 }
 
-/* ── Responsive ── */
 @media (max-width: 700px) {
     .ann-detail-hero {
         flex-direction: column;
