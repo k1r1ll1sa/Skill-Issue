@@ -28,7 +28,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 DEBUG = os.environ.get('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', 'backend']
 
 MEDIA_URL = '/media/'
 LOGIN_URL = '/login-page/'
@@ -164,7 +164,12 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_COOKIE_HTTPONLY = False
 SESSION_COOKIE_SAMESITE = "Lax"  # или "None", если используется HTTPS
 SESSION_COOKIE_SECURE = False    # True, если на HTTPS
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000"]
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8080",
+    "http://localhost:8080",
+]
 
 # Email settings (для разработки используется консольный вывод)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

@@ -9,8 +9,34 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     ports:
-      - "5432:5432"
+      - "5433:5432"
     restart: unless-stopped
+    networks:
+      - app_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: skillissue_backend
+    command: >
+      sh -c "python SkillIssue/manage.py migrate &&
+        python SkillIssue/manage.py makemigrations &&
+        python SkillIssue/manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=skill_issue
+      - DB_USER=postgres
+      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - app_network
 
   frontend:
     build:
@@ -19,7 +45,15 @@ services:
     container_name: skillissue_frontend
     ports:
       - "8080:80"
+    depends_on:
+      - backend
     restart: unless-stopped
+    networks:
+      - app_network
 
 volumes:
   postgres_data:
+
+networks:
+  app_network:
+    driver: bridge
