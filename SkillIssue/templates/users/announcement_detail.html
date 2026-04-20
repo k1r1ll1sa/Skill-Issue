@@ -112,9 +112,18 @@
 
         <!-- ── Comments ── -->
         <div class="ann-comments-card">
-            <p class="ann-comments-title"
-               data-lang-ru="Комментарии к объявлению"
-               data-lang-en="Comments on the announcement">Комментарии к объявлению</p>
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 0 0 8px 0; margin-bottom: 16px;">
+                <p class="ann-comments-title"
+                    data-lang-ru="Комментарии к объявлению"
+                    data-lang-en="Comments on the announcement">Комментарии к объявлению</p>
+        
+                <div class="sort-dropdown-container">
+                    <select id="comment-sort-select" style="font-family: 'Cascadia Code'; font-size: 0.9rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <option value="new" {% if sort_by == 'new' %}selected{% endif %}>Новые</option>
+                        <option value="Popular" {% if sort_by == 'Popular' %}selected{% endif %}>Популярные</option>
+                    </select>
+                </div>
+            </div>
 
             <div id="comments-container" class="ann-comments-list">
                 {% for comment in comments %}
@@ -234,6 +243,19 @@
     <script src="{% static 'js/toggle_chat.js' %}"></script>
     <script src="{% static 'js/favorite_announce.js' %}"></script>
     <script src="{% static 'js/theme.js' %}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sortSelect = document.getElementById('comment-sort-select');
+            if (!sortSelect) return;
+            
+            sortSelect.addEventListener('change', function() {
+                const url = new URL(window.location);
+                url.searchParams.set('sort', this.value);
+                window.location.href = url.toString();
+            });
+        });
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

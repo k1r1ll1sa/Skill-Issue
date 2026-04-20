@@ -161,11 +161,20 @@
 
         <div class="profile-section">
             <div class="profile-section-header">
-                <span class="section-icon">💬</span>
-                <h2 data-lang-ru="Отзывы о {{ profile.user.username }}"
-                    data-lang-en="Reviews about {{ profile.user.username }}">
-                    Отзывы о {{ profile.user.username }}
-                </h2>
+                <div style="display: flex;">
+                    <span class="section-icon">💬 </span>
+                    <h2 data-lang-ru="Отзывы о {{ profile.user.username }}"
+                        data-lang-en="Reviews about {{ profile.user.username }}">
+                        Отзывы о {{ profile.user.username }}
+                    </h2>
+                </div>
+
+                <div class="sort-dropdown-container">
+                    <select id="comment-sort-select" style="font-family: 'Cascadia Code'; font-size: 0.9rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <option value="new" {% if sort_by == 'new' %}selected{% endif %}>Новые</option>
+                        <option value="Popular" {% if sort_by == 'Popular' %}selected{% endif %}>Популярные</option>
+                    </select>
+                </div>
             </div>
 
             <div id="profile-comments-container" class="profile-reviews-list">
@@ -275,6 +284,19 @@
 {% include 'users/chat.html' %}
 
 {% include 'users/footer.html' %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sortSelect = document.getElementById('comment-sort-select');
+        if (!sortSelect) return;
+        
+        sortSelect.addEventListener('change', function() {
+            const url = new URL(window.location);
+            url.searchParams.set('sort', this.value);
+            window.location.href = url.toString();
+        });
+    });
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {

@@ -82,12 +82,21 @@
         {% endif %}
     </div>
     {% endif %}
-
+    
     <!-- ── Отзывы ── -->
     <div class="guide-detail-reviews-card">
-        <p class="guide-detail-reviews-title"
-           data-lang-ru="Отзывы к руководству"
-           data-lang-en="Guide reviews">Отзывы к руководству</p>
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 0 0 8px 0; margin-bottom: 16px;">
+            <p class="guide-detail-reviews-title"
+               data-lang-ru="Отзывы к руководству"
+               data-lang-en="Guide reviews">Отзывы к руководству</p>
+            
+            <div class="sort-dropdown-container">
+                <select id="comment-sort-select" style="font-family: 'Cascadia Code'; font-size: 0.9rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+                    <option value="new" {% if sort_by == 'new' %}selected{% endif %}>Новые</option>
+                    <option value="Popular" {% if sort_by == 'Popular' %}selected{% endif %}>Популярные</option>
+                </select>
+            </div>
+        </div>
 
         <div id="reviews-container" class="profile-column-container guide-reviews-list">
             {% for review in reviews %}
@@ -185,6 +194,19 @@
 
 {% include 'users/chat.html' %}
 {% include 'users/footer.html' %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sortSelect = document.getElementById('comment-sort-select');
+        if (!sortSelect) return;
+        
+        sortSelect.addEventListener('change', function() {
+            const url = new URL(window.location);
+            url.searchParams.set('sort', this.value);
+            window.location.href = url.toString();
+        });
+    });
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

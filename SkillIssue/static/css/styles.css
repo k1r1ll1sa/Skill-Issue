@@ -1787,6 +1787,9 @@ svg.social-label-icon {
     align-items: center;
     gap: 8px;
     margin-bottom: 16px;
+    justify-content: space-between; 
+    border-bottom: 1px solid var(--border-color); 
+    padding: 0 0 8px 0;
 }
 
 .profile-section-header h2 {
@@ -2619,4 +2622,22 @@ svg.social-label-icon {
     background: var(--bg-tertiary);
     border-radius: 8px;
     border: 1px solid transparent;
+}
+
+.sort-dropdown-container {
+    display: inline-flex;
+    align-items: center;
+}
+
+.sort-dropdown-container select {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sort-dropdown-container select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(0, 191, 255, 0.2);
 }
