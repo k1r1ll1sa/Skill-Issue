@@ -22,7 +22,7 @@ import markdown
 from rest_framework.parsers import MultiPartParser, FormParser
 from .daos import GuideDAO
 from django.db.models import Avg, Count
-from django.db.models import Q
+from django.db.models import Q, F
 from django.utils.safestring import mark_safe
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -78,10 +78,19 @@ def profile_page(request, username):
     guides = Guide.objects.filter(author=user_obj).order_by('-created_at')
     announcements = Announcement.objects.filter(author=user_obj).order_by('-created_at')
     activities = UserActivity.objects.filter(user=user_obj).order_by('-created_at')[:20]
+
+    sort_by = request.GET.get('sort', 'new')
     reviews = ProfileReview.objects.filter(profile=profile).select_related('reviewer', 'reviewer__profile').annotate(
         likes_count=Count('ratings', filter=Q(ratings__is_like=True)),
         dislikes_count=Count('ratings', filter=Q(ratings__is_like=False))
-    ).order_by("-created_at")
+    )
+
+    if sort_by == 'Popular':
+        reviews = reviews.annotate(
+            net_rating=F('likes_count') - F('dislikes_count')
+        ).order_by('-net_rating', '-created_at')
+    else:
+        reviews = reviews.order_by('-created_at')
 
     user_liked = set()
     user_disliked = set()
@@ -100,6 +109,7 @@ def profile_page(request, username):
         "activities": activities,
         "user_liked": user_liked,
         "user_disliked": user_disliked,
+        "sort_by": sort_by,
     })
 
 
@@ -373,10 +383,19 @@ def guide_detail(request, pk):
 
     guide_content_html = mark_safe(html)
 
+    sort_by = request.GET.get('sort', 'new')
+
     reviews = guide.reviews.select_related("author", "author__profile").annotate(
         likes_count=Count('ratings', filter=Q(ratings__is_like=True)),
         dislikes_count=Count('ratings', filter=Q(ratings__is_like=False))
-    ).order_by("-created_at")
+    )
+
+    if sort_by == 'Popular':
+        reviews = reviews.annotate(
+            net_rating=F('likes_count') - F('dislikes_count')
+        ).order_by('-net_rating', '-created_at')
+    else:
+        reviews = reviews.order_by('-created_at')
 
     is_favorited = False
 
@@ -397,17 +416,27 @@ def guide_detail(request, pk):
         'is_favorited': is_favorited,
         'user_liked': user_liked,
         'user_disliked': user_disliked,
+        'sort_by': sort_by,
     })
 
 
 def announcement_detail(request, announcement_id):
     announcement = get_object_or_404(Announcement, id=announcement_id)
 
+    sort_by = request.GET.get('sort', 'new')
+
     # Аннотируем комментарии количеством лайков/дизлайков
     comments = announcement.comments.select_related('author', 'author__profile').annotate(
         likes_count=Count('ratings', filter=Q(ratings__is_like=True)),
         dislikes_count=Count('ratings', filter=Q(ratings__is_like=False))
-    ).order_by("-created_at")
+    )
+
+    if sort_by == 'Popular':
+        comments = comments.annotate(
+            net_rating=F('likes_count') - F('dislikes_count')
+        ).order_by('-net_rating', '-created_at')
+    else:
+        comments = comments.order_by('-created_at')
 
     is_favorited = False
     user_liked = set()
@@ -431,6 +460,7 @@ def announcement_detail(request, announcement_id):
         'is_favorited': is_favorited,
         'user_liked': user_liked,
         'user_disliked': user_disliked,
+        'sort_by': sort_by
     })
 
 
