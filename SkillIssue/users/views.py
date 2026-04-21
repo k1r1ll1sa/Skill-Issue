@@ -21,7 +21,7 @@ from rest_framework.decorators import api_view
 import markdown
 from rest_framework.parsers import MultiPartParser, FormParser
 from .daos import GuideDAO
-from django.db.models import Avg, Count
+from django.db.models import Avg, Count, Prefetch
 from django.db.models import Q, F
 from django.utils.safestring import mark_safe
 from drf_yasg.utils import swagger_auto_schema
@@ -37,7 +37,8 @@ import string
 
 from .models import Profile, GuideRating, Review, Guide, ProfileReview, Announcement, AnnouncementComment, \
     EmailVerificationCode, ChatMessage, UserActivity, FavoriteAnnouncement, FavoriteGuide, GuideComment, \
-    GuideReviewRating, AnnouncementCommentRating, ProfileReviewRating
+    GuideReviewRating, AnnouncementCommentRating, ProfileReviewRating, ReviewReply, ReviewReplyRating, \
+    AnnouncementCommentReplyRating, AnnouncementCommentReply
 from .serializers import RegisterSerializer, UserProfileSerializer, ReviewSerializer, GuideSerializer, \
     AnnouncementSerializer, ChatMessageSerializer, ChatContactSerializer, ProfileCommentSerializer
 from .forms import GuideForm
@@ -238,6 +239,63 @@ class GuideReviewRatingView(APIView):
         })
 
 
+class ReviewReplyCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, review_id):
+        review = get_object_or_404(Review, id=review_id)
+        text = request.data.get('text', '').strip()
+        if not text:
+            return Response({"error": "Текст не может быть пустым"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Автоматический пинг автора отзыва
+        target_username = review.author.username
+        if not text.startswith(f'@{target_username}'):
+            text = f'@{target_username}, {text}'
+
+        reply = ReviewReply.objects.create(review=review, author=request.user, text=text)
+
+        author_avatar = None
+        if hasattr(reply.author, 'profile') and reply.author.profile.avatar:
+            author_avatar = reply.author.profile.avatar.url
+
+        return Response({
+            "id": reply.id,
+            "text": reply.text,
+            "author": reply.author.username,
+            "author_avatar": author_avatar,
+            "created_at": reply.created_at.strftime('%d.%m.%Y %H:%M'),
+            "likes_count": 0,
+            "dislikes_count": 0
+        }, status=status.HTTP_201_CREATED)
+
+
+class ReviewReplyRatingView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, reply_id):
+        reply = get_object_or_404(ReviewReply, id=reply_id)
+        if reply.author.id == request.user.id:
+            return Response({"error": "Нельзя оценивать свой ответ"}, status=status.HTTP_403_FORBIDDEN)
+
+        is_like = request.data.get('is_like')
+        if is_like is None:
+            return Response({"error": "Не указан тип оценки"}, status=status.HTTP_400_BAD_REQUEST)
+
+        rating = ReviewReplyRating.objects.filter(reply=reply, user=request.user).first()
+        if rating and rating.is_like == is_like:
+            rating.delete()
+            user_action = None
+        else:
+            ReviewReplyRating.objects.update_or_create(reply=reply, user=request.user, defaults={'is_like': is_like})
+            user_action = is_like
+
+        likes = reply.ratings.filter(is_like=True).count()
+        dislikes = reply.ratings.filter(is_like=False).count()
+        return Response({'likes': likes, 'dislikes': dislikes, 'user_action': user_action})
+
+
 class AnnouncementListView(ListView):
     model = Announcement
     template_name = 'users/announcement.html'
@@ -277,6 +335,7 @@ class AnnouncementListView(ListView):
             return announcements[:20]
 
         return queryset.order_by('-created_at')
+
 
 @login_required
 @xframe_options_exempt
@@ -388,6 +447,11 @@ def guide_detail(request, pk):
     reviews = guide.reviews.select_related("author", "author__profile").annotate(
         likes_count=Count('ratings', filter=Q(ratings__is_like=True)),
         dislikes_count=Count('ratings', filter=Q(ratings__is_like=False))
+    ).prefetch_related(
+        Prefetch('replies', queryset=ReviewReply.objects.select_related('author', 'author__profile').annotate(
+            likes_count=Count('ratings', filter=Q(ratings__is_like=True)),
+            dislikes_count=Count('ratings', filter=Q(ratings__is_like=False))
+        ).order_by('created_at'))
     )
 
     if sort_by == 'Popular':
@@ -409,6 +473,16 @@ def guide_detail(request, pk):
             else:
                 user_disliked.add(r.review_id)
 
+    user_liked_replies = set()
+    user_disliked_replies = set()
+    if request.user.is_authenticated:
+        all_reply_ids = [reply.id for review in reviews for reply in review.replies.all()]
+        if all_reply_ids:
+            reply_ratings = ReviewReplyRating.objects.filter(reply_id__in=all_reply_ids, user=request.user)
+            for r in reply_ratings:
+                if r.is_like: user_liked_replies.add(r.reply_id)
+                else: user_disliked_replies.add(r.reply_id)
+
     return render(request, 'users/guide_detail.html', {
         'guide': guide,
         'guide_content_html': guide_content_html,
@@ -416,16 +490,17 @@ def guide_detail(request, pk):
         'is_favorited': is_favorited,
         'user_liked': user_liked,
         'user_disliked': user_disliked,
+        'user_liked_replies': user_liked_replies,
+        'user_disliked_replies': user_disliked_replies,
         'sort_by': sort_by,
     })
 
 
+
 def announcement_detail(request, announcement_id):
     announcement = get_object_or_404(Announcement, id=announcement_id)
-
     sort_by = request.GET.get('sort', 'new')
 
-    # Аннотируем комментарии количеством лайков/дизлайков
     comments = announcement.comments.select_related('author', 'author__profile').annotate(
         likes_count=Count('ratings', filter=Q(ratings__is_like=True)),
         dislikes_count=Count('ratings', filter=Q(ratings__is_like=False))
@@ -438,9 +513,19 @@ def announcement_detail(request, announcement_id):
     else:
         comments = comments.order_by('-created_at')
 
+    # Prefetch ответов с их рейтингами
+    replies_qs = AnnouncementCommentReply.objects.select_related('author', 'author__profile').annotate(
+        likes_count=Count('ratings', filter=Q(ratings__is_like=True)),
+        dislikes_count=Count('ratings', filter=Q(ratings__is_like=False))
+    ).order_by('created_at')
+
+    comments = comments.prefetch_related(Prefetch('replies', queryset=replies_qs))
+
     is_favorited = False
     user_liked = set()
     user_disliked = set()
+    user_liked_replies = set()
+    user_disliked_replies = set()
 
     if request.user.is_authenticated:
         is_favorited = FavoriteAnnouncement.objects.filter(
@@ -449,10 +534,16 @@ def announcement_detail(request, announcement_id):
 
         user_ratings = AnnouncementCommentRating.objects.filter(comment__in=comments, user=request.user)
         for r in user_ratings:
-            if r.is_like:
-                user_liked.add(r.comment_id)
-            else:
-                user_disliked.add(r.comment_id)
+            if r.is_like: user_liked.add(r.comment_id)
+            else: user_disliked.add(r.comment_id)
+
+        # Рейтинги ответов
+        all_reply_ids = [reply.id for c in comments for reply in c.replies.all()]
+        if all_reply_ids:
+            reply_ratings = AnnouncementCommentReplyRating.objects.filter(reply_id__in=all_reply_ids, user=request.user)
+            for r in reply_ratings:
+                if r.is_like: user_liked_replies.add(r.reply_id)
+                else: user_disliked_replies.add(r.reply_id)
 
     return render(request, 'users/announcement_detail.html', {
         'announcement': announcement,
@@ -460,6 +551,8 @@ def announcement_detail(request, announcement_id):
         'is_favorited': is_favorited,
         'user_liked': user_liked,
         'user_disliked': user_disliked,
+        'user_liked_replies': user_liked_replies,
+        'user_disliked_replies': user_disliked_replies,
         'sort_by': sort_by
     })
 
@@ -1554,6 +1647,60 @@ class AnnouncementCommentRatingView(APIView):
             'dislikes': dislikes,
             'user_action': user_action
         })
+
+
+class AnnouncementCommentReplyCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, comment_id):
+        comment = get_object_or_404(AnnouncementComment, id=comment_id)
+        content = request.data.get('content', '').strip()
+        if not content:
+            return Response({"error": "Текст не может быть пустым"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Автоматический пинг автора комментария
+        target_username = comment.author.username
+        if not content.startswith(f'@{target_username}'):
+            content = f'@{target_username}, {content}'
+
+        reply = AnnouncementCommentReply.objects.create(
+            comment=comment, author=request.user, content=content
+        )
+
+        author_avatar = None
+        if hasattr(reply.author, 'profile') and reply.author.profile.avatar:
+            author_avatar = reply.author.profile.avatar.url
+
+        return Response({
+            "id": reply.id, "content": reply.content, "author": reply.author.username,
+            "author_avatar": author_avatar, "created_at": reply.created_at.strftime('%d.%m.%Y %H:%M'),
+            "likes_count": 0, "dislikes_count": 0
+        }, status=status.HTTP_201_CREATED)
+
+class AnnouncementCommentReplyRatingView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    def post(self, request, reply_id):
+        reply = get_object_or_404(AnnouncementCommentReply, id=reply_id)
+        if reply.author.id == request.user.id:
+            return Response({"error": "Нельзя оценивать свой ответ"}, status=status.HTTP_403_FORBIDDEN)
+
+        is_like = request.data.get('is_like')
+        if is_like is None:
+            return Response({"error": "Не указан тип оценки"}, status=status.HTTP_400_BAD_REQUEST)
+
+        rating = AnnouncementCommentReplyRating.objects.filter(reply=reply, user=request.user).first()
+        if rating and rating.is_like == is_like:
+            rating.delete()
+            user_action = None
+        else:
+            AnnouncementCommentReplyRating.objects.update_or_create(
+                reply=reply, user=request.user, defaults={'is_like': is_like}
+            )
+            user_action = is_like
+
+        likes = reply.ratings.filter(is_like=True).count()
+        dislikes = reply.ratings.filter(is_like=False).count()
+        return Response({'likes': likes, 'dislikes': dislikes, 'user_action': user_action})
 
 
 class ReviewUpdateView(APIView):

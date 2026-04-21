@@ -2641,3 +2641,115 @@ svg.social-label-icon {
     border-color: var(--accent-color);
     box-shadow: 0 0 0 2px rgba(0, 191, 255, 0.2);
 }
+
+.replies-container {
+    margin-left: 40px;
+    border-left: 3px solid #e0e0e0;
+    padding-left: 15px;
+    margin-top: 10px;
+}
+.reply-item {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+}
+/* Контейнер ответов с визуальной вложенностью */
+.replies-container {
+    margin-left: 40px;
+    margin-top: 12px;
+    border-left: 2px solid #e2e8f0;
+    padding-left: 16px;
+}
+
+/* Карточка отдельного ответа */
+.reply-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+
+/* Шапка ответа (аватар + инфо) */
+.reply-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.reply-avatar, .reply-avatar-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #475569;
+}
+
+.reply-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.reply-author {
+    font-weight: 600;
+    text-decoration: none;
+    color: #0f172a;
+    font-size: 14px;
+}
+.reply-author:hover { text-decoration: underline; }
+
+.reply-date {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.reply-text {
+    font-size: 14px;
+    color: #334155;
+    margin: 4px 0 8px;
+    line-height: 1.4;
+}
+
+/* Кнопки лайк/дизлайк */
+.reply-footer {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-like, .btn-dislike {
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+.btn-like:hover:not([disabled]) { background: #dcfce7; border-color: #86efac; }
+.btn-dislike:hover:not([disabled]) { background: #fee2e2; border-color: #fca5a5; }
+
+.btn-like[disabled], .btn-dislike[disabled] {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* Сообщение "пока нет ответов" */
+.no-replies {
+    font-size: 13px;
+    color: #94a3b8;
+    font-style: italic;
+    padding: 8px 0;
+}
+

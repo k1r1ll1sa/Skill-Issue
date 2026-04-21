@@ -139,6 +139,33 @@ class GuideReviewRating(models.Model):
         return f"{'👍' if self.is_like else '👎'} от {self.user.username} на отзыв {self.review.id}"
 
 
+class ReviewReply(models.Model):
+    """Модель ответа на отзыв к руководству"""
+    review = models.ForeignKey('Review', on_delete=models.CASCADE, related_name='replies')
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Ответ от {self.author.username} к отзыву {self.review.id}"
+
+class ReviewReplyRating(models.Model):
+    """Модель оценки ответа (лайк/дизлайк)"""
+    reply = models.ForeignKey(ReviewReply, on_delete=models.CASCADE, related_name='ratings')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_like = models.BooleanField(verbose_name="Лайк (True) / Дизлайк (False)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('reply', 'user')
+        verbose_name = "Оценка ответа"
+        verbose_name_plural = "Оценки ответов"
+
+    def __str__(self):
+        return f"{'👍' if self.is_like else '👎'} от {self.user.username} на ответ {self.reply.id}"
+
+
 class AnnouncementComment(models.Model):
     """Модель комментария к объявлению"""
     announcement = models.ForeignKey(Announcement, on_delete=models.CASCADE, related_name='comments')
@@ -150,6 +177,34 @@ class AnnouncementComment(models.Model):
 
     def __str__(self):
         return f"Комментарий от {self.author} к объявлению {self.announcement}"
+
+
+class AnnouncementCommentReply(models.Model):
+    """Модель ответа на комментарий к объявлению"""
+    comment = models.ForeignKey('AnnouncementComment', on_delete=models.CASCADE, related_name='replies')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='announcement_replies')
+    content = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_edited = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Ответ от {self.author.username} к комментарию {self.comment.id}"
+
+class AnnouncementCommentReplyRating(models.Model):
+    """Модель оценки ответа на комментарий (лайк/дизлайк)"""
+    reply = models.ForeignKey('AnnouncementCommentReply', on_delete=models.CASCADE, related_name='ratings')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_like = models.BooleanField(verbose_name="Лайк (True) / Дизлайк (False)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('reply', 'user')
+        verbose_name = "Оценка ответа"
+        verbose_name_plural = "Оценки ответов"
+
+    def __str__(self):
+        return f"{'👍' if self.is_like else '👎'} от {self.user.username} на ответ {self.reply.id}"
 
 
 class Review(models.Model):

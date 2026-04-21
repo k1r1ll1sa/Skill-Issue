@@ -82,14 +82,14 @@
         {% endif %}
     </div>
     {% endif %}
-    
+
     <!-- ── Отзывы ── -->
     <div class="guide-detail-reviews-card">
         <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 0 0 8px 0; margin-bottom: 16px;">
             <p class="guide-detail-reviews-title"
                data-lang-ru="Отзывы к руководству"
                data-lang-en="Guide reviews">Отзывы к руководству</p>
-            
+
             <div class="sort-dropdown-container">
                 <select id="comment-sort-select" style="font-family: 'Cascadia Code'; font-size: 0.9rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
                     <option value="new" {% if sort_by == 'new' %}selected{% endif %}>Новые</option>
@@ -100,9 +100,7 @@
 
         <div id="reviews-container" class="profile-column-container guide-reviews-list">
             {% for review in reviews %}
-            <div class="review-block profile-column-container"
-                 data-review-id="{{ review.id }}">
-
+            <div class="review-block profile-column-container" data-review-id="{{ review.id }}">
                 <div class="profile-row-container review-block-header">
                     {% if review.author.profile.avatar %}
                         <img src="{{ review.author.profile.avatar.url }}" class="rec_avatar">
@@ -111,39 +109,26 @@
                     {% endif %}
 
                     <div class="profile-column-container review-author-info">
-                        <a href="{% url 'profile_page' review.author.username %}"
-                           class="simple-text"
-                           style="font-size:0.95rem;">{{ review.author.username }}</a>
-                        <span class="simple-text"
-                              style="font-size:0.8rem;color:var(--text-tertiary);">{{ review.created_at|date:"d.m.Y" }}</span>
+                        <a href="{% url 'profile_page' review.author.username %}" class="simple-text" style="font-size:0.95rem;">{{ review.author.username }}</a>
+                        <span class="simple-text" style="font-size:0.8rem;color:var(--text-tertiary);">{{ review.created_at|date:"d.m.Y" }}</span>
                     </div>
 
                     <span class="simple-text review-stars review-stars-badge">⭐ {{ review.stars }}</span>
 
                     {% if review.author == user %}
-                        <button class="btn-secondary edit-review-btn"
-                                data-review-id="{{ review.id }}"
-                                data-review-stars="{{ review.stars }}"
-                                data-review-text="{{ review.text|escapejs }}"
-                                style="padding:6px 12px;font-size:0.85rem;min-width:auto;">✎</button>
-                        <button class="btn-danger delete-review-btn"
-                                data-review-id="{{ review.id }}"
-                                style="padding:6px 12px;font-size:0.85rem;min-width:auto;">🗑</button>
+                        <button class="btn-secondary edit-review-btn" data-review-id="{{ review.id }}" data-review-stars="{{ review.stars }}" data-review-text="{{ review.text|escapejs }}" style="padding:6px 12px;font-size:0.85rem;min-width:auto;">✎</button>
+                        <button class="btn-danger delete-review-btn" data-review-id="{{ review.id }}" style="padding:6px 12px;font-size:0.85rem;min-width:auto;">🗑</button>
                     {% endif %}
                 </div>
 
                 <p class="simple-text review-text review-text-content">{{ review.text }}</p>
 
-                <div class="review-rating-container"
-                     data-review-id="{{ review.id }}"
-                     style="display:flex;gap:8px;margin-top:8px;">
+                <div class="review-rating-container" data-review-id="{{ review.id }}" style="display:flex;gap:8px;margin-top:8px;">
                     {% if user.is_authenticated and user != review.author %}
-                        <button class="review-rate-btn rate-like {% if review.id in user_liked %}active{% endif %}"
-                                data-type="like" title="Нравится">
+                        <button class="review-rate-btn rate-like {% if review.id in user_liked %}active{% endif %}" data-type="like" title="Нравится" onclick="rateReview({{ review.id }}, true)">
                             👍 <span class="rate-count">{{ review.likes_count|default:0 }}</span>
                         </button>
-                        <button class="review-rate-btn rate-dislike {% if review.id in user_disliked %}active{% endif %}"
-                                data-type="dislike" title="Не нравится">
+                        <button class="review-rate-btn rate-dislike {% if review.id in user_disliked %}active{% endif %}" data-type="dislike" title="Не нравится" onclick="rateReview({{ review.id }}, false)">
                             👎 <span class="rate-count">{{ review.dislikes_count|default:0 }}</span>
                         </button>
                     {% else %}
@@ -153,12 +138,66 @@
                         </div>
                     {% endif %}
                 </div>
+            <!-- Кнопка "Ответить" -->
+                {% if user.is_authenticated %}
+                <button class="reply-btn btn-reply-toggle"
+                        onclick="toggleReplyForm({{ review.id }})"
+                        style="margin-top:12px;background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:0.85rem;padding:6px 12px; display:flex;">
+                    💬 Ответить
+                </button>
+
+                <!-- Форма ответа -->
+                <form id="reply-form-{{ review.id }}" class="reply-form" onsubmit="submitReply(event, {{ review.id }})" style="display:none;margin-top:12px;padding:12px;background:var(--bg-secondary);border-radius:8px;">
+                    {% csrf_token %}
+                    <textarea name="text" placeholder="Написать ответ..." required style="width:100%;min-height:60px;padding:8px;border:1px solid var(--border-secondary);border-radius:6px;resize:vertical;font-family:inherit;"></textarea>
+                    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+                        <button type="button" class="btn-secondary" onclick="toggleReplyForm({{ review.id }})" style="padding:6px 12px;font-size:0.85rem;">Отмена</button>
+                        <button type="submit" class="btn-primary" style="padding:6px 12px;font-size:0.85rem;">Отправить</button>
+                    </div>
+                </form>
+                {% endif %}
+
+                <!-- === ОТВЕТЫ НА ОТЗЫВ === -->
+                <div class="replies-container">
+                    {% for reply in review.replies.all %}
+                    <div class="reply-block profile-column-container" data-reply-id="{{ reply.id }}">
+                        <div class="profile-row-container review-block-header">
+                            {% if reply.author.profile.avatar %}
+                                <img src="{{ reply.author.profile.avatar.url }}" class="rec_avatar">
+                            {% else %}
+                                <img src="{% static 'images/default-avatar.jpg' %}" class="rec_avatar">
+                            {% endif %}
+
+                            <div class="profile-column-container review-author-info">
+                                <a href="{% url 'profile_page' reply.author.username %}" class="simple-text" style="font-size:0.85rem;">{{ reply.author.username }}</a>
+                                <span class="simple-text" style="font-size:0.75rem;color:var(--text-tertiary);">{{ reply.created_at|date:"d.m.Y H:i" }}</span>
+                            </div>
+                        </div>
+
+                        <p class="simple-text review-text review-text-content" style="font-size:0.9rem;margin:8px 0;">{{ reply.text }}</p>
+
+                        <div class="reply-rating-container" data-reply-id="{{ reply.id }}" style="display:flex;gap:8px;margin-top:8px;">
+                            {% if user.is_authenticated and user != reply.author %}
+                                <button class="review-rate-btn rate-like {% if reply.id in user_liked_replies %}active{% endif %}" data-type="like" title="Нравится" onclick="rateReply({{ reply.id }}, true)" style="padding:4px 8px;font-size:0.8rem;">
+                                    👍 <span class="rate-count">{{ reply.likes_count|default:0 }}</span>
+                                </button>
+                                <button class="review-rate-btn rate-dislike {% if reply.id in user_disliked_replies %}active{% endif %}" data-type="dislike" title="Не нравится" onclick="rateReply({{ reply.id }}, false)" style="padding:4px 8px;font-size:0.8rem;">
+                                    👎 <span class="rate-count">{{ reply.dislikes_count|default:0 }}</span>
+                                </button>
+                            {% else %}
+                                <div class="review-stats-only" style="font-size:0.85rem;">
+                                    👍 <span class="stat-count">{{ reply.likes_count|default:0 }}</span>
+                                    👎 <span class="stat-count">{{ reply.dislikes_count|default:0 }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    {% endfor %}
+                </div>
             </div>
             {% empty %}
-            <p class="simple-text reviews-empty"
-               style="text-align:center;"
-               data-lang-ru="Пока нет отзывов."
-               data-lang-en="No reviews yet.">Пока нет отзывов.</p>
+            <p class="simple-text reviews-empty" style="text-align:center;" data-lang-ru="Пока нет отзывов." data-lang-en="No reviews yet.">Пока нет отзывов.</p>
             {% endfor %}
         </div>
     </div>
@@ -423,6 +462,134 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+</script>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+function toggleReplyForm(reviewId) {
+    const form = document.getElementById(`reply-form-${reviewId}`);
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+        form.querySelector('textarea').focus();
+    } else {
+        form.style.display = 'none';
+    }
+}
+
+async function submitReply(e, reviewId) {
+    e.preventDefault();
+    const form = e.target;
+    const textarea = form.querySelector('textarea');
+    const text = textarea.value.trim();
+    if (!text) return alert('Текст не может быть пустым');
+
+    const response = await fetch(`/api/reviews/${reviewId}/reply/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+        body: JSON.stringify({ text })
+    });
+    const data = await response.json();
+
+    if (response.ok) {
+        const repliesContainer = form.previousElementSibling.previousElementSibling;
+        const newReplyHTML = `
+            <div class="reply-block profile-column-container" data-reply-id="${data.id}" style="padding:12px;margin-bottom:12px;background:var(--bg-secondary);border-radius:8px;transform:scale(0.98);transform-origin:left;">
+                <div class="profile-row-container review-block-header" style="margin-bottom:8px;">
+                    ${data.author_avatar ? `<img src="${data.author_avatar}" class="rec_avatar" style="width:32px;height:32px;">` : `<img src="{% static 'images/default-avatar.jpg' %}" class="rec_avatar" style="width:32px;height:32px;">`}
+                    <div class="profile-column-container review-author-info">
+                        <a href="/users/${data.author}/" class="simple-text" style="font-size:0.85rem;">${data.author}</a>
+                        <span class="simple-text" style="font-size:0.75rem;color:var(--text-tertiary);">${data.created_at}</span>
+                    </div>
+                </div>
+                <p class="simple-text review-text review-text-content" style="font-size:0.9rem;margin:8px 0;">${data.text}</p>
+                <div class="reply-rating-container" data-reply-id="${data.id}" style="display:flex;gap:8px;margin-top:8px;">
+                    <button class="review-rate-btn rate-like" data-type="like" title="Нравится" onclick="rateReply(${data.id}, true)" style="padding:4px 8px;font-size:0.8rem;">
+                        👍 <span class="rate-count">${data.likes_count}</span>
+                    </button>
+                    <button class="review-rate-btn rate-dislike" data-type="dislike" title="Не нравится" onclick="rateReply(${data.id}, false)" style="padding:4px 8px;font-size:0.8rem;">
+                        👎 <span class="rate-count">${data.dislikes_count}</span>
+                    </button>
+                </div>
+            </div>`;
+        repliesContainer.insertAdjacentHTML('beforeend', newReplyHTML);
+        form.reset();
+        toggleReplyForm(reviewId);
+    } else {
+        alert(data.error || 'Ошибка отправки');
+    }
+}
+
+async function rateReply(replyId, isLike) {
+    const response = await fetch(`/api/replies/${replyId}/rate/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+        body: JSON.stringify({ is_like: isLike })
+    });
+    const data = await response.json();
+    if (response.ok) {
+        const el = document.querySelector(`[data-reply-id="${replyId}"] .reply-rating-container`);
+        const likeBtn = el.querySelector('.rate-like');
+        const dislikeBtn = el.querySelector('.rate-dislike');
+        likeBtn.querySelector('.rate-count').textContent = data.likes;
+        dislikeBtn.querySelector('.rate-count').textContent = data.dislikes;
+        if (data.user_action === true) {
+            likeBtn.classList.add('active');
+            dislikeBtn.classList.remove('active');
+        } else if (data.user_action === false) {
+            likeBtn.classList.remove('active');
+            dislikeBtn.classList.add('active');
+        } else {
+            likeBtn.classList.remove('active');
+            dislikeBtn.classList.remove('active');
+        }
+    } else if (response.status === 403) {
+        alert(data.error);
+    }
+}
+
+// Существующая функция для оценки отзывов
+async function rateReview(reviewId, isLike) {
+    const btn = document.querySelector(`[data-review-id="${reviewId}"] .rate-${isLike ? 'like' : 'dislike'}`);
+    const response = await fetch(`/api/reviews/${reviewId}/rate/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+        body: JSON.stringify({ is_like: isLike })
+    });
+    const data = await response.json();
+    if (response.ok) {
+        const likeBtn = document.querySelector(`[data-review-id="${reviewId}"] .rate-like`);
+        const dislikeBtn = document.querySelector(`[data-review-id="${reviewId}"] .rate-dislike`);
+        likeBtn.querySelector('.rate-count').textContent = data.likes;
+        dislikeBtn.querySelector('.rate-count').textContent = data.dislikes;
+        if (data.user_action === true) {
+            likeBtn.classList.add('active');
+            dislikeBtn.classList.remove('active');
+        } else if (data.user_action === false) {
+            likeBtn.classList.remove('active');
+            dislikeBtn.classList.add('active');
+        } else {
+            likeBtn.classList.remove('active');
+            dislikeBtn.classList.remove('active');
+        }
+    } else if (response.status === 403) {
+        alert(data.error);
+    }
+}
 </script>
 </body>
 </html>
