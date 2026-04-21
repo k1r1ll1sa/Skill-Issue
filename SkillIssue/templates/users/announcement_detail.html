@@ -1,135 +1,96 @@
 {% load static %}
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skill Issue — {{ announcement.title }}</title>
-    <script>
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        })();
-    </script>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <link rel="stylesheet" href="{% static 'css/editor.css' %}">
-</head>
-<body>
+    <title>{{ announcement.title }} - Skill Issue</title>
     {% include 'users/header.html' %}
 
-    <div class="ann-detail-wrapper">
+</head>
+<body>
 
-        <!-- ── Hero: image + info ── -->
-        <div class="ann-detail-hero">
-
-            <div class="ann-detail-img-col">
-                <div class="ann-detail-img-wrap">
-                    {% if announcement.image %}
-                        <img src="{{ announcement.image.url }}" alt="{{ announcement.title }}">
-                    {% else %}
-                        <img src="{% static 'images/default-announcement.png' %}" alt="{{ announcement.title }}">
-                    {% endif %}
-                </div>
+<div class="ann-detail-wrapper">
+    <!-- Изображение объявления -->
+    <div class="ann-detail-hero">
+        <div class="ann-detail-img-col">
+            <div class="ann-detail-img-wrap">
+            {% if announcement.image %}
+                <img src="{{ announcement.image.url }}" alt="{{ announcement.title }}" class="announcement-image">
+            {% else %}
+                <img src="{% static 'images/default-announcement.png' %}" alt="Default" class="announcement-image">
+            {% endif %}
             </div>
-
-            <div class="ann-detail-info-col">
-                <h1 class="ann-detail-title">{{ announcement.title }}</h1>
-
-                <a class="ann-author-chip"
-                   href="{% url 'profile_page' announcement.author.username %}">
-                    {% if announcement.author.profile.avatar %}
-                        <img src="{{ announcement.author.profile.avatar.url }}"
-                             class="ann-author-chip-avatar"
-                             alt="{{ announcement.author.username }}">
-                    {% else %}
-                        <img src="{% static 'images/default-avatar.jpg' %}"
-                             class="ann-author-chip-avatar"
-                             alt="{{ announcement.author.username }}">
-                    {% endif %}
-                    <div class="ann-author-chip-info">
-                        <span class="ann-author-chip-label"
-                              data-lang-ru="Автор" data-lang-en="Author">Автор</span>
-                        <span class="ann-author-chip-name">{{ announcement.author.username }}</span>
-                    </div>
-                </a>
-
-                {% if user.is_authenticated and user != announcement.author %}
-                <div class="ann-cta-section">
-                    <div class="ann-detail-divider"></div>
-                    <p class="ann-cta-headline"
-                       data-lang-ru="Заинтересовало? Напишите автору!"
-                       data-lang-en="Interested? Write to the author!">Заинтересовало? Напишите автору!</p>
-                    <div class="ann-cta-buttons">
-                        <button id="write-message"
-                                class="ann-cta-btn"
-                                data-user-id="{{ announcement.author.id }}"
-                                data-username="{{ announcement.author.username }}"
-                                data-lang-ru="Написать в чат"
-                                data-lang-en="Write to chat">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                                 stroke="currentColor" stroke-width="2"
-                                 stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                            </svg>
-                            Написать в чат
-                        </button>
-                        <button id="add-favorite"
-                                data-announcement-id="{{ announcement.id }}"
-                                class="favorite-btn {% if is_favorited %}favorite-btn--active{% endif %}"
-                                data-lang-ru="{% if is_favorited %}★ В избранном{% else %}☆ В избранное{% endif %}"
-                                data-lang-en="{% if is_favorited %}★ In favorites{% else %}☆ Favorite{% endif %}">
-                            {% if is_favorited %}★ В избранном{% else %}☆ В избранное{% endif %}
-                        </button>
-                    </div>
-                </div>
-                {% endif %}
-
-                {% if user.is_authenticated and user == announcement.author %}
-                <form action="{% url 'edit_announcement' announcement.id %}" method="get"
-                      style="margin:0; margin-top:auto;">
-                    <button class="ann-edit-btn" type="submit">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                             stroke="currentColor" stroke-width="2"
-                             stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                        <span data-lang-ru="редактировать" data-lang-en="edit">редактировать</span>
-                    </button>
-                </form>
-                {% endif %}
-            </div>
-
         </div>
 
-        <!-- ── Description ── -->
-        <div class="ann-desc-card">
-            <div class="ann-desc-card-header">
-                <p class="ann-desc-card-label"
+    <!-- Заголовок и автор -->
+    <div class="ann-detail-info-col">
+        <h1 class="ann-detail-title">{{ announcement.title }}</h1>
+        <a class="ann-author-chip"
+            href="{% url 'profile_page' announcement.author.username %}">
+            {% if announcement.author.profile.avatar %}
+                <img src="{{ announcement.author.profile.avatar.url }}"
+                     class="ann-author-chip-avatar"
+                     alt="{{ announcement.author.username }}">
+            {% else %}
+                <img src="{% static 'images/default-avatar.jpg' %}"
+                     class="ann-author-chip-avatar"
+                     alt="{{ announcement.author.username }}">
+            {% endif %}
+            <div class="ann-author-chip-info">
+                <span class="ann-author-chip-label"
+                      data-lang-ru="Автор" data-lang-en="Author">Автор</span>
+                <span class="ann-author-chip-name">{{ announcement.author.username }}</span>
+            </div>
+        </a>
+
+        {% if user.is_authenticated and user != announcement.author %}
+            <div class="announcement-actions">
+                <p>Заинтересовало? Напишите автору!</p>
+                <button class="btn-primary" onclick="openChat({{ announcement.author.id }})">Написать в чат</button>
+                <button class="btn-secondary" onclick="toggleFavorite({{ announcement.id }})">
+                    {% if is_favorited %}★ В избранном{% else %}☆ В избранное{% endif %}
+                </button>
+            </div>
+        {% endif %}
+
+        {% if user.is_authenticated and user == announcement.author %}
+            <a href="{% url 'edit_announcement' announcement.id %}" class="btn-edit">редактировать</a>
+        {% endif %}
+    </div>
+    </div>
+
+    <!-- Описание -->
+    <div class="ann-desc-card">
+        <div class="ann-desc-card-header">
+            <p class="ann-desc-card-label"
                    data-lang-ru="Описание" data-lang-en="Description">Описание</p>
-            </div>
-            <div class="ann-desc-card-body">{{ announcement.description|default:"Описание отсутствует" }}</div>
         </div>
+        <div class="ann-desc-card-body">{{ announcement.description|default:"Описание отсутствует" }}</div>
+    </div>
 
-        <!-- ── Comments ── -->
-        <div class="ann-comments-card">
-            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 0 0 8px 0; margin-bottom: 16px;">
+    <!-- Комментарии -->
+    <div class="ann-comments-card">
+         <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 0 0 8px 0; margin-bottom: 16px;">
                 <p class="ann-comments-title"
                     data-lang-ru="Комментарии к объявлению"
                     data-lang-en="Comments on the announcement">Комментарии к объявлению</p>
-        
-                <div class="sort-dropdown-container">
-                    <select id="comment-sort-select" style="font-family: 'Cascadia Code'; font-size: 0.9rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
-                        <option value="new" {% if sort_by == 'new' %}selected{% endif %}>Новые</option>
-                        <option value="Popular" {% if sort_by == 'Popular' %}selected{% endif %}>Популярные</option>
-                    </select>
-                </div>
-            </div>
 
-            <div id="comments-container" class="ann-comments-list">
-                {% for comment in comments %}
-                <div class="ann-comment-block comment-block"
-                     data-comment-id="{{ comment.id }}">
+        <!-- Сортировка -->
+        <div class="sort-dropdown-container">
+            <select id="comment-sort-select" style="font-family: 'Cascadia Code'; font-size: 0.9rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color);">
+                <option value="new" {% if sort_by == 'new' %}selected{% endif %}>Новые</option>
+                <option value="Popular" {% if sort_by == 'Popular' %}selected{% endif %}>Популярные</option>
+            </select>
+        </div>
+        </div>
 
+        <!-- Список комментариев -->
+        <div class="ann-comments-list">
+            {% for comment in comments %}
+                <div class="ann-comment-block comment-block" data-comment-id="{{ comment.id }}">
                     <div class="ann-comment-header">
                         {% if comment.author.profile.avatar %}
                             <img src="{{ comment.author.profile.avatar.url }}"
@@ -151,7 +112,7 @@
                         </div>
 
                         {% if comment.author == user %}
-                        <div class="p-review-actions">
+                             <div class="p-review-actions">
                             <button class="p-icon-btn edit-comment-btn"
                                     data-comment-id="{{ comment.id }}"
                                     data-comment-content="{{ comment.content|escapejs }}"
@@ -163,325 +124,409 @@
                                     data-lang-ru-title="Удалить"
                                     data-lang-en-title="Delete"
                                     title="Удалить">🗑</button>
-                        </div>
+                            </div>
                         {% endif %}
                     </div>
 
-                    <p class="ann-comment-body comment-content">{{ comment.content }}</p>
+                     <p class="ann-comment-body comment-content">{{ comment.content }}</p>
 
-                    <div class="review-rating-container"
-                         data-comment-id="{{ comment.id }}"
+                    <!-- Оценка комментария -->
+                    <div class="review-rating-containe" data-comment-id="{{ comment.id }}"
                          style="display:flex;gap:8px;margin-top:10px;">
                         {% if user.is_authenticated and user != comment.author %}
-                            <button class="review-rate-btn rate-like {% if comment.id in user_liked %}active{% endif %}"
-                                    data-type="like" title="Нравится">
+                            <button class="review-rate-btn rate-btn rate-like {% if comment.id in user_liked %}active{% endif %}"
+                                    onclick="rateAnnouncementComment({{ comment.id }}, true)"
+                                    title="Нравится">
                                 👍 <span class="rate-count">{{ comment.likes_count|default:0 }}</span>
                             </button>
-                            <button class="review-rate-btn rate-dislike {% if comment.id in user_disliked %}active{% endif %}"
-                                    data-type="dislike" title="Не нравится">
+                            <button class="review-rate-btn rate-btn rate-dislike {% if comment.id in user_disliked %}active{% endif %}"
+                                    onclick="rateAnnouncementComment({{ comment.id }}, false)"
+                                    title="Не нравится">
                                 👎 <span class="rate-count">{{ comment.dislikes_count|default:0 }}</span>
                             </button>
                         {% else %}
                             <div class="review-stats-only">
-                                👍 <span class="stat-count">{{ comment.likes_count|default:0 }}</span>
-                                👎 <span class="stat-count">{{ comment.dislikes_count|default:0 }}</span>
+                                <span class="rate-count stat-count">👍 {{ comment.likes_count|default:0 }}</span>
+                                <span class="rate-count stat-count">👎 {{ comment.dislikes_count|default:0 }}</span>
                             </div>
                         {% endif %}
                     </div>
+
+                    <!-- Кнопка Ответить -->
+                    {% if user.is_authenticated %}
+                        <button class="reply-btn btn-reply-toggle" style="margin-top:12px;background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:0.85rem;padding:6px 12px;"
+                                type="button"
+                                onclick="toggleReplyForm({{ comment.id }})">
+                            💬 Ответить
+                        </button>
+
+                        <!-- Форма ответа -->
+                        <form id="reply-form-{{ comment.id }}"
+                              class="reply-form"
+                              onsubmit="submitReply(event, {{ comment.id }})"
+                              style="display:none;">
+                            {% csrf_token %}
+                            <textarea name="content"
+                                      placeholder="Ваш ответ..."
+                                      required
+                                      rows="3"></textarea>
+                            <div class="form-actions">
+                                <button type="button" class="btn-cancel" onclick="toggleReplyForm({{ comment.id }})" style="padding:6px 12px;font-size:0.85rem;">Отмена</button>
+                                <button type="submit" class="btn-submit" style="padding:6px 12px;font-size:0.85rem;">Отправить</button>
+                            </div>
+                        </form>
+                    {% endif %}
+
+                    <!-- Ответы на комментарий -->
+                    <div class="replies-container" data-comment-id="{{ comment.id }}">
+                        {% for reply in comment.replies.all %}
+                            <div class="reply-block profile-column-container" data-reply-id="{{ reply.id }}">
+                                <div class="profile-row-container review-block-header">
+                                    {% if reply.author.profile.avatar %}
+                                        <img src="{{ reply.author.profile.avatar.url }}" class="reply-avatar">
+                                    {% else %}
+                                        <img src="{% static 'images/default-avatar.jpg' %}" class="reply-avatar">
+                                    {% endif %}
+
+                                    <div class="profile-column-container review-author-info">
+                                        <a href="{% url 'profile_page' reply.author.username %}" class="reply-author">
+                                            {{ reply.author.username }}
+                                        </a>
+                                        <span class="reply-date">{{ reply.created_at|date:"d.m.Y H:i" }}</span>
+                                    </div>
+                                </div>
+
+                                <p class="simple-text review-text review-text-content" style="font-size:0.9rem;margin:8px 0;">{{ reply.content }}</p>
+
+                                <!-- Оценка ответа -->
+                                <div class="reply-rating-container">
+                                    {% if user.is_authenticated and user != reply.author %}
+                                        <button class="review-rate-btn rate-like {% if reply.id in user_liked_replies %}active{% endif %}"
+                                                onclick="rateAnnouncementReply({{ reply.id }}, true)"
+                                                title="Нравится">
+                                            👍 <span class="rate-count">{{ reply.likes_count|default:0 }}</span>
+                                        </button>
+                                        <button class="review-rate-btn rate-dislike {% if reply.id in user_disliked_replies %}active{% endif %}"
+                                                onclick="rateAnnouncementReply({{ reply.id }}, false)"
+                                                title="Не нравится">
+                                            👎 <span class="rate-count">{{ reply.dislikes_count|default:0 }}</span>
+                                        </button>
+                                    {% else %}
+                                        <span class="rate-count">👍 {{ reply.likes_count|default:0 }}</span>
+                                        <span class="rate-count">👎 {{ reply.dislikes_count|default:0 }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <!-- Нет ответов -->
+                        {% endfor %}
+                    </div>
                 </div>
-                {% empty %}
-                <div class="ann-empty-comments"
-                     data-lang-ru="Пока нет комментариев. Будьте первым!"
-                     data-lang-en="No comments yet. Be the first!">Пока нет комментариев. Будьте первым!</div>
-                {% endfor %}
-            </div>
+            {% empty %}
+                <div class="no-comments">
+                    <p>Пока нет комментариев. Будьте первым!</p>
+                </div>
+            {% endfor %}
         </div>
 
-        <!-- ── Comment form ── -->
+        <!-- Форма нового комментария -->
         {% if user.is_authenticated and user != announcement.author %}
-        <div class="ann-form-card">
-            <p class="ann-form-title" id="form-title"
-               data-lang-ru="Напишите свой комментарий"
-               data-lang-en="Write your comment">Напишите свой комментарий</p>
-
-            <form id="comment-form" method="POST" action="#" onsubmit="return false;">
-                {% csrf_token %}
-                <input type="hidden" id="comment-id-edit" name="comment_id" value="">
-                <textarea id="comment-text" name="content"
-                          class="ann-form-textarea"
-                          placeholder="Поделитесь своим мнением об этом объявлении..."
-                          data-placeholder-ru="Поделитесь своим мнением об этом объявлении..."
-                          data-placeholder-en="Share your opinion about this announcement..."></textarea>
-                <p id="error" hidden class="ann-form-error"
-                   data-lang-ru="Комментарий не может быть пустым!"
-                   data-lang-en="Comment cannot be empty!">Комментарий не может быть пустым!</p>
-                <div class="ann-form-actions">
-                    <button id="response-btn" class="ann-submit-btn" type="submit"
-                            data-lang-ru="Отправить" data-lang-en="Send">Отправить</button>
-                </div>
-            </form>
-        </div>
+            <div class="new-comment-form">
+                <h4>Напишите свой комментарий</h4>
+                <form id="new-comment-form" onsubmit="submitNewComment(event, {{ announcement.id }})">
+                    {% csrf_token %}
+                    <textarea name="content"
+                              placeholder="Ваш комментарий..."
+                              required
+                              rows="4"></textarea>
+                    <div class="error-message" id="comment-error" style="display:none; color:red; margin:10px 0;">
+                        Комментарий не может быть пустым!
+                    </div>
+                    <button type="submit" class="btn-submit">Отправить</button>
+                </form>
+            </div>
 
         {% elif not user.is_authenticated %}
-        <div class="ann-form-card">
-            <p class="ann-login-hint">
-                <span data-lang-ru="Войдите" data-lang-en="Log in">Войдите</span>,
-                <span data-lang-ru="чтобы оставить комментарий"
-                      data-lang-en="to leave a comment">чтобы оставить комментарий</span>
-            </p>
-        </div>
+            <div class="login-prompt">
+                <p><a href="{% url 'login_page' %}">Войдите</a>, чтобы оставить комментарий</p>
+            </div>
         {% endif %}
-
     </div>
+</div>
 
-    {% include 'users/footer.html' %}
-    {% include 'users/chat.html' %}
+{% include 'users/footer.html' %}
+{% include 'users/chat.html' %}
 
-    <script src="{% static 'js/auth.js' %}"></script>
-    <script src="{% static 'js/search.js' %}"></script>
-    <script src="{% static 'js/toggle_language.js' %}"></script>
-    <script src="{% static 'js/toggle_chat.js' %}"></script>
-    <script src="{% static 'js/favorite_announce.js' %}"></script>
-    <script src="{% static 'js/theme.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sortSelect = document.getElementById('comment-sort-select');
+        if (!sortSelect) return;
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const sortSelect = document.getElementById('comment-sort-select');
-            if (!sortSelect) return;
-            
-            sortSelect.addEventListener('change', function() {
-                const url = new URL(window.location);
-                url.searchParams.set('sort', this.value);
-                window.location.href = url.toString();
-            });
-        });
-    </script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            function getElement(id) {
-                const element = document.getElementById(id);
-                if (!element) console.warn(`Элемент с id "${id}" не найден`);
-                return element;
-            }
-
-            const form = getElement('comment-form');
-            if (!form) return;
-
-            const textarea        = getElement('comment-text');
-            const commentIdInput  = getElement('comment-id-edit');
-            const errorEl         = getElement('error');
-            const formTitle       = getElement('form-title');
-            const submitBtn       = getElement('response-btn');
-            const csrfTokenEl     = document.querySelector('[name=csrfmiddlewaretoken]');
-
-            if (!textarea || !form || !csrfTokenEl) return;
-
-            const csrfToken      = csrfTokenEl.value;
-            const announcementId = "{{ announcement.id }}";
-
-            /* ── Edit existing comment ── */
-            document.querySelectorAll('.edit-comment-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    textarea.value = btn.dataset.commentContent;
-                    if (commentIdInput) commentIdInput.value = btn.dataset.commentId;
-                    const lang = localStorage.getItem('lang') || 'RU';
-                    if (submitBtn) submitBtn.textContent = lang === 'RU' ? "Сохранить изменения" : "Save changes";
-                    if (formTitle) formTitle.textContent = lang === 'RU' ? "Редактировать комментарий" : "Edit comment";
-                    textarea.focus();
-                });
-            });
-
-            /* ── Delete comment ── */
-            function bindDeleteBtn(btn) {
-                btn.addEventListener('click', () => {
-                    const commentId = btn.dataset.commentId;
-                    const lang = localStorage.getItem('lang') || 'RU';
-                    if (!confirm(lang === 'RU' ? "Вы уверены, что хотите удалить этот комментарий?" : "Are you sure you want to delete this comment?")) return;
-
-                    fetch(`/api/announcements/comments/${commentId}/delete/`, {
-                        method: "DELETE",
-                        headers: { "X-CSRFToken": csrfToken, "Content-Type": "application/json" }
-                    }).then(res => {
-                        if (!res.ok) return res.json().then(d => { throw new Error(d.error || d.detail || 'Неизвестная ошибка'); });
-                        return res.json();
-                    }).then(() => {
-                        const block = document.querySelector(`.comment-block[data-comment-id="${commentId}"]`);
-                        if (block) block.remove();
-                        const container = document.getElementById('comments-container');
-                        if (container && container.querySelectorAll('.comment-block').length === 0) {
-                            const lang2 = localStorage.getItem('lang') || 'RU';
-                            container.innerHTML = `<div class="ann-empty-comments">${lang2 === 'RU' ? 'Пока нет комментариев. Будьте первым!' : 'No comments yet. Be the first!'}</div>`;
-                        }
-                    }).catch(err => alert((localStorage.getItem('lang') === 'RU' ? 'Ошибка: ' : 'Error: ') + err.message));
-                });
-            }
-
-            document.querySelectorAll('.delete-comment-btn').forEach(bindDeleteBtn);
-
-            /* ── Submit form ── */
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const content = textarea.value.trim();
-                if (!content) { if (errorEl) errorEl.hidden = false; return; }
-                if (errorEl) errorEl.hidden = true;
-
-                const commentId = commentIdInput ? commentIdInput.value : "";
-                const isUpdate  = commentId !== "";
-                const url       = isUpdate ? `/api/announcements/comments/${commentId}/update/` : `/api/announcements/comments/create/`;
-
-                fetch(url, {
-                    method: isUpdate ? "PUT" : "POST",
-                    headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
-                    body: JSON.stringify({ announcement_id: announcementId, content })
-                }).then(res => {
-                    if (!res.ok) return res.json().then(d => { throw new Error(d.error || d.detail || 'Неизвестная ошибка'); });
-                    return res.json();
-                }).then(data => {
-                    if (isUpdate) {
-                        const block = document.querySelector(`.comment-block[data-comment-id="${commentId}"]`);
-                        if (block) {
-                            const contentEl = block.querySelector('.comment-content');
-                            if (contentEl) contentEl.textContent = content;
-
-                            const existingLabel = block.querySelector('.edited-label');
-                            if (existingLabel) {
-                                existingLabel.style.display = 'inline';
-                            } else {
-                                const dateEl = block.querySelector('.comment-date');
-                                if (dateEl) {
-                                    const lang = localStorage.getItem('lang') || 'RU';
-                                    dateEl.innerHTML += ` <span class="edited-label ann-comment-edited">${lang === 'RU' ? '(редактировано)' : '(edited)'}</span>`;
-                                }
-                            }
-                        }
-                    } else {
-                        const container = document.getElementById('comments-container');
-                        if (!container) { location.reload(); return; }
-
-                        /* Remove empty-state placeholder */
-                        const emptyEl = container.querySelector('.ann-empty-comments');
-                        if (emptyEl) emptyEl.remove();
-
-                        function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
-
-                        const avatarUrl       = data.author_avatar || "{% static 'images/default-avatar.jpg' %}";
-                        const escapedAuthor   = escapeHtml(data.author);
-                        const escapedContent  = escapeHtml(data.content);
-                        const escapedDate     = escapeHtml(data.created_at || new Date().toLocaleString('ru-RU'));
-                        const currentUser     = "{{ user.username|default:'' }}";
-                        const isAuthor        = data.author === currentUser;
-
-                        let buttonsHtml = '';
-                        if (isAuthor) {
-                            const safeContent = escapedContent.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-                            buttonsHtml = `
-                                <div class="p-review-actions">
-                                    <button class="p-icon-btn edit-comment-btn"
-                                            data-comment-id="${data.id}"
-                                            data-comment-content="${safeContent}"
-                                            title="Редактировать">✎</button>
-                                    <button class="p-icon-btn danger delete-comment-btn"
-                                            data-comment-id="${data.id}"
-                                            title="Удалить">🗑</button>
-                                </div>`;
-                        }
-
-                        const defaultAvatar = "{% static 'images/default-avatar.jpg' %}";
-                        const newComment = document.createElement('div');
-                        newComment.className = 'ann-comment-block comment-block';
-                        newComment.dataset.commentId = data.id;
-                        newComment.innerHTML = `
-                            <div class="ann-comment-header">
-                                <img src="${escapeHtml(avatarUrl)}" class="rec_avatar" alt="${escapedAuthor}"
-                                     onerror="this.src='${defaultAvatar}'">
-                                <div class="ann-comment-meta">
-                                    <a href="/users/${escapedAuthor}/" class="ann-comment-author">${escapedAuthor}</a>
-                                    <span class="ann-comment-date comment-date">${escapedDate}</span>
-                                </div>
-                                ${buttonsHtml}
-                            </div>
-                            <p class="ann-comment-body comment-content">${escapedContent}</p>`;
-
-                        if (isAuthor) {
-                            newComment.querySelector('.edit-comment-btn')?.addEventListener('click', () => {
-                                textarea.value = newComment.querySelector('.comment-content').textContent;
-                                if (commentIdInput) commentIdInput.value = data.id;
-                                const lang = localStorage.getItem('lang') || 'RU';
-                                if (submitBtn) submitBtn.textContent = lang === 'RU' ? "Сохранить изменения" : "Save changes";
-                                if (formTitle) formTitle.textContent = lang === 'RU' ? "Редактировать комментарий" : "Edit comment";
-                                textarea.focus();
-                            });
-                            bindDeleteBtn(newComment.querySelector('.delete-comment-btn'));
-                        }
-
-                        container.insertBefore(newComment, container.firstChild);
-                    }
-
-                    /* Reset form */
-                    textarea.value = "";
-                    if (commentIdInput) commentIdInput.value = "";
-                    const lang = localStorage.getItem('lang') || 'RU';
-                    if (submitBtn) submitBtn.textContent = lang === 'RU' ? "Отправить" : "Send";
-                    if (formTitle) formTitle.textContent = lang === 'RU' ? "Напишите свой комментарий" : "Write your comment";
-
-                }).catch(err => alert((localStorage.getItem('lang') === 'RU' ? 'Ошибка: ' : 'Error: ') + err.message));
-            });
-
-            textarea.addEventListener('input', function() {
-                if (errorEl) errorEl.hidden = true;
-                this.style.height = 'auto';
-                this.style.height = this.scrollHeight + 'px';
-            });
-
-            window.addEventListener('languageChanged', () => {
-                const lang = localStorage.getItem('lang') || 'RU';
-                const isRu = lang === 'RU';
-                if (formTitle) formTitle.textContent = isRu ? "Напишите свой комментарий" : "Write your comment";
-                if (errorEl)   errorEl.textContent   = isRu ? "Комментарий не может быть пустым!" : "Comment cannot be empty!";
-                if (submitBtn) submitBtn.textContent  = isRu ? "Отправить" : "Send";
-            });
-        });
-    </script>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        function getCsrfToken() {
-            const input = document.querySelector('[name=csrfmiddlewaretoken]');
-            if (input) return input.value;
-            const match = document.cookie.match(/csrftoken=([^;]+)/);
-            return match ? match[1] : '';
-        }
-        const csrfToken = getCsrfToken();
-
-        document.querySelectorAll('[data-comment-id] .review-rate-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const container = btn.closest('[data-comment-id]');
-                const commentId = container.dataset.commentId;
-                const isLike    = btn.dataset.type === 'like';
-                try {
-                    const response = await fetch(`/api/announcements/comments/${commentId}/rate/`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-                        body: JSON.stringify({ is_like: isLike })
-                    });
-                    const data = await response.json();
-                    if (response.ok) {
-                        container.querySelector('.rate-like .rate-count').textContent  = data.likes;
-                        container.querySelector('.rate-dislike .rate-count').textContent = data.dislikes;
-                        container.querySelector('.rate-like').classList.toggle('active',    data.user_action === true);
-                        container.querySelector('.rate-dislike').classList.toggle('active', data.user_action === false);
-                    } else {
-                        alert(data.error || 'Ошибка при оценке комментария');
-                    }
-                } catch (err) {
-                    console.error('Ошибка сети:', err);
-                    alert('Произошла ошибка сети');
-                }
-            });
+        sortSelect.addEventListener('change', function() {
+            const url = new URL(window.location);
+            url.searchParams.set('sort', this.value);
+            window.location.href = url.toString();
         });
     });
-    </script>
+</script>
+
+<script>
+// ========== CSRF TOKEN ==========
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+// ========== TOGGLE REPLY FORM ==========
+function toggleReplyForm(commentId) {
+    const form = document.getElementById('reply-form-' + commentId);
+    if (!form) return;
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+        const textarea = form.querySelector('textarea');
+        if (textarea) textarea.focus();
+    } else {
+        form.style.display = 'none';
+    }
+}
+
+// ========== SUBMIT REPLY ==========
+async function submitReply(e, commentId) {
+    e.preventDefault();
+    const form = e.target;
+    const textarea = form.querySelector('textarea');
+    const content = textarea ? textarea.value.trim() : '';
+    if (!content) return alert('Текст не может быть пустым');
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+        const response = await fetch('/api/announcements/comments/' + commentId + '/reply/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+            body: JSON.stringify({ content: content })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Ищем контейнер с ответами ВНУТРИ этого комментария
+            const commentBlock = form.closest('.comment-block');
+            let repliesContainer = commentBlock ? commentBlock.querySelector('.replies-container') : null;
+
+            // Если не нашли, создаём
+            if (!repliesContainer) {
+                repliesContainer = document.createElement('div');
+                repliesContainer.className = 'replies-container';
+                repliesContainer.setAttribute('data-comment-id', commentId);
+                form.parentNode.insertBefore(repliesContainer, form);
+            }
+
+            const newReply = document.createElement('div');
+            newReply.className = 'reply-block';
+            newReply.setAttribute('data-reply-id', data.id);
+            newReply.style.cssText = 'padding:12px;margin:12px 0 12px 48px;background:var(--bg-secondary);border-radius:8px;';
+
+            const avatarUrl = data.author_avatar || '{% static "images/default-avatar.jpg" %}';
+
+            newReply.innerHTML =
+                '<div style="display:flex;gap:10px;margin-bottom:8px;align-items:center;">' +
+                    '<img src="' + avatarUrl + '" style="width:32px;height:32px;border-radius:50%;">' +
+                    '<div>' +
+                        '<a href="/users/' + data.author + '/" style="font-size:0.85rem;font-weight:500;">' + data.author + '</a>' +
+                        '<div style="font-size:0.75rem;color:var(--text-tertiary);">' + data.created_at + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<p style="font-size:0.9rem;margin:8px 0 0 0;line-height:1.4;">' + data.content + '</p>' +
+                '<div style="display:flex;gap:8px;margin-top:12px;">' +
+                    '<button class="rate-btn rate-like" onclick="rateAnnouncementReply(' + data.id + ', true)" style="padding:4px 10px;font-size:0.8rem;background:none;border:none;cursor:pointer;color:var(--text-secondary);">👍 <span class="rate-count">' + data.likes_count + '</span></button>' +
+                    '<button class="rate-btn rate-dislike" onclick="rateAnnouncementReply(' + data.id + ', false)" style="padding:4px 10px;font-size:0.8rem;background:none;border:none;cursor:pointer;color:var(--text-secondary);">👎 <span class="rate-count">' + data.dislikes_count + '</span></button>' +
+                '</div>';
+
+            repliesContainer.appendChild(newReply);
+
+            // Сбрасываем и скрываем форму
+            form.reset();
+            form.style.display = 'none';
+        } else {
+            alert(data.error || 'Ошибка отправки ответа');
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка при отправке');
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+}
+
+// ========== RATE COMMENT ==========
+async function rateAnnouncementComment(commentId, isLike) {
+    try {
+        const response = await fetch('/api/announcements/comments/' + commentId + '/rate/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+            body: JSON.stringify({ is_like: isLike })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            const commentBlock = document.querySelector(`.comment-block[data-comment-id="${commentId}"]`);
+            if (!commentBlock) return;
+
+            const likeBtn = commentBlock.querySelector('.rate-like');
+            const dislikeBtn = commentBlock.querySelector('.rate-dislike');
+            const likeCount = likeBtn.querySelector('.rate-count');
+            const dislikeCount = dislikeBtn.querySelector('.rate-count');
+
+            // Обновляем цифры
+            if (likeCount) likeCount.textContent = data.likes;
+            if (dislikeCount) dislikeCount.textContent = data.dislikes;
+
+            // Обновляем стили (синий цвет)
+            // data.user_action: true = лайк, false = дизлайк, null = убрали оценку
+
+            // Сбрасываем всё сначала
+            likeBtn.classList.remove('active');
+            dislikeBtn.classList.remove('active');
+            likeBtn.style.color = '';
+            dislikeBtn.style.color = '';
+
+            if (data.user_action === true) {
+                likeBtn.classList.add('active');
+                likeBtn.style.color = 'var(--primary-color, #2563eb)'; // Синий цвет для активного
+            } else if (data.user_action === false) {
+                dislikeBtn.classList.add('active');
+                dislikeBtn.style.color = 'var(--primary-color, #2563eb)'; // Синий цвет для активного
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка оценки:', error);
+    }
+}
+
+// ========== RATE REPLY ==========
+async function rateAnnouncementReply(replyId, isLike) {
+    try {
+        const response = await fetch('/api/announcements/comments/replies/' + replyId + '/rate/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+            body: JSON.stringify({ is_like: isLike })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            const replyBlock = document.querySelector(`.reply-block[data-reply-id="${replyId}"]`);
+            if (!replyBlock) return;
+
+            const likeBtn = replyBlock.querySelector('.rate-like');
+            const dislikeBtn = replyBlock.querySelector('.rate-dislike');
+            const likeCount = likeBtn.querySelector('.rate-count');
+            const dislikeCount = dislikeBtn.querySelector('.rate-count');
+
+            if (likeCount) likeCount.textContent = data.likes;
+            if (dislikeCount) dislikeCount.textContent = data.dislikes;
+
+            likeBtn.classList.remove('active');
+            dislikeBtn.classList.remove('active');
+            likeBtn.style.color = '';
+            dislikeBtn.style.color = '';
+
+            if (data.user_action === true) {
+                likeBtn.classList.add('active');
+                likeBtn.style.color = 'var(--primary-color, #2563eb)';
+            } else if (data.user_action === false) {
+                dislikeBtn.classList.add('active');
+                dislikeBtn.style.color = 'var(--primary-color, #2563eb)';
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка оценки:', error);
+    }
+}
+
+// ========== SUBMIT NEW COMMENT ==========
+async function submitNewComment(e, announcementId) {
+    e.preventDefault();
+
+    const form = e.target;
+    const textarea = form.querySelector('textarea');
+    const content = textarea ? textarea.value.trim() : '';
+
+    if (!content) {
+        const errorDiv = document.getElementById('comment-error');
+        if (errorDiv) errorDiv.style.display = 'block';
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/announcements/comments/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                announcement_id: announcementId,
+                content: content
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert(data.error || 'Ошибка отправки комментария');
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка при отправке');
+    }
+}
+
+// ========== TOGGLE FAVORITE ==========
+async function toggleFavorite(announcementId) {
+    try {
+        const response = await fetch('/announcements/' + announcementId + '/toggle-favorite/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            location.reload();
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+    }
+}
+
+// ========== OPEN CHAT ==========
+function openChat(userId) {
+    if (typeof window.openChatWithUser === 'function') {
+        window.openChatWithUser(userId);
+    } else {
+        window.location.href = '/chat/?user=' + userId;
+    }
+}
+</script>
+
 </body>
 </html>
