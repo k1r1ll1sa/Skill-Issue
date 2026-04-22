@@ -49,8 +49,9 @@
         {% if user.is_authenticated and user != announcement.author %}
             <div class="announcement-actions">
                 <p>Заинтересовало? Напишите автору!</p>
-                <button class="btn-primary" onclick="openChat({{ announcement.author.id }})">Написать в чат</button>
-                <button class="btn-secondary" onclick="toggleFavorite({{ announcement.id }})">
+                <button class="btn-primary" id="write-message" data-user-id="{{ announcement.author.id }}"
+                data-username="{{ announcement.author.username }}">Написать в чат</button>
+                <button class="btn-secondary" id="add-favorite" data-announcement-id="{{ announcement.id }}">
                     {% if is_favorited %}★ В избранном{% else %}☆ В избранное{% endif %}
                 </button>
             </div>
@@ -269,7 +270,12 @@
         });
     });
 </script>
-
+<script src="{% static 'js/auth.js' %}"></script>
+<script src="{% static 'js/search.js' %}"></script>
+<script src="{% static 'js/toggle_chat.js' %}"></script>
+<script src="{% static 'js/toggle_language.js' %}"></script>
+<script src="{% static 'js/theme.js' %}"></script>
+<script src="{% static 'js/favorite_announce.js' %}"></script>
 <script>
 // ========== CSRF TOKEN ==========
 function getCookie(name) {
@@ -528,5 +534,154 @@ function openChat(userId) {
 }
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('new-comment-form');
+    const textarea = form.querySelector('textarea[name="content"]');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const errorMsg = document.getElementById('comment-error');
+
+    // Состояние режима редактирования
+    let editState = { isActive: false, commentId: null };
+
+    // Безопасное получение CSRF токена (из cookies или скрытого input)
+    function getCSRFToken() {
+        const cookie = document.cookie.match(/csrftoken=([^;]+)/);
+        if (cookie) return decodeURIComponent(cookie[1]);
+        const input = document.querySelector('form input[name="csrfmiddlewaretoken"]');
+        return input ? input.value : '';
+    }
+
+    // ================= КНОПКА РЕДАКТИРОВАТЬ =================
+    document.querySelectorAll('.edit-comment-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            editState.isActive = true;
+            editState.commentId = this.dataset.commentId;
+
+            // Перенос текста в форму нового комментария
+            textarea.value = this.dataset.commentContent;
+            submitBtn.textContent = 'Сохранить изменения';
+            errorMsg.style.display = 'none';
+
+            // Добавляем кнопку "Отмена", если её ещё нет
+            if (!document.getElementById('cancel-edit-comment')) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.id = 'cancel-edit-comment';
+                cancelBtn.className = 'btn-secondary';
+                cancelBtn.textContent = 'Отмена';
+                cancelBtn.style.marginLeft = '8px';
+                cancelBtn.onclick = function() {
+                    editState.isActive = false;
+                    editState.commentId = null;
+                    textarea.value = '';
+                    submitBtn.textContent = 'Отправить';
+                    this.remove();
+                };
+                submitBtn.insertAdjacentElement('afterend', cancelBtn);
+            }
+
+            // Плавная прокрутка к форме
+            form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            textarea.focus();
+        });
+    });
+
+    // ================= КНОПКА УДАЛИТЬ =================
+    document.querySelectorAll('.delete-comment-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!confirm('Вы уверены, что хотите удалить этот комментарий? Все ответы под ним также будут удалены.')) return;
+
+            const commentId = this.dataset.commentId;
+            const commentBlock = this.closest('.ann-comment-block');
+
+            fetch(`/api/announcements/comments/${commentId}/delete/`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.message) {
+                    // Удаляем блок комментария (вместе с вложенными ответами) из DOM
+                    commentBlock?.remove();
+                } else {
+                    alert(data.error || 'Не удалось удалить комментарий');
+                }
+            })
+            .catch(() => alert('Ошибка соединения при удалении'));
+        });
+    });
+
+    // ================= ОТПРАВКА ФОРМЫ (СОЗДАНИЕ / ОБНОВЛЕНИЕ) =================
+    window.submitNewComment = function(e, announcementId) {
+        e.preventDefault();
+        const content = textarea.value.trim();
+
+        if (!content) {
+            errorMsg.style.display = 'block';
+            return;
+        }
+        errorMsg.style.display = 'none';
+
+        const isUpdate = editState.isActive;
+        const url = isUpdate
+            ? `/api/announcements/comments/${editState.commentId}/update/`
+            : '/api/announcements/comments/create/';
+        const method = isUpdate ? 'PUT' : 'POST';
+
+        const body = isUpdate
+            ? JSON.stringify({ content: content })
+            : JSON.stringify({ announcement_id: announcementId, content: content });
+
+        submitBtn.disabled = true;
+
+        fetch(url, {
+            method: method,
+            credentials: 'include',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            },
+            body: body
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else if (isUpdate) {
+                // Обновляем текст в DOM без перезагрузки
+                const commentBlock = document.querySelector(`.ann-comment-block[data-comment-id="${editState.commentId}"]`);
+                if (commentBlock) {
+                    commentBlock.querySelector('.comment-content').textContent = data.content;
+                    const dateSpan = commentBlock.querySelector('.ann-comment-date');
+                    // Добавляем метку "(редактировано)", если её нет
+                    if (data.is_edited && !dateSpan.querySelector('.edited-label')) {
+                        dateSpan.insertAdjacentHTML('beforeend', ' <span class="edited-label ann-comment-edited">(редактировано)</span>');
+                    }
+                }
+                // Сброс формы в режим создания
+                editState.isActive = false;
+                editState.commentId = null;
+                textarea.value = '';
+                submitBtn.textContent = 'Отправить';
+                document.getElementById('cancel-edit-comment')?.remove();
+            } else {
+                // Новый комментарий успешно создан -> перезагружаем для корректного порядка и нумерации
+                window.location.reload();
+            }
+        })
+        .catch(() => alert('Ошибка при отправке данных'))
+        .finally(() => {
+            submitBtn.disabled = false;
+        });
+    };
+});
+</script>
 </body>
 </html>
