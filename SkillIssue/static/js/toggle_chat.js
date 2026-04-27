@@ -21,24 +21,65 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!modal || !button) return; // Если элементов нет, выходим
 
+    const unreadBadge   = document.getElementById('chat-unread-badge');
+    const headerBadge   = document.getElementById('chat-header-badge');
+    const btnMarkAll    = document.getElementById('btn-mark-all-read');
+    const btnMute       = document.getElementById('btn-mute-notifications');
+
     let currentReceiverId = null;
     let contactsCache = {};
+    let isMuted = false;
 
-    /* ─────────────────────────────────────────────
-       ОТКРЫТЬ ОКНО ЧАТА
-    ───────────────────────────────────────────── */
-    button.addEventListener('click', function () {
+    function updateUnreadBadge(count) {
+        if (count > 0) {
+            const label = count > 99 ? '99+' : String(count);
+            if (unreadBadge) {
+                unreadBadge.textContent = label;
+                unreadBadge.style.display = 'flex';
+            }
+            if (headerBadge) {
+                headerBadge.textContent = label;
+                headerBadge.style.display = 'inline-block';
+            }
+        } else {
+            if (unreadBadge) unreadBadge.style.display = 'none';
+            if (headerBadge) headerBadge.style.display = 'none';
+        }
+    }
+
+    if (btnMarkAll) {
+        btnMarkAll.addEventListener('click', function () {
+            modal.querySelectorAll('.chat-unread-count').forEach(el => el.remove());
+            updateUnreadBadge(0);
+        });
+    }
+
+    if (btnMute) {
+        btnMute.addEventListener('click', function () {
+            isMuted = !isMuted;
+            btnMute.classList.toggle('muted', isMuted);
+            btnMute.title = isMuted ? 'Включить уведомления' : 'Выключить уведомления';
+        });
+    }
+
+    function openChat() {
         modal.style.right = '20px';
+        button.style.display = 'none';
         loadContacts();
+    }
+
+    function closeChat() {
+        modal.style.right = '-420px';
+        button.style.display = 'flex';
+    }
+
+    button.addEventListener('click', function () {
+        const isOpen = modal.style.right === '20px';
+        isOpen ? closeChat() : openChat();
     });
 
-    /* ─────────────────────────────────────────────
-       ЗАКРЫТЬ ОКНО ЧАТА
-    ───────────────────────────────────────────── */
     if (closeButton) {
-    closeButton.addEventListener('click', function () {
-        modal.style.right = '-400px';
-    });
+        closeButton.addEventListener('click', closeChat);
     }
 
 
@@ -113,17 +154,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    /* ─────────────────────────────────────────────
-       ОТОБРАЖЕНИЕ КОНТАКТОВ
-    ───────────────────────────────────────────── */
     function renderContacts(contacts) {
         chatList.innerHTML = '';
         contactsCache = {};
 
         if (contacts.length === 0) {
             chatList.innerHTML = '<div class="simple-text" style="padding: 20px; color: #666;">У вас пока нет сообщений</div>';
+            updateUnreadBadge(0);
             return;
         }
+
+        let totalUnread = 0;
 
         contacts.forEach(contact => {
             contactsCache[contact.user_id] = contact.username;
@@ -133,16 +174,16 @@ document.addEventListener('DOMContentLoaded', function () {
             contactEl.dataset.userId = contact.user_id;
 
             const avatarUrl = contact.avatar || '/static/images/default-avatar.jpg';
+            const unread = contact.unread_count || 0;
+            totalUnread += unread;
 
             contactEl.innerHTML = `
                 <img src="${avatarUrl}" alt="Avatar">
-                <div style="flex: 1;">
-                    <div class="username">${contact.username}</div>
-                    <div class="simple-text" style="font-size: 0.85rem; color: #666; margin-top: 3px;">
-                        ${contact.last_message || 'Без сообщений'}
-                    </div>
+                <div class="chat-item-info">
+                    <div class="chat-item-name">${contact.username}</div>
+                    <div class="chat-item-preview">${contact.last_message || 'Без сообщений'}</div>
                 </div>
-                ${contact.unread_count > 0 ? `<div style="min-width: 30px; text-align: right; color: #007bff; font-size: 0.8rem;">${contact.unread_count}</div>` : ''}
+                ${unread > 0 ? `<span class="chat-unread-count">${unread > 99 ? '99+' : unread}</span>` : ''}
             `;
 
             contactEl.addEventListener('click', (e) => {
@@ -151,12 +192,11 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             chatList.appendChild(contactEl);
-    });
+        });
+
+        updateUnreadBadge(totalUnread);
     }
 
-    /* ─────────────────────────────────────────────
-       КНОПКА "НАЗАД"
-    ───────────────────────────────────────────── */
     if (backToChats) {
     backToChats.addEventListener('click', function () {
         chatDialog.style.display = 'none';
@@ -166,9 +206,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    /* ─────────────────────────────────────────────
-       ОТКРЫТИЕ ДИАЛОГА
-    ───────────────────────────────────────────── */
     async function openDialog(userId, username) {
         if (imagePreviewContainer) imagePreviewContainer.style.display = 'none';
         if (imagePreview) imagePreview.src = '';
@@ -240,9 +277,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    /* ─────────────────────────────────────────────
-       ДОБАВЛЕНИЕ СООБЩЕНИЯ
-    ───────────────────────────────────────────── */
     function addMessage(type, text, time, imageUrl = null) {
         if (!messagesContainer) {
             console.error('Контейнер сообщений не найден при добавлении сообщения');
@@ -318,26 +352,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    /* ─────────────────────────────────────────────
-       ФОРМАТИРОВАНИЕ ВРЕМЕНИ
-    ───────────────────────────────────────────── */
     function formatTime(dateStr) {
         const date = new Date(dateStr);
         return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     }
 
-    /* ─────────────────────────────────────────────
-       ЭКРАНИРОВАНИЕ HTML
-    ───────────────────────────────────────────── */
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-    /* ─────────────────────────────────────────────
-       ОТПРАВКА СООБЩЕНИЯ (делегирование событий)
-    ───────────────────────────────────────────── */
     // Используем делегирование событий на modal, чтобы обработчик работал всегда
     if (modal) {
         console.log('Инициализация обработчика формы сообщения');
@@ -493,9 +518,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    /* ─────────────────────────────────────────────
-       СОЗДАНИЕ / ОТКРЫТИЕ ЧАТА ИЗ КНОПКИ "НАПИСАТЬ"
-    ───────────────────────────────────────────── */
     const writeBtn = document.getElementById("write-message");
 
     if (writeBtn) {
@@ -515,6 +537,7 @@ document.addEventListener('DOMContentLoaded', function () {
     async function openChatWithUser(userId, username) {
         // Открыть окно чата
         modal.style.right = "20px";
+        button.style.display = 'none';
 
         // Загрузить контакты
         await loadContacts();

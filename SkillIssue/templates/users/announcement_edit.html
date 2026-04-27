@@ -16,14 +16,12 @@
 
     <div class="edit-page-wrapper">
 
-        <!-- Page header -->
         <div class="edit-page-header">
             <h1 data-lang-ru="Измените своё объявление!" data-lang-en="Edit your announcement!">
                 Измените своё объявление!
             </h1>
         </div>
 
-        <!-- Tabs -->
         <div class="editor-tabs">
             <button class="editor-tab-btn active" data-tab="editor"
                     data-lang-ru="Редактор" data-lang-en="Editor">Редактор</button>
@@ -34,10 +32,8 @@
         <form class="edit-form" method="POST" action="{% url 'update_announcement' announcement.id %}" enctype="multipart/form-data">
             {% csrf_token %}
 
-            <!-- ── EDITOR PANEL ── -->
             <div class="editor-tab-panel active" id="tab-panel-editor">
 
-                <!-- Card: Main Info -->
                 <div class="form-card">
                     <div class="form-card-header">
                         <h2 class="form-card-title"
@@ -89,7 +85,6 @@
                     </div>
                 </div>
 
-                <!-- Card: Settings -->
                 <div class="form-card">
                     <div class="form-card-header">
                         <h2 class="form-card-title"
@@ -113,7 +108,6 @@
                     </div>
                 </div>
 
-                <!-- Action bar -->
                 <div class="form-actions">
                     <div class="form-actions-left">
                         <button type="button"
@@ -133,11 +127,9 @@
                 </div>
 
             </div>
-            <!-- ── END EDITOR PANEL ── -->
 
         </form>
 
-        <!-- ── PREVIEW PANEL (outside form — no submit risk) ── -->
         <div class="editor-tab-panel" id="tab-panel-preview">
 
             <div class="ann-detail-hero">
@@ -175,8 +167,6 @@
             </div>
 
         </div>
-        <!-- ── END PREVIEW PANEL ── -->
-
     </div>
 
     {% include 'users/footer.html' %}
@@ -184,7 +174,6 @@
     <script>
         let hasCustomImage = {% if announcement.image %}true{% else %}false{% endif %};
 
-        /* ── Seed preview panel with existing announcement image ── */
         document.addEventListener('DOMContentLoaded', function() {
             {% if announcement.image %}
                 document.getElementById('preview-image').src = "{{ announcement.image.url }}";
