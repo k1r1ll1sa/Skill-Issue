@@ -28,9 +28,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentReceiverId = null;
     let contactsCache = {};
-    let isMuted = false;
+    let isMuted = localStorage.getItem('chat_notifications_muted') === 'true';
+
+    if (btnMute) {
+        btnMute.classList.toggle('muted', isMuted);
+        btnMute.title = isMuted ? 'Включить уведомления' : 'Выключить уведомления';
+    }
 
     function updateUnreadBadge(count) {
+        if (isMuted) {
+            if (unreadBadge) unreadBadge.style.display = 'none';
+            if (headerBadge) headerBadge.style.display = 'none';
+            return;
+        }
+
         if (count > 0) {
             const label = count > 99 ? '99+' : String(count);
             if (unreadBadge) {
@@ -57,8 +68,17 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnMute) {
         btnMute.addEventListener('click', function () {
             isMuted = !isMuted;
+            localStorage.setItem('chat_notifications_muted', isMuted);
+
             btnMute.classList.toggle('muted', isMuted);
             btnMute.title = isMuted ? 'Включить уведомления' : 'Выключить уведомления';
+
+            if (isMuted) {
+                if (unreadBadge) unreadBadge.style.display = 'none';
+                if (headerBadge) headerBadge.style.display = 'none';
+            } else {
+                loadContacts();
+            }
         });
     }
 

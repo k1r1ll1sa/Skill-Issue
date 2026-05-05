@@ -46,3 +46,57 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const muteBtn = document.getElementById('btn-mute-notifications');
+    const badge = document.getElementById('chat-unread-badge');
+    const STORAGE_KEY = 'chat_notifications_muted';
+
+    let isMuted = localStorage.getItem(STORAGE_KEY) === 'true';
+    applyMuteState(isMuted);
+
+    if (muteBtn) {
+        muteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            isMuted = !isMuted;
+            localStorage.setItem(STORAGE_KEY, isMuted);
+            applyMuteState(isMuted);
+
+            if (!isMuted && window.lastUnreadCount > 0) {
+                window.updateChatBadge(window.lastUnreadCount);
+            }
+        });
+    }
+
+    function applyMuteState(muted) {
+        if (muted) {
+            muteBtn?.classList.add('is-muted');
+            muteBtn?.setAttribute('title', 'Включить уведомления');
+            if (badge) badge.style.display = 'none';
+        } else {
+            muteBtn?.classList.remove('is-muted');
+            muteBtn?.setAttribute('title', 'Отключить уведомления');
+        }
+    }
+
+    window.updateChatBadge = function(unreadCount) {
+        window.lastUnreadCount = unreadCount;
+        if (!badge) return;
+
+        if (isMuted) {
+            badge.style.display = 'none';
+            badge.textContent = '';
+            return;
+        }
+
+        if (unreadCount > 0) {
+            badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+            badge.textContent = '';
+        }
+    };
+});
+</script>
