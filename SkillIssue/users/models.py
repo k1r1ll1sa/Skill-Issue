@@ -1,5 +1,3 @@
-from unittest.mock import DEFAULT
-
 from django.db.models import BooleanField
 from django.utils import timezone
 from django.db import models
@@ -14,6 +12,12 @@ ACTION_CHOICES = [
 TARGET_TYPE_CHOICES = [
     ('GUIDE', 'Руководство'),
     ('ANNOUNCEMENT', 'Объявление'),
+]
+
+ROLE_CHOICES = [
+    ('USER', 'Пользователь'),
+    ('MODERATOR', 'Модератор'),
+    ('ADMIN', 'Администратор'),
 ]
 
 class Profile(models.Model):
@@ -41,6 +45,16 @@ class Profile(models.Model):
 
     banner_style = models.CharField(max_length=255, blank=True, null=True)
     banner_image = models.ImageField(upload_to='profile_banners/', blank=True, null=True)
+
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default='USER',
+        verbose_name="Роль"
+    )
+
+    is_moderator = models.BooleanField(default=False, verbose_name="Является модератором")
+    moderator_since = models.DateTimeField(null=True, blank=True, verbose_name="Дата назначения модератором")
 
     def __str__(self):
         return self.user.username
