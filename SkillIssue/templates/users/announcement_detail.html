@@ -58,8 +58,10 @@
             </div>
         {% endif %}
 
-        {% if user.is_authenticated and user == announcement.author %}
-            <a href="{% url 'edit_announcement' announcement.id %}" class="btn-edit">редактировать</a>
+        {% if user.is_authenticated %}
+            {% if user == announcement.author or user.profile.role == 'MODERATOR' %}
+                <a href="{% url 'edit_announcement' announcement.id %}" class="btn-edit">редактировать</a>
+            {% endif %}
         {% endif %}
     </div>
     </div>
@@ -113,7 +115,7 @@
                             </span>
                         </div>
 
-                        {% if comment.author == user %}
+                        {% if comment.author == user or user.profile.role == 'MODERATOR' %}
                              <div class="p-review-actions">
                             <button class="p-icon-btn edit-comment-btn"
                                     data-comment-id="{{ comment.id }}"

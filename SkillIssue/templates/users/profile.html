@@ -50,6 +50,9 @@
                   data-lang-en="⭐ Rating: {{ profile.rating|default:"0"|floatformat:0 }}/5">
                 ⭐ Рейтинг: {{ profile.rating|default:"0"|floatformat:0 }}/5
             </span>
+            {% if profile.role == 'MODERATOR' %}
+                <span class="section-icon" style="margin-right: auto" title="Модератор">✅</span>
+            {% endif %}
         </div>
 
         {% if user == profile.user %}
