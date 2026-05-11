@@ -9,11 +9,14 @@ from .views import (GuideRateAPIView, ReviewCreateView, create_announcement_view
                     ReviewUpdateView, ReviewDeleteView, AnnouncementListView, GuideListView, ProfileCommentCreateView,
                     ProfileCommentUpdateView, ProfileCommentDeleteView, PasswordResetConfirmView,
                     PasswordResetRequestView, delete_account, ChangePasswordView, blocked_page,
-                    GuideReviewRatingView, AnnouncementCommentRatingView, ProfileReviewRatingView)
+                    GuideReviewRatingView, AnnouncementCommentRatingView, ProfileReviewRatingView,
+                    ReviewReplyCreateView, ReviewReplyRatingView, AnnouncementCommentReplyCreateView,
+                    AnnouncementCommentReplyRatingView, )
 
 router = DefaultRouter()
 router.register(r'guides', views.GuideViewSet, basename='guides')
 router.register(r'announcements', views.AnnouncementViewSet, basename='announcements')
+
 
 urlpatterns = [
     # --- API endpoints ---
@@ -113,6 +116,10 @@ urlpatterns = [
     path('api/reviews/<int:review_id>/rate/', GuideReviewRatingView.as_view(), name='review-rate'),
     path('api/announcements/comments/<int:comment_id>/rate/', AnnouncementCommentRatingView.as_view(), name='announcement-comment-rate'),
     path('api/profile/reviews/<int:review_id>/rate/', ProfileReviewRatingView.as_view(), name='profile-review-rate'),
+    path('api/reviews/<int:review_id>/reply/', ReviewReplyCreateView.as_view(), name='review-reply-create'),
+    path('api/replies/<int:reply_id>/rate/', ReviewReplyRatingView.as_view(), name='reply-rate'),
+    path('api/announcements/comments/<int:comment_id>/reply/', AnnouncementCommentReplyCreateView.as_view(), name='announcement-comment-reply'),
+    path('api/announcements/comments/replies/<int:reply_id>/rate/', AnnouncementCommentReplyRatingView.as_view(), name='announcement-reply-rate'),
 ]
 
 if settings.DEBUG:
