@@ -12,15 +12,23 @@ class GuideAdmin(admin.ModelAdmin):
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ("user", "rating", "created_at", "is_blocked", "blocked_at")
-    list_filter = ("is_blocked", "created_at")
+    list_filter = ("is_blocked", "role", "created_at")
     search_fields = ("user__username",)
     readonly_fields = ['blocked_at']
     fieldsets = (
         ('Основное', {
-            'fields': ('user', 'avatar', 'bio', 'rating', 'allow_reviews')
+            'fields': ('user', 'avatar', 'bio', 'rating', 'allow_reviews', 'role')
         }),
         ('Блокировка', {
             'fields': ('is_blocked', 'blocked_reason'),
+            'classes': ('collapse',)
+        }),
+        ('Соцсети и ссылки', {
+            'fields': ('telegram', 'github', 'vk', 'youtube', 'website'),
+            'classes': ('collapse',)
+        }),
+        ('Баннер', {
+            'fields': ('banner_style', 'banner_image'),
             'classes': ('collapse',)
         }),
     )

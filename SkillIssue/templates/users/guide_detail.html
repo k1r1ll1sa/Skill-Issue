@@ -57,7 +57,7 @@
 
     {% if user.is_authenticated %}
     <div class="guide-detail-actions">
-        {% if user == guide.author %}
+        {% if user == guide.author or user.profile.role == 'MODERATOR' %}
         <form action="{% url 'create_guide' %}" method="get" style="margin:0;">
             <input type="hidden" name="id" value="{{ guide.id }}">
             <button class="guide-detail-edit-btn" type="submit">
@@ -116,9 +116,11 @@
 
                     <span class="simple-text review-stars review-stars-badge">⭐ {{ review.stars }}</span>
 
-                    {% if review.author == user %}
-                        <button class="btn-secondary edit-review-btn" data-review-id="{{ review.id }}" data-review-stars="{{ review.stars }}" data-review-text="{{ review.text|escapejs }}" style="padding:6px 12px;font-size:0.85rem;min-width:auto;">✎</button>
-                        <button class="btn-danger delete-review-btn" data-review-id="{{ review.id }}" style="padding:6px 12px;font-size:0.85rem;min-width:auto;">🗑</button>
+                    {% if user.is_authenticated %}
+                         {% if review.author == user or user.profile.role == 'MODERATOR' %}
+                            <button class="btn-secondary edit-review-btn" data-review-id="{{ review.id }}" data-review-stars="{{ review.stars }}" data-review-text="{{ review.text|escapejs }}" style="padding:6px 12px;font-size:0.85rem;min-width:auto;">✎</button>
+                            <button class="btn-danger delete-review-btn" data-review-id="{{ review.id }}" style="padding:6px 12px;font-size:0.85rem;min-width:auto;">🗑</button>
+                        {% endif %}
                     {% endif %}
                 </div>
 

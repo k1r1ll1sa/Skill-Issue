@@ -344,7 +344,9 @@ def create_guide(request):
     guide = None
     if guide_id:
         guide = get_object_or_404(Guide, id=guide_id)
-        if guide.author != request.user:
+        is_moderator = hasattr(request.user, 'profile') and request.user.profile.role == 'MODERATOR'
+
+        if guide.author != request.user and not is_moderator:
             return redirect('guides_list')
 
     if request.method == 'POST':
@@ -634,7 +636,9 @@ def profile_edit(request):
 def edit_announcement(request, announcement_id):
     announcement = get_object_or_404(Announcement, id=announcement_id)
 
-    if request.user != announcement.author:
+    is_moderator = hasattr(request.user, 'profile') and request.user.profile.role == 'MODERATOR'
+
+    if request.user != announcement.author and not is_moderator:
         return redirect('announcement_detail', announcement_id=announcement_id)
 
     tags_string = ''
@@ -1309,11 +1313,17 @@ def delete_account(request):
 
     return JsonResponse({'success': True, 'message': 'Аккаунт успешно удалён'})
 
+
 class IsAuthorOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return obj.author == request.user
+        is_moderator = (
+                request.user.is_authenticated and
+                hasattr(request.user, 'profile') and
+                request.user.profile.role in ['MODERATOR', 'ADMIN']
+        )
+        return obj.author == request.user or is_moderator
 
 
 class GuideViewSet(viewsets.ModelViewSet):
@@ -1739,7 +1749,8 @@ class ReviewUpdateView(APIView):
     def put(self, request, pk):
         review = get_object_or_404(Review, pk=pk)
 
-        if review.author != request.user:
+        is_moderator = hasattr(request.user, 'profile') and request.user.profile.role in ['MODERATOR', 'ADMIN']
+        if review.author != request.user and not is_moderator:
             return Response({"error": "Нет доступа"}, status=403)
 
         stars = int(request.data.get("stars"))
@@ -1800,7 +1811,8 @@ class ReviewDeleteView(APIView):
         review = get_object_or_404(Review, pk=pk)
 
         # Проверяем, что пользователь — автор
-        if review.author != request.user:
+        is_moderator = hasattr(request.user, 'profile') and request.user.profile.role in ['MODERATOR', 'ADMIN']
+        if review.author != request.user and not is_moderator:
             return Response({"error": "Нет доступа"}, status=403)
 
         guide = review.guide
@@ -2023,7 +2035,8 @@ class AnnouncementCommentUpdateView(APIView):
         comment = get_object_or_404(AnnouncementComment, pk=pk)
 
         # Проверяем, что пользователь - автор комментария
-        if comment.author != request.user:
+        is_moderator = hasattr(request.user, 'profile') and request.user.profile.role in ['MODERATOR', 'ADMIN']
+        if comment.author != request.user and not is_moderator:
             return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
 
         content = request.data.get("content", "").strip()
@@ -2071,7 +2084,8 @@ class AnnouncementCommentDeleteView(APIView):
         comment = get_object_or_404(AnnouncementComment, pk=pk)
 
         # Проверяем, что пользователь — автор
-        if comment.author != request.user:
+        is_moderator = hasattr(request.user, 'profile') and request.user.profile.role in ['MODERATOR', 'ADMIN']
+        if comment.author != request.user and not is_moderator:
             return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
 
         announcement_id = comment.announcement.id
