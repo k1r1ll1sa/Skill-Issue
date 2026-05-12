@@ -1,0 +1,64 @@
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profile.user.username }} — Заблокирован — Skill Issue</title>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/blocked.css' %}">
+</head>
+<body>
+    <div class="profile-banner blocked-banner"></div>
+
+    <div class="body-background profile-page">
+        <div class="profile-hero">
+
+            <div class="profile-avatar-wrapper blocked-avatar-wrap">
+                <div class="blocked-avatar-placeholder">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" class="blocked-avatar-icon">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="profile-hero-info">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <h1 class="p-username" style="margin:0;">{{ profile.user.username }}</h1>
+                    <span class="blocked-status-pill">Заблокирован</span>
+                </div>
+
+                <p class="blocked-info-text">
+                    Аккаунт заблокирован модератором. Страница профиля недоступна.
+                </p>
+
+                {% if profile.blocked_reason %}
+                <div class="blocked-reason-block">
+                    <span class="blocked-reason-label">Причина блокировки</span>
+                    <p class="blocked-reason-text">{{ profile.blocked_reason }}</p>
+                    {% if profile.blocked_at %}
+                    <p class="blocked-reason-date">{{ profile.blocked_at|date:"d.m.Y в H:i" }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="blocked-actions">
+                    <a href="javascript:history.back()" class="gone-btn gone-btn--ghost">← Назад</a>
+                    <a href="{% url 'main_page' %}" class="gone-btn gone-btn--primary">На главную</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {% include 'users/footer.html' %}
+    <script src="{% static 'js/theme.js' %}"></script>
+</body>
+</html>

@@ -1,7 +1,9 @@
 {% load static %}
-<html>
+<html lang="ru">
 <head>
-    <title>Skill Issue</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Руководства — Skill Issue</title>
     <script>
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
@@ -9,160 +11,246 @@
         })();
     </script>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/guides.css' %}">
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
 </head>
 <body>
     {% include 'users/header.html' %}
 
-    <div class="body-background">
-        <h1 class="simple-text" style="margin-top: 20px; font-size: 1.5rem;" data-lang-ru="Руководства" data-lang-en="Guides">Руководства</h1>
-        <hr style="width: 96%; margin: 10px auto;">
-        <p class="simple-text" style="font-size: 1.1rem;" data-lang-ru="Просматривайте руководства других пользователей и узнавайте много нового!" data-lang-en="Browse guides from other users and learn something new!">Просматривайте руководства других пользователей и узнавайте много нового!</p>
-        <hr style="width: 75%; margin: 10px auto;">
+    <div class="feed-page">
 
-        <!-- ФОРМА ПОИСКА ПО РУКОВОДСТВАМ -->
-        <form method="GET" action="{% url 'guides_list' %}" style="display: flex; flex-direction: column; align-items: center;">
-            <div class="profile-row-container">
-                <input type="text"
-                       name="search"
-                       placeholder="поиск по названию"
-                       class="search-guides"
-                       value="{{ request.GET.search }}"
-                       data-placeholder-ru="поиск по названию"
-                       data-placeholder-en="search by title">
+        <!-- Hero -->
+        <div class="feed-wrap">
+            <div class="feed-hero">
+                <h1 class="feed-hero-title"
+                    data-lang-ru="Руководства"
+                    data-lang-en="Guides">Руководства</h1>
+                <p class="feed-hero-sub"
+                   data-lang-ru="Просматривайте руководства других пользователей и узнавайте много нового!"
+                   data-lang-en="Browse guides from other users and learn something new!">
+                    Просматривайте руководства других пользователей и узнавайте много нового!
+                </p>
+            </div>
+        </div>
 
-                <input type="text"
-                       name="tags"
-                       placeholder="теги через запятую"
-                       class="search-guides"
-                       value=""
-                       data-placeholder-ru="теги через запятую"
-                       data-placeholder-en="tags separated by comma">
+        <!-- Sticky filter bar -->
+        <div class="feed-filters">
+            <form method="GET" action="{% url 'guides_list' %}">
+                <div class="feed-filters-inner">
+                    <input class="feed-input feed-input--search"
+                           type="text"
+                           name="search"
+                           value="{{ request.GET.search }}"
+                           placeholder="поиск по названию"
+                           data-placeholder-ru="поиск по названию"
+                           data-placeholder-en="search by title"
+                           autocomplete="off">
 
-                <div style="display: flex; align-items: flex-end; gap: 15px; flex-wrap: nowrap; margin-bottom: 20px;">
-                    <div class="filter-container">
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <input type="range" min="1" max="180" value="30" id="daysRangeSlider">
-                            <span id="daysRangeValue">30 дней</span>
-                        </div>
+                    <input class="feed-input feed-input--tags"
+                           type="text"
+                           name="tags"
+                           placeholder="теги через запятую"
+                           data-placeholder-ru="теги через запятую"
+                           data-placeholder-en="tags separated by comma">
+
+                    <div class="feed-range-wrap">
+                        <input type="range"
+                               class="feed-range"
+                               min="1" max="180" value="30"
+                               id="daysRangeSlider">
+                        <span class="feed-range-label" id="daysRangeValue">30 дней</span>
                     </div>
-                    <button id="filter-search-button">Найти</button>
+
+                    <button class="feed-btn-search"
+                            type="submit"
+                            id="filter-search-button"
+                            data-lang-ru="Найти"
+                            data-lang-en="Search">Найти</button>
                 </div>
-            </div>
-        </form>
-
-        <!-- Блок создания руководства сразу под фильтрами -->
-        {% if user.is_authenticated %}
-        <a class="simple-text" style="margin: 20px 0 10px 0;"
-           data-lang-ru="Или создайте своё собственное руководство!"
-           data-lang-en="Or create your own guide!">
-            Или создайте своё собственное руководство!
-        </a>
-        <form action="{% url 'create_guide' %}">
-            <input class="profile-button"
-                   style="width: 200px; height: 40px; margin-bottom: 20px;"
-                   type="submit"
-                   value="Перейти"
-                   data-lang-ru="Перейти"
-                   data-lang-en="Go"/>
-        </form>
-        {% else %}
-        <div class="simple-text" style="margin: 20px 0; text-align: center;">
-            <span data-lang-ru="Чтобы создать своё руководство, "
-                  data-lang-en="To create your own guide, ">Чтобы создать своё руководство, </span>
-            <a href="{% url 'login_page' %}"
-               data-lang-ru="войдите"
-               data-lang-en="log in">войдите</a>
-            <span data-lang-ru=" или "
-                  data-lang-en=" or "> или </span>
-            <a href="{% url 'register_page' %}"
-               data-lang-ru="зарегистрируйтесь"
-               data-lang-en="register">зарегистрируйтесь</a>.
+            </form>
         </div>
-        {% endif %}
 
-        <h2 class="simple-text" style="font-size: 1.25rem; text-align: left; padding-left: 20px; margin-top:40px;">
-            {% if request.GET.search %}
-            <span data-lang-ru="Результаты поиска &quot;{{ request.GET.search }}&quot;" data-lang-en="Search results for &quot;{{ request.GET.search }}&quot;">Результаты поиска "{{ request.GET.search }}"</span>
+        <div class="feed-wrap">
+
+            <!-- Create CTA -->
+            {% if user.is_authenticated %}
+            <div class="feed-cta">
+                <span class="feed-cta-icon">✍️</span>
+                <p class="feed-cta-text"
+                   data-lang-ru="Или создайте своё собственное руководство!"
+                   data-lang-en="Or create your own guide!">
+                    Или создайте своё собственное руководство!
+                </p>
+                <a class="feed-cta-action"
+                   href="{% url 'create_guide' %}"
+                   data-lang-ru="Создать"
+                   data-lang-en="Create">+ Создать</a>
+            </div>
             {% else %}
-            <span data-lang-ru="Популярное" data-lang-en="Popular">Популярное</span>
+            <div class="feed-cta">
+                <span class="feed-cta-icon">✍️</span>
+                <p class="feed-cta-text">
+                    <span data-lang-ru="Чтобы создать руководство, "
+                          data-lang-en="To create a guide, ">Чтобы создать руководство, </span>
+                    <a href="{% url 'login_page' %}"
+                       data-lang-ru="войдите"
+                       data-lang-en="log in">войдите</a>
+                    <span data-lang-ru=" или "
+                          data-lang-en=" or "> или </span>
+                    <a href="{% url 'register_page' %}"
+                       data-lang-ru="зарегистрируйтесь"
+                       data-lang-en="register">зарегистрируйтесь</a>.
+                </p>
+            </div>
             {% endif %}
-        </h2>
 
-        <div class="scroll-area" style="display: flex; justify-content: center; overflow: visible; width: 95%; margin: auto; padding: 20px; min-height: fit-content;">
-            <div class="profile-row-container" style="display: flex; gap: 20px; align-content: flex-start; flex-direction: row; flex-wrap: wrap; justify-content: center;">
-                {% if popular_guides %}
-                {% for guide in popular_guides %}
-                <div class="guide-element">
-                    <a href="{% url 'guide_detail' guide.id %}" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; width: 100%; height: 100%;">
-                        {% if guide.image %}
-                        <img src="{{ guide.image.url }}" class="image-element" alt="{{ guide.title }}">
+            <!-- ── Popular / Search results ───────────────────── -->
+            <div class="feed-section">
+                <div class="feed-section-head">
+                    <h2 class="feed-section-title">
+                        {% if request.GET.search %}
+                            <span data-lang-ru="Результаты по «{{ request.GET.search }}»"
+                                  data-lang-en="Results for «{{ request.GET.search }}»">
+                                Результаты по «{{ request.GET.search }}»
+                            </span>
                         {% else %}
-                        <img src="{% static 'images/default-guide.png' %}" class="image-element" alt="{{ guide.title }}">
+                            <span data-lang-ru="Популярное" data-lang-en="Popular">Популярное</span>
                         {% endif %}
-                        <span class="text-element">{{ guide.title }}</span>
-                        <hr style="width: 75%; margin: 0 auto;">
-                        <div class="profile-row-container" style="margin: auto; gap:5px">
-                            <span class="text-element">{{ guide.author.username }}</span>
-                            <span class="text-element">{{ guide.rating }}★</span>
-                        </div>
-                    </a>
-                </div>
-                {% endfor %}
-                {% else %}
-                <p style="text-align:center; font-style: italic; margin: 20px 0;">
-                    {% if request.GET.search %}
-                    <span data-lang-ru="Руководства по запросу &quot;{{ request.GET.search }}&quot; не найдены" data-lang-en="No guides found for &quot;{{ request.GET.search }}&quot;">Руководства по запросу "{{ request.GET.search }}" не найдены</span>
-                    {% else %}
-                    <span data-lang-ru="Популярных руководств пока нет" data-lang-en="No popular guides yet">Популярных руководств пока нет</span>
+                    </h2>
+                    <span class="feed-section-rule"></span>
+                    {% if popular_guides %}
+                    <span class="feed-section-count">{{ popular_guides|length }}</span>
                     {% endif %}
-                </p>
-                {% endif %}
-            </div>
-        </div>
-
-        {% if not request.GET.search %}
-        <h2 class="simple-text" style="font-size: 1.25rem; text-align: left; padding-left: 20px; margin-top:40px;" data-lang-ru="Лучшее за всё время" data-lang-en="Best of all time">Лучшее за всё время</h2>
-        <div class="scroll-area" style="display: flex; justify-content: center; overflow: visible; width: 95%; margin: auto; padding: 20px; min-height: fit-content;">
-            <div class="profile-row-container" style="display: flex; gap: 20px; align-content: flex-start; flex-direction: row; flex-wrap: wrap; justify-content: center;">
-                {% if top_guides %}
-                {% for guide in top_guides %}
-                <div class="guide-element">
-                    <a href="{% url 'guide_detail' guide.id %}" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; width: 100%; height: 100%;">
-                        {% if guide.image %}
-                        <img src="{{ guide.image.url }}" class="image-element" alt="{{ guide.title }}">
-                        {% else %}
-                        <img src="{% static 'images/default-guide.png' %}" class="image-element" alt="{{ guide.title }}">
-                        {% endif %}
-                        <span class="text-element">{{ guide.title }}</span>
-                        <hr style="width: 75%; margin: 0 auto;">
-                        <div class="profile-row-container" style="margin: auto; gap:5px">
-                            <span class="text-element">{{ guide.author.username }}</span>
-                            <span class="text-element">{{ guide.rating }}★</span>
-                        </div>
-                    </a>
                 </div>
-                {% endfor %}
-                {% else %}
-                <p style="text-align:center; font-style: italic; margin: 20px 0;">
-                    <span data-lang-ru="Лучших руководств пока нет" data-lang-en="No best guides yet">Лучших руководств пока нет</span>
-                </p>
-                {% endif %}
+
+                <div class="feed-grid">
+                    {% if popular_guides %}
+                        {% for guide in popular_guides %}
+                        <article class="feed-card">
+                            <a class="feed-card-link" href="{% url 'guide_detail' guide.id %}">
+                                <div class="feed-card-thumb">
+                                    {% if guide.image %}
+                                    <img class="feed-card-img"
+                                         src="{{ guide.image.url }}"
+                                         alt="{{ guide.title }}"
+                                         loading="lazy">
+                                    {% else %}
+                                    <img class="feed-card-img"
+                                         src="{% static 'images/default-guide.png' %}"
+                                         alt="{{ guide.title }}"
+                                         loading="lazy">
+                                    {% endif %}
+                                </div>
+                                <div class="feed-card-body">
+                                    <p class="feed-card-title">{{ guide.title }}</p>
+                                    <div class="feed-card-divider"></div>
+                                    <div class="feed-card-meta">
+                                        <div class="feed-card-author">
+                                            <span class="feed-card-author-name">{{ guide.author.username }}</span>
+                                        </div>
+                                        <div class="feed-card-rating">
+                                            <span class="feed-card-star">★</span>
+                                            {{ guide.rating }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                        <div class="feed-empty">
+                            <div class="feed-empty-icon">📭</div>
+                            <p class="feed-empty-title">
+                                {% if request.GET.search %}
+                                    <span data-lang-ru="Ничего не найдено"
+                                          data-lang-en="Nothing found">Ничего не найдено</span>
+                                {% else %}
+                                    <span data-lang-ru="Популярных руководств пока нет"
+                                          data-lang-en="No popular guides yet">Популярных руководств пока нет</span>
+                                {% endif %}
+                            </p>
+                            {% if request.GET.search %}
+                            <p class="feed-empty-sub"
+                               data-lang-ru="Попробуйте другой запрос или сбросьте фильтры"
+                               data-lang-en="Try a different query or reset filters">
+                                Попробуйте другой запрос или сбросьте фильтры
+                            </p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
             </div>
-        </div>
-        {% endif %}
-    </div>
 
-    <!-- Чат -->
+            <!-- ── Best of all time (only on no-search) ────────── -->
+            {% if not request.GET.search %}
+            <div class="feed-section">
+                <div class="feed-section-head">
+                    <h2 class="feed-section-title"
+                        data-lang-ru="Лучшее за всё время"
+                        data-lang-en="Best of all time">Лучшее за всё время</h2>
+                    <span class="feed-section-rule"></span>
+                    {% if top_guides %}
+                    <span class="feed-section-count">{{ top_guides|length }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="feed-grid">
+                    {% if top_guides %}
+                        {% for guide in top_guides %}
+                        <article class="feed-card">
+                            <a class="feed-card-link" href="{% url 'guide_detail' guide.id %}">
+                                <div class="feed-card-thumb">
+                                    {% if guide.image %}
+                                    <img class="feed-card-img"
+                                         src="{{ guide.image.url }}"
+                                         alt="{{ guide.title }}"
+                                         loading="lazy">
+                                    {% else %}
+                                    <img class="feed-card-img"
+                                         src="{% static 'images/default-guide.png' %}"
+                                         alt="{{ guide.title }}"
+                                         loading="lazy">
+                                    {% endif %}
+                                </div>
+                                <div class="feed-card-body">
+                                    <p class="feed-card-title">{{ guide.title }}</p>
+                                    <div class="feed-card-divider"></div>
+                                    <div class="feed-card-meta">
+                                        <div class="feed-card-author">
+                                            <span class="feed-card-author-name">{{ guide.author.username }}</span>
+                                        </div>
+                                        <div class="feed-card-rating">
+                                            <span class="feed-card-star">★</span>
+                                            {{ guide.rating }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </article>
+                        {% endfor %}
+                    {% else %}
+                        <div class="feed-empty">
+                            <div class="feed-empty-icon">🏆</div>
+                            <p class="feed-empty-title"
+                               data-lang-ru="Лучших руководств пока нет"
+                               data-lang-en="No top guides yet">Лучших руководств пока нет</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div><!-- /feed-wrap -->
+    </div><!-- /feed-page -->
+
     {% include 'users/chat.html' %}
-
     {% include 'users/footer.html' %}
-<script src="{% static 'js/search.js' %}"></script>
-<script src="{% static 'js/filter.js' %}"></script>
-<script src="{% static 'js/toggle_language.js' %}"></script>
-<script src="{% static 'js/auth.js' %}"></script>
-<script src="{% static 'js/toggle_chat.js' %}"></script>
-<script src="{% static 'js/profile_menu.js' %}"></script>
-<script src="{% static 'js/theme.js' %}"></script>
+
+    <script src="{% static 'js/search.js' %}"></script>
+    <script src="{% static 'js/filter.js' %}"></script>
+    <script src="{% static 'js/toggle_language.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/toggle_chat.js' %}"></script>
+    <script src="{% static 'js/theme.js' %}"></script>
 </body>
 </html>

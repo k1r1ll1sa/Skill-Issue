@@ -71,7 +71,7 @@ def blocked_page(request):
         'reason': request.user.profile.blocked_reason or "Причина не указана",
         'blocked_at': request.user.profile.blocked_at,
     }
-    return render(request, "users/blocked.html", context)
+    return render(request, "users/blocked_page.html", context)
 
 def profile_page(request, username):
     user_obj = get_object_or_404(User, username=username)

@@ -1014,7 +1014,7 @@ button#theme-toggle:focus {
 
 #filter-search-button {
     padding: 8px 16px;
-    background: #f0f0f0;
+    background: #00BFFF;
     border: 1px solid #ccc;
     border-radius: 4px;
     cursor: pointer;

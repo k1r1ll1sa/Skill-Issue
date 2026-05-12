@@ -134,157 +134,122 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
+    // Находим первый feed-grid на странице (секция результатов/популярного)
+    function getGrid() {
+        return document.querySelector('.feed-grid');
+    }
+
     // Функция обновления результатов на странице
     function updateResults(items) {
-        console.log('Обновление результатов, количество:', items.length);
-        const scrollArea = document.querySelector('.scroll-area');
-        if (!scrollArea) {
-            console.error('Не найден элемент .scroll-area');
+        const grid = getGrid();
+        if (!grid) {
+            console.error('Не найден элемент .feed-grid');
             return;
-        }
-        
-        let container = scrollArea.querySelector('.profile-row-container');
-        if (!container) {
-            console.warn('Не найден элемент .profile-row-container, создаем новый');
-            container = document.createElement('div');
-            container.className = 'profile-row-container';
-            container.style = "display: flex; gap: 10px; align-content: flex-start; flex-direction: row; flex-wrap: wrap; justify-content: center;"
-            scrollArea.appendChild(container);
         }
 
-        // Очищаем контейнер
-        container.innerHTML = '';
-        
+        grid.innerHTML = '';
+
         if (items.length === 0) {
-            const emptyMessage = document.createElement('div');
-            emptyMessage.className = 'simple-text';
-            emptyMessage.style.cssText = 'text-align: center; width: 100%; padding: 20px;';
-            emptyMessage.textContent = 'Ничего не найдено';
-            container.appendChild(emptyMessage);
-            console.log('Добавлено сообщение "Ничего не найдено"');
+            const empty = document.createElement('div');
+            empty.className = 'feed-empty';
+            empty.innerHTML = '<div class="feed-empty-icon">📭</div>'
+                + '<p class="feed-empty-title">Ничего не найдено</p>'
+                + '<p class="feed-empty-sub">Попробуйте другой запрос или сбросьте фильтры</p>';
+            grid.appendChild(empty);
             return;
         }
-        
-        // Добавляем элементы
+
         items.forEach((item, index) => {
-            console.log(`Создание элемента ${index}:`, item);
             try {
-                const element = createResultElement(item);
-                if (element) {
-                    container.appendChild(element);
-                    console.log(`Элемент ${index} добавлен`);
-                } else {
-                    console.error(`Не удалось создать элемент ${index}`);
+                const card = createResultElement(item);
+                if (card) {
+                    card.style.animationDelay = (index * 0.05) + 's';
+                    grid.appendChild(card);
                 }
-            } catch (error) {
-                console.error(`Ошибка при создании элемента ${index}:`, error);
+            } catch (err) {
+                console.error(`Ошибка при создании карточки ${index}:`, err);
             }
         });
-        console.log('Все элементы добавлены, всего:', container.children.length);
     }
-    
-    // Функция создания элемента результата
+
+    // Функция создания карточки в новом дизайне (.feed-card)
     function createResultElement(item) {
-        const div = document.createElement('div');
-        div.className = 'guide-element';
-        
-        const link = document.createElement('a');
-        if (isAnnouncementsPage) {
-            link.href = `/announcements/${item.id}/`;
-        } else {
-            link.href = `/guides/${item.id}/`;
-        }
-        link.style.cssText = 'text-decoration: none; color: inherit; display: flex; flex-direction: column; width: 100%; height: 100%;';
-        
-        // Изображение
-        const img = document.createElement('img');
-        img.className = 'image-element';
-        if (item.image) {
-            // Обрабатываем URL изображения
-            img.src = item.image;
-            img.onerror = function() {
-                // Если изображение не загрузилось, используем дефолтное
-                this.src = isAnnouncementsPage ? '/static/images/default-announcement.png' : '/static/images/default-avatar.jpg';
-            };
-        } else {
-            img.src = isAnnouncementsPage ? '/static/images/default-announcement.png' : '/static/images/default-avatar.jpg';
-        }
-        img.alt = item.title || '';
-        link.appendChild(img);
-        
-        // Название (используем span, так как уже внутри ссылки)
-        const title = document.createElement('span');
-        title.className = 'simple-text';
-        title.style.cssText = 'text-align: center; font-size: 1rem; margin: 0 auto; display: block;';
-        title.textContent = item.title || 'Без названия';
-        link.appendChild(title);
-        
-        // Разделитель
-        const hr = document.createElement('hr');
-        hr.style.width = '90%';
-        link.appendChild(hr);
-        
-        // Автор и рейтинг
-        if (isGuidesPage) {
-            const authorContainer = document.createElement('div');
-            authorContainer.className = 'profile-row-container';
-            authorContainer.style.cssText = 'margin: auto; gap:5px';
-            
-            const author = document.createElement('span');
-            author.className = 'text-element';
-            author.textContent = item.author_name || item.author || 'Неизвестный автор';
-            authorContainer.appendChild(author);
-            
-            const rating = document.createElement('span');
-            rating.className = 'text-element';
-            rating.textContent = `${item.rating || 0}★`;
-            authorContainer.appendChild(rating);
-            
-            link.appendChild(authorContainer);
-        } else {
-            // Для объявлений - просто текст автора (используем span вместо a)
-            const author = document.createElement('span');
-            author.className = 'simple-text';
-            author.style.cssText = 'text-align: center; font-size: 1rem; margin: 0 auto; display: block;';
-            author.textContent = item.author || 'Неизвестный автор';
-            link.appendChild(author);
-        }
-        
-        div.appendChild(link);
-        return div;
+        const defaultImg = isAnnouncementsPage
+            ? '/static/images/default-announcement.png'
+            : '/static/images/default-guide.png';
+
+        const href = isAnnouncementsPage
+            ? `/announcements/${item.id}/`
+            : `/guides/${item.id}/`;
+
+        const imgSrc = item.image || defaultImg;
+        const authorName = item.author_name || item.author || 'Неизвестный автор';
+        const rating = item.rating !== undefined ? item.rating : null;
+
+        const article = document.createElement('article');
+        article.className = 'feed-card';
+
+        article.innerHTML = `
+            <a class="feed-card-link" href="${href}">
+                <div class="feed-card-thumb">
+                    <img class="feed-card-img"
+                         src="${imgSrc}"
+                         alt="${item.title || ''}"
+                         loading="lazy"
+                         onerror="this.src='${defaultImg}'">
+                </div>
+                <div class="feed-card-body">
+                    <p class="feed-card-title">${item.title || 'Без названия'}</p>
+                    <div class="feed-card-divider"></div>
+                    <div class="feed-card-meta">
+                        <div class="feed-card-author">
+                            <span class="feed-card-author-name">${authorName}</span>
+                        </div>
+                        ${rating !== null && isGuidesPage
+                            ? `<div class="feed-card-rating">
+                                   <span class="feed-card-star">★</span>${rating}
+                               </div>`
+                            : ''}
+                    </div>
+                </div>
+            </a>`;
+
+        return article;
     }
-    
+
     // Функция показа индикатора загрузки
     function showLoading() {
-        const scrollArea = document.querySelector('.scroll-area');
-        if (!scrollArea) return;
-        
-        const loading = document.createElement('div');
-        loading.id = 'filter-loading';
-        loading.style.cssText = 'text-align: center; padding: 20px;';
-        loading.textContent = 'Загрузка...';
-        scrollArea.innerHTML = '';
-        scrollArea.appendChild(loading);
+        const grid = getGrid();
+        if (!grid) return;
+
+        grid.innerHTML = Array.from({ length: 4 }, () => `
+            <div class="feed-skeleton">
+                <div class="feed-skeleton-thumb"></div>
+                <div class="feed-skeleton-body">
+                    <div class="feed-skeleton-line feed-skeleton-line--long"></div>
+                    <div class="feed-skeleton-line feed-skeleton-line--medium"></div>
+                    <div class="feed-skeleton-line feed-skeleton-line--short"></div>
+                </div>
+            </div>`).join('');
     }
-    
+
     // Функция скрытия индикатора загрузки
     function hideLoading() {
-        const loading = document.getElementById('filter-loading');
-        if (loading) {
-            loading.remove();
-        }
+        const grid = getGrid();
+        if (!grid) return;
+        grid.querySelectorAll('.feed-skeleton').forEach(el => el.remove());
     }
-    
+
     // Функция показа ошибки
     function showError(message) {
-        const scrollArea = document.querySelector('.scroll-area');
-        if (!scrollArea) return;
-        
-        const error = document.createElement('div');
-        error.className = 'simple-text';
-        error.style.cssText = 'text-align: center; width: 100%; padding: 20px; color: red;';
-        error.textContent = message;
-        scrollArea.innerHTML = '';
-        scrollArea.appendChild(error);
+        const grid = getGrid();
+        if (!grid) return;
+
+        grid.innerHTML = `
+            <div class="feed-empty" style="grid-column:1/-1">
+                <div class="feed-empty-icon">⚠️</div>
+                <p class="feed-empty-title">Ошибка загрузки</p>
+                <p class="feed-empty-sub">${message}</p>
+            </div>`;
     }
 });

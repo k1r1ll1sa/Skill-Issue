@@ -1,7 +1,8 @@
 {% load static %}
-<html>
 <head>
-    <title>Skill Issue</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Объявления — Skill Issue</title>
     <script>
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
@@ -9,113 +10,187 @@
         })();
     </script>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/announcements.css' %}">
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
 </head>
 <body>
     {% include 'users/header.html' %}
 
-    <div class="body-background">
-        <a class="simple-text" style="margin-top: 20px; font-size: 1.5rem;" data-lang-ru="Объявления" data-lang-en="Announcements">Объявления</a>
-        <hr style="width: 96%; margin: auto; margin-top: 10px; margin-bottom:10px">
-        <a class="simple-text" style="font-size: 1.1rem" data-lang-ru="Ищите интересные вам объявления и обменивайтесь навыками!" data-lang-en="Find interesting announcements and exchange skills!">Ищите интересные вам объявления и обменивайтесь навыками!</a>
-        <hr style="width: 75%; margin: auto; margin-top: 10px; margin-bottom:10px">
+    <div class="feed-page">
 
-        <form method="GET" action="{% url 'announcements_list' %}" style="display: flex; flex-direction: column; align-items: center;">
-            <div class="profile-row-container">
-                <input type="text"
-                       name="search"
-                       placeholder="поиск по названию"
-                       class="search-guides"
-                       value="{{ request.GET.search }}"
-                       data-placeholder-ru="поиск по названию"
-                       data-placeholder-en="search by title">
-
-                <input type="text"
-                       name="tags"
-                       placeholder="теги через запятую"
-                       class="search-guides"
-                       value=""
-                       data-placeholder-ru="теги через запятую"
-                       data-placeholder-en="tags separated by comma">
-
-                <div style="display: flex; align-items: flex-end; gap: 15px; flex-wrap: nowrap; margin-bottom: 20px;">
-                    <div class="filter-container">
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <input type="range" min="1" max="180" value="30" id="daysRangeSlider">
-                            <span id="daysRangeValue">30 дней</span>
-                        </div>
-                    </div>
-                    <button id="filter-search-button">Найти</button>
-                </div>
+        <!-- Hero -->
+        <div class="feed-wrap">
+            <div class="feed-hero">
+                <h1 class="feed-hero-title"
+                    data-lang-ru="Объявления"
+                    data-lang-en="Announcements">Объявления</h1>
+                <p class="feed-hero-sub"
+                   data-lang-ru="Ищите интересные вам объявления и обменивайтесь навыками!"
+                   data-lang-en="Find interesting announcements and exchange skills!">
+                    Ищите интересные вам объявления и обменивайтесь навыками!
+                </p>
             </div>
-        </form>
+        </div>
 
-        <a class="simple-text" style="font-size: 1.25rem; text-align: left; padding-left: 20px; margin-top:40px; margin-bottom: -10px">
-            <span data-lang-ru="Объявления" data-lang-en="Announcements">Объявления</span>
-            {% if request.GET.search %}
-                <span data-lang-ru=" по запросу &quot;{{ request.GET.search }}&quot;" data-lang-en=" for &quot;{{ request.GET.search }}&quot;"> по запросу "{{ request.GET.search }}"</span>
-            {% endif %}
-        </a>
+        <!-- Sticky filter bar -->
+        <div class="feed-filters">
+            <form method="GET" action="{% url 'announcements_list' %}">
+                <div class="feed-filters-inner">
+                    <input class="feed-input feed-input--search"
+                           type="text"
+                           name="search"
+                           value="{{ request.GET.search }}"
+                           placeholder="поиск по названию"
+                           data-placeholder-ru="поиск по названию"
+                           data-placeholder-en="search by title"
+                           autocomplete="off">
 
-        <div class="scroll-area" style="display: flex; justify-content: center; overflow: visible; width: 95%; margin: auto; padding: 20px; min-height: fit-content;">
-            <div class="profile-row-container" style="display: flex; gap: 10px; align-content: flex-start; flex-direction: row; flex-wrap: wrap; justify-content: center;">
-                {% for item in announcements %}
-                <div class="guide-element">
-                    <a href="{% url 'announcement_detail' item.id %}" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; width: 100%; height: 100%;">
-                        {% if item.image %}
-                            <img class="image-element" src="{{ item.image.url }}">
-                        {% else %}
-                            <img class="image-element" src="{% static 'images/default-announcement.png' %}">
-                        {% endif %}
-                        <a class="simple-text" style="text-align: center; font-size: 1rem; margin: 0 auto">{{ item.title }}</a>
-                        <hr style="width: 90%;">
-                        <a class="simple-text" style="text-align: center; font-size: 1rem; margin: 0 auto">{{ item.author.username }}</a>
-                    </a>
+                    <input class="feed-input feed-input--tags"
+                           type="text"
+                           name="tags"
+                           placeholder="теги через запятую"
+                           data-placeholder-ru="теги через запятую"
+                           data-placeholder-en="tags separated by comma">
+
+                    <div class="feed-range-wrap">
+                        <input type="range"
+                               class="feed-range"
+                               min="1" max="180" value="30"
+                               id="daysRangeSlider">
+                        <span class="feed-range-label" id="daysRangeValue">30 дней</span>
+                    </div>
+
+                    <button class="feed-btn-search"
+                            type="submit"
+                            id="filter-search-button"
+                            data-lang-ru="Найти"
+                            data-lang-en="Search">Найти</button>
                 </div>
-                {% empty %}
-                <div class="simple-text" style="text-align: center; width: 100%; padding: 20px;">
-                    {% if request.GET.search %}
-                        <span data-lang-ru="Объявления по запросу &quot;{{ request.GET.search }}&quot; не найдены" data-lang-en="No announcements found for &quot;{{ request.GET.search }}&quot;">Объявления по запросу "{{ request.GET.search }}" не найдены</span>
-                    {% else %}
-                        <span data-lang-ru="Объявления отсутствуют" data-lang-en="No announcements available">Объявления отсутствуют</span>
+            </form>
+        </div>
+
+        <div class="feed-wrap">
+
+            <!-- Create CTA -->
+            {% if user.is_authenticated %}
+            <div class="feed-cta">
+                <span class="feed-cta-icon">📢</span>
+                <p class="feed-cta-text"
+                   data-lang-ru="Или напишите своё собственное объявление!"
+                   data-lang-en="Or write your own announcement!">
+                    Или напишите своё собственное объявление!
+                </p>
+                <a class="feed-cta-action"
+                   href="{% url 'create' %}"
+                   data-lang-ru="Создать"
+                   data-lang-en="Create">+ Создать</a>
+            </div>
+            {% else %}
+            <div class="feed-cta">
+                <span class="feed-cta-icon">📢</span>
+                <p class="feed-cta-text">
+                    <span data-lang-ru="Чтобы создать объявление, "
+                          data-lang-en="To create an announcement, ">Чтобы создать объявление, </span>
+                    <a href="{% url 'login_page' %}"
+                       data-lang-ru="войдите"
+                       data-lang-en="log in">войдите</a>
+                    <span data-lang-ru=" или "
+                          data-lang-en=" or "> или </span>
+                    <a href="{% url 'register_page' %}"
+                       data-lang-ru="зарегистрируйтесь"
+                       data-lang-en="register">зарегистрируйтесь</a>.
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- ── Announcements list ─────────────────────────── -->
+            <div class="feed-section">
+                <div class="feed-section-head">
+                    <h2 class="feed-section-title">
+                        {% if request.GET.search %}
+                            <span data-lang-ru="Результаты по «{{ request.GET.search }}»"
+                                  data-lang-en="Results for «{{ request.GET.search }}»">
+                                Результаты по «{{ request.GET.search }}»
+                            </span>
+                        {% else %}
+                            <span data-lang-ru="Все объявления"
+                                  data-lang-en="All announcements">Все объявления</span>
+                        {% endif %}
+                    </h2>
+                    <span class="feed-section-rule"></span>
+                    {% if announcements %}
+                    <span class="feed-section-count">{{ announcements|length }}</span>
                     {% endif %}
                 </div>
-                {% endfor %}
+
+                <div class="feed-grid">
+                    {% for item in announcements %}
+                    <article class="feed-card feed-card--announce">
+                        <a class="feed-card-link" href="{% url 'announcement_detail' item.id %}">
+                            <div class="feed-card-thumb">
+                                {% if item.image %}
+                                <img class="feed-card-img"
+                                     src="{{ item.image.url }}"
+                                     alt="{{ item.title }}"
+                                     loading="lazy">
+                                {% else %}
+                                <img class="feed-card-img"
+                                     src="{% static 'images/default-announcement.png' %}"
+                                     alt="{{ item.title }}"
+                                     loading="lazy">
+                                {% endif %}
+                            </div>
+                            <div class="feed-card-body">
+                                <p class="feed-card-title">{{ item.title }}</p>
+                                <div class="feed-card-divider"></div>
+                                <div class="feed-card-meta">
+                                    <div class="feed-card-author">
+                                        <span class="feed-card-author-name">{{ item.author.username }}</span>
+                                    </div>
+                                    {% if item.created_at %}
+                                    <span class="feed-card-date">
+                                        🕐 {{ item.created_at|date:"d.m.Y" }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </a>
+                    </article>
+                    {% empty %}
+                    <div class="feed-empty">
+                        <div class="feed-empty-icon">📭</div>
+                        <p class="feed-empty-title">
+                            {% if request.GET.search %}
+                                <span data-lang-ru="Объявления не найдены"
+                                      data-lang-en="No announcements found">Объявления не найдены</span>
+                            {% else %}
+                                <span data-lang-ru="Объявлений пока нет"
+                                      data-lang-en="No announcements yet">Объявлений пока нет</span>
+                            {% endif %}
+                        </p>
+                        {% if request.GET.search %}
+                        <p class="feed-empty-sub"
+                           data-lang-ru="Попробуйте другой запрос или сбросьте фильтры"
+                           data-lang-en="Try a different query or reset filters">
+                            Попробуйте другой запрос или сбросьте фильтры
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
-        </div>
 
-        {% if user.is_authenticated %}
-        <a class="simple-text" style="margin: 20px 0 10px 0" data-lang-ru="Или напишите своё собственное!" data-lang-en="Or write your own!">Или напишите своё собственное!</a>
+        </div><!-- /feed-wrap -->
+    </div><!-- /feed-page -->
 
-        <form action="{% url 'create' %}">
-            <input class="profile-button" style="width: 200px; height: 40px; margin-bottom: 20px;" type="submit" 
-                   value="Перейти" data-lang-ru="Перейти" data-lang-en="Go"/>
-        </form>
-        {% else %}
-        <div class="simple-text" style="margin: 20px 0; text-align: center;">
-            <span data-lang-ru="Чтобы создать своё объявление, "
-                  data-lang-en="To create your own announcement, ">Чтобы создать своё объявление, </span>
-            <a href="{% url 'login_page' %}"
-               data-lang-ru="войдите"
-               data-lang-en="log in">войдите</a>
-            <span data-lang-ru=" или "
-                  data-lang-en=" or "> или </span>
-            <a href="{% url 'register_page' %}"
-               data-lang-ru="зарегистрируйтесь"
-               data-lang-en="register">зарегистрируйтесь</a>.
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Чат -->
     {% include 'users/chat.html' %}
-
     {% include 'users/footer.html' %}
-<script src="{% static 'js/search.js' %}"></script>
-<script src="{% static 'js/filter.js' %}"></script>
-<script src="{% static 'js/toggle_language.js' %}"></script>
-<script src="{% static 'js/auth.js' %}"></script>
-<script src="{% static 'js/toggle_chat.js' %}"></script>
-<script src="{% static 'js/theme.js' %}"></script>
+
+    <script src="{% static 'js/search.js' %}"></script>
+    <script src="{% static 'js/filter.js' %}"></script>
+    <script src="{% static 'js/toggle_language.js' %}"></script>
+    <script src="{% static 'js/auth.js' %}"></script>
+    <script src="{% static 'js/toggle_chat.js' %}"></script>
+    <script src="{% static 'js/theme.js' %}"></script>
 </body>
 </html>

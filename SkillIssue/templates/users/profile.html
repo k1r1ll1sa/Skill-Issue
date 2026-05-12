@@ -12,9 +12,18 @@
     </script>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
+    <link rel="stylesheet" href="{% static 'css/blocked.css' %}">
 </head>
 <body>
 {% include 'users/header.html' %}
+
+{% if profile.is_blocked %}
+
+{% include 'users/blocked_page.html' %}
+
+<script src="{% static 'js/theme.js' %}"></script>
+
+{% else %}
 
 <div class="body-background profile-page">
 
@@ -666,5 +675,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+
+{% endif %}
 </body>
 </html>
