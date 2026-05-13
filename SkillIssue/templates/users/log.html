@@ -68,7 +68,15 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({username, password}),
             credentials: "include"
         })
-        .then(res => {
+        .then(async res => {
+            // ✅ ОБРАБОТКА БЛОКИРОВКИ (403)
+            if (res.status === 403) {
+                const data = await res.json();
+                // Перенаправляем на страницу блокировки
+                window.location.href = '/blocked/';
+                return;
+            }
+
             if (!res.ok) {
                 return res.json().then(data => {
                     throw new Error(data.error || `Ошибка ${res.status}`);
@@ -77,14 +85,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return res.json();
         })
         .then(data => {
+            // Если был 403, data будет undefined — просто выходим
+            if (!data) return;
+
             if (data.access && data.refresh) {
-                // Сохраняем JWT токены
                 authManager.setTokens(data.access, data.refresh, {
                     username: data.username,
                     email: data.email
                 });
-                
-                // Перенаправляем на главную страницу
                 window.location.href = "{% url 'main_page' %}";
             } else {
                 error_par.textContent = "Неожиданный ответ от сервера";
