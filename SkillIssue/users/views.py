@@ -785,6 +785,8 @@ class LoginView(APIView):
             return Response({"error": "Email не подтвержден. Проверьте почту и подтвердите регистрацию."},
                             status=status.HTTP_401_UNAUTHORIZED)
 
+        login(request, user)
+
         # === ПРОВЕРКА БЛОКИРОВКИ ===
         if hasattr(user, 'profile') and user.profile.is_blocked:
             return Response({
@@ -798,8 +800,6 @@ class LoginView(APIView):
         refresh = RefreshToken.for_user(user)
 
         # Создаем сессионную авторизацию
-        login(request, user)
-
         return Response({
             "access": str(refresh.access_token),
             "refresh": str(refresh),
