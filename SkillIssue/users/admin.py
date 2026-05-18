@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Profile, Guide, Review, GuideRating
+from .models import Profile, Guide, Review, GuideRating, BlacklistWord
+
 
 @admin.register(Guide)
 class GuideAdmin(admin.ModelAdmin):
@@ -44,3 +45,22 @@ class ReviewAdmin(admin.ModelAdmin):
 class GuideRatingAdmin(admin.ModelAdmin):
     list_display = ("guide", "reviewer", "rating", "created_at")
     list_filter = ("rating",)
+
+
+@admin.register(BlacklistWord)
+class BlacklistWordAdmin(admin.ModelAdmin):
+    list_display = ('word', 'replacement', 'is_active', 'case_sensitive', 'created_at')
+    list_filter = ('is_active', 'case_sensitive', 'created_at')
+    search_fields = ('word',)
+    ordering = ('word',)
+
+    fieldsets = (
+        ('Основное', {
+            'fields': ('word', 'replacement', 'is_active', 'case_sensitive')
+        }),
+        ('Информация', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at',)

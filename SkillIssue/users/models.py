@@ -338,3 +338,38 @@ class FavoriteAnnouncement(models.Model):
     class Meta:
         unique_together = ['user', 'announcement']
         ordering = ['-added_at']
+
+
+class BlacklistWord(models.Model):
+    """Модель для хранения слов блэк-листа"""
+    word = models.CharField(
+        max_length=100,
+        unique=True,
+        verbose_name="Запрещённое слово",
+        help_text="Слово или фраза, которая будет фильтроваться"
+    )
+    replacement = models.CharField(
+        max_length=50,
+        default="****",
+        verbose_name="Замена",
+        help_text="На что заменять слово (по умолчанию: ****)"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Активно",
+        help_text="Если снять галочку, слово не будет фильтроваться"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата добавления")
+    case_sensitive = models.BooleanField(
+        default=False,
+        verbose_name="Учитывать регистр",
+        help_text="Если включено, 'Bad' и 'bad' — разные слова"
+    )
+
+    class Meta:
+        verbose_name = "Слово блэк-листа"
+        verbose_name_plural = "Words black list"
+        ordering = ['word']
+
+    def __str__(self):
+        return f"{self.word} → {self.replacement}"
