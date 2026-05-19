@@ -42,6 +42,7 @@ from .models import Profile, GuideRating, Review, Guide, ProfileReview, Announce
 from .serializers import RegisterSerializer, UserProfileSerializer, ReviewSerializer, GuideSerializer, \
     AnnouncementSerializer, ChatMessageSerializer, ChatContactSerializer, ProfileCommentSerializer
 from .forms import GuideForm
+from .utils import filter_text
 
 
 def main_page(request):
@@ -1076,8 +1077,13 @@ class ReviewCreateView(generics.CreateAPIView):
         if Review.objects.filter(guide=guide, author=self.request.user).exists():
             raise serializers.ValidationError("Вы уже оставили отзыв на этот гайд.")
 
+        # Фильтруем текст
+
+
         # Сохраняем отзыв
-        review = serializer.save(author=self.request.user, guide=guide, stars=stars)
+        text = self.request.data.get('text', '')
+        filtered_text = filter_text(text)
+        review = serializer.save(author=self.request.user, guide=guide, stars=stars, text=filtered_text)
 
         # Пересчитываем средний рейтинг руководства
         avg_rating = guide.reviews.aggregate(avg=Avg('stars'))['avg'] or 0
@@ -1755,11 +1761,12 @@ class ReviewUpdateView(APIView):
 
         stars = int(request.data.get("stars"))
         text = request.data.get("text", "").strip()
+        filtered_text = filter_text(text)
 
-        if not text:
+        if not filtered_text:
             return Response({"error": "Текст не может быть пустым"}, status=400)
 
-        review.text = text
+        review.text = filtered_text
         review.stars = stars
         review.save()
 
@@ -1853,10 +1860,11 @@ class ProfileCommentCreateView(APIView):
     def post(self, request):
         username = request.data.get("username", "").strip()
         comment_text = request.data.get("comment", "").strip()
+        filtered_text = filter_text(comment_text)
 
         if not username:
             return Response({"error": "Не указан username профиля"}, status=status.HTTP_400_BAD_REQUEST)
-        if not comment_text:
+        if not filtered_text:
             return Response({"error": "Комментарий не может быть пустым"}, status=status.HTTP_400_BAD_REQUEST)
 
         profile = get_object_or_404(Profile, user__username=username)
@@ -1870,7 +1878,7 @@ class ProfileCommentCreateView(APIView):
         review, created = ProfileReview.objects.update_or_create(
             reviewer=request.user,
             profile=profile,
-            defaults={"comment": comment_text}
+            defaults={"comment": filtered_text}
         )
 
         serializer = ProfileCommentSerializer(review, context={'request': request})
@@ -1903,10 +1911,11 @@ class ProfileCommentUpdateView(APIView):
             return Response({"error": "Нет прав на редактирование"}, status=status.HTTP_403_FORBIDDEN)
 
         text = request.data.get("text", "").strip()
-        if not text:
+        filtered_text = filter_text(text)
+        if not filtered_text:
             return Response({"error": "Комментарий не может быть пустым"}, status=status.HTTP_400_BAD_REQUEST)
 
-        comment.comment = text
+        comment.comment = filtered_text
         comment.is_edited = True
         comment.save()
 
@@ -1977,11 +1986,14 @@ class AnnouncementCommentCreateView(APIView):
 
         announcement = get_object_or_404(Announcement, id=announcement_id)
 
+        # Фильтрация плохих слов
+        filtered_content = filter_text(content)
+
         # Создаем комментарий
         comment = AnnouncementComment.objects.create(
             announcement=announcement,
             author=request.user,
-            content=content
+            content=filtered_content
         )
 
         # Получаем аватар автора
@@ -2040,6 +2052,7 @@ class AnnouncementCommentUpdateView(APIView):
             return Response({"error": "Нет доступа"}, status=status.HTTP_403_FORBIDDEN)
 
         content = request.data.get("content", "").strip()
+        filtered_content = filter_text(content)
 
         if not content:
             return Response({"error": "Комментарий не может быть пустым"}, status=status.HTTP_400_BAD_REQUEST)
