@@ -1,7 +1,21 @@
+body:has(.favorites-container) > .body-background {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+body:has(.favorites-container) > .footer {
+    margin-top: auto;
+    flex-shrink: 0;
+}
+
 .favorites-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 40px 20px;
+    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .favorites-header {
@@ -54,6 +68,7 @@
     padding: 6px 14px;
     border-radius: 20px;
     font-family: 'Cascadia Code';
+    flex-shrink: 0;
 }
 
 .favorites-grid {
@@ -114,15 +129,21 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
     margin-top: auto;
     padding-top: 12px;
     border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
 }
 
 .favorite-card-author {
     font-size: 0.9rem;
     color: var(--text-tertiary);
     font-family: 'Cascadia Code';
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .favorite-card-rating {
@@ -130,6 +151,8 @@
     color: var(--accent-color);
     font-weight: 500;
     font-family: 'Cascadia Code';
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .empty-state {
@@ -162,6 +185,9 @@
     margin-bottom: 40px;
     border-bottom: 2px solid var(--border-color);
     padding-bottom: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
 }
 
 .tab-button {
@@ -175,6 +201,8 @@
     transition: all 0.3s ease;
     font-family: 'Cascadia Code';
     margin-bottom: -2px;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .tab-button:hover {
@@ -195,17 +223,125 @@
 }
 
 @media (max-width: 768px) {
-    .favorites-grid {
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 16px;
+    .body-background {
+        width: 100%;
+        max-width: 100%;
+        margin-top: calc(var(--header-height) + 12px);
+        margin-bottom: 24px;
+        padding: 0 16px 24px;
+        box-sizing: border-box;
+    }
+
+    .favorites-container {
+        padding: 24px 0 32px;
+    }
+
+    .favorites-header {
+        margin-bottom: 32px;
     }
 
     .favorites-title {
-        font-size: 2rem;
+        font-size: 1.85rem;
+    }
+
+    .favorites-subtitle {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        padding: 0 8px;
+    }
+
+    .tabs-container {
+        margin-bottom: 28px;
+        gap: 8px;
+    }
+
+    .tab-button {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    .favorites-section {
+        margin-bottom: 40px;
+    }
+
+    .section-header {
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
     }
 
     .section-title {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .favorites-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .favorite-card:hover {
+        transform: none;
+    }
+
+    .favorite-card-image {
+        height: 180px;
+    }
+
+    .favorite-card-content {
+        padding: 16px;
+    }
+
+    .favorite-card-title {
+        font-size: 1.05rem;
+    }
+
+    .empty-state {
+        padding: 40px 16px;
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+    }
+
+    .empty-state-text {
+        font-size: 1.05rem;
     }
 }
 
+@media (max-width: 480px) {
+    .body-background {
+        padding: 0 12px 20px;
+    }
+
+    .favorites-title {
+        font-size: 1.55rem;
+    }
+
+    .favorites-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .favorite-card-image {
+        height: 160px;
+    }
+
+    .favorite-card-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .favorite-card-author {
+        white-space: normal;
+    }
+
+    .tab-button {
+        flex: 1 1 auto;
+        text-align: center;
+        min-width: 0;
+    }
+}

@@ -10,7 +10,9 @@
             document.documentElement.setAttribute('data-theme', savedTheme);
         })();
     </script>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% include 'users/_styles_core.html' %}
+    <link rel="stylesheet" href="{% static 'css/reviews.css' %}">
+    <link rel="stylesheet" href="{% static 'css/content.css' %}">
     <link rel="stylesheet" href="{% static 'css/editor.css' %}">
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
 </head>

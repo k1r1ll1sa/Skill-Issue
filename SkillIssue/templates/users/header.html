@@ -2,29 +2,27 @@
 <header class="header" id="header">
     <nav class="header-container">
         <a class="logo" href="{% url 'main_page' %}">Skill Issue</a>
-        <div class="nav-group nav-group-left">
-            <a class="nav-links" href="{% url 'guides_list' %}" data-lang-ru="руководства" data-lang-en="guides">руководства</a>
-            <a class="nav-links" href="{% url 'announcements_list' %}" data-lang-ru="объявления" data-lang-en="announcements">объявления</a>
-            <a class="nav-links" href="{% url 'favorites_page' %}" data-lang-ru="избранное" data-lang-en="favorites">избранное</a>
-        </div>
-        <div class="nav-group nav-group-right">
-            <div class="search-container">
+        <div class="header-nav header-drawer-nav" id="header-nav">
+            <nav class="header-drawer-main" aria-label="Основная навигация">
+                <a class="header-drawer-link nav-links" href="{% url 'guides_list' %}" data-lang-ru="руководства" data-lang-en="guides">руководства</a>
+                <a class="header-drawer-link nav-links" href="{% url 'announcements_list' %}" data-lang-ru="объявления" data-lang-en="announcements">объявления</a>
+                <a class="header-drawer-link nav-links" href="{% url 'favorites_page' %}" data-lang-ru="избранное" data-lang-en="favorites">избранное</a>
+            </nav>
+            <div class="header-drawer-search search-container">
+                <label class="header-drawer-label" for="searchInput" data-lang-ru="Поиск" data-lang-en="Search">Поиск</label>
                 <input class="search" placeholder="поиск руководств, анкет и профилей" id="searchInput"
                        data-placeholder-ru="поиск руководств, анкет и профилей"
                        data-placeholder-en="search guides, profiles and announcements">
                 <div class="search-dropdown" id="searchDropdown">
                 </div>
             </div>
-            <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему">🌙</button>
-            <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык">RU</a>
-            <div class="menu-container" id="menu-container">
+            <div class="header-drawer-auth menu-container" id="menu-container">
                 {% if user.is_authenticated %}
                     {% if request.resolver_match.url_name == 'profile_page' and request.resolver_match.kwargs.username == user.username %}
-                        <a class="nav-links"
+                        <a class="header-drawer-link nav-links"
                            href="{% url 'logout_page' %}"
                            data-lang-ru="выйти"
                            data-lang-en="log out"
-                           style="margin-right: 24px;"
                            data-logout-url="{% url 'logout_page' %}"
                            id="header-logout-link">выйти</a>
                         <script>
@@ -43,21 +41,36 @@
                             })();
                         </script>
                     {% else %}
-                        <a class="nav-links"
+                        <a class="header-drawer-link nav-links"
                            href="{% url 'profile_page' user.username %}"
                            data-lang-ru="профиль"
-                           data-lang-en="profile"
-                           style="margin-right: 24px;">профиль</a>
+                           data-lang-en="profile">профиль</a>
                     {% endif %}
                 {% else %}
-                    <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
-                    <div class="context-menu">
-                        <a href="{% url 'register_page' %}" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
+                    <a class="header-drawer-link nav-links header-auth-trigger" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
+                    <a class="header-drawer-link nav-links header-auth-register-mobile" href="{% url 'register_page' %}" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
+                    <div class="context-menu header-auth-dropdown">
                         <a href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
+                        <a href="{% url 'register_page' %}" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
                     </div>
                 {% endif %}
             </div>
         </div>
+        <div class="header-utilities" id="header-utilities">
+            <button id="theme-toggle" onclick="window.toggleTheme(event)" title="Переключить тему" aria-label="Переключить тему">🌙</button>
+            <a class="nav-links" id="language-toggle" href="#" onclick="toggleLanguage(event)" title="Сменить язык" aria-label="Сменить язык">RU</a>
+        </div>
+        <button type="button"
+                class="header-menu-btn"
+                id="header-menu-btn"
+                aria-label="Меню"
+                aria-expanded="false"
+                aria-controls="header-nav">
+            <span class="header-menu-btn-bar" aria-hidden="true"></span>
+            <span class="header-menu-btn-bar" aria-hidden="true"></span>
+            <span class="header-menu-btn-bar" aria-hidden="true"></span>
+        </button>
     </nav>
+    <div class="header-overlay" id="header-overlay" hidden></div>
 </header>
-
+<script src="{% static 'js/header.js' %}"></script>

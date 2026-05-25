@@ -1,0 +1,237 @@
+.review-block {
+    width: 90%;
+    margin: auto;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-color);
+    background-color: var(--bg-tertiary);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.review-block .simple-text {
+    font-size: 1rem;
+    line-height: 1.2rem;
+}
+
+.review-block a.simple-text {
+    padding-left: 5px;
+}
+
+.edit-review-btn {
+    padding: 0px 10px;
+    min-width: auto;
+    height: 28px;
+    line-height: 26px;
+    background-color: var(--bg-primary);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.edit-review-btn:hover {
+    background-color: var(--bg-secondary);
+}
+
+.edit-review-btn:active {
+    transform: scale(0.9);
+}
+
+#review-text {
+    font-family: inherit;
+    text-align: left;
+    margin-top: 10px;
+}
+
+#form-title {
+    font-size: 1.2rem;
+    padding-bottom: 10px;
+}
+
+#rating-container {
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.star-button {
+    width: 38px;
+    height: 38px;
+    font-size: 22px;
+    border-radius: 6px;
+}
+
+.review-rating-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-color);
+}
+.review-rate-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-family: 'Cascadia Code', monospace;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.review-rate-btn:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-color);
+    transform: translateY(-1px);
+}
+.review-rate-btn:active {
+    transform: scale(0.97);
+}
+.review-rate-btn.active {
+    background: var(--accent-color);
+    color: #ffffff;
+    border-color: var(--accent-color);
+    box-shadow: 0 2px 6px var(--shadow-color);
+}
+.review-stats-only {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Cascadia Code', monospace;
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+    padding: 6px 12px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    border: 1px solid transparent;
+}
+
+.sort-dropdown-container {
+    display: inline-flex;
+    align-items: center;
+}
+
+.sort-dropdown-container select {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sort-dropdown-container select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(0, 191, 255, 0.2);
+}
+
+.replies-container {
+    margin-left: 40px;
+    border-left: 3px solid #e0e0e0;
+    padding-left: 15px;
+    margin-top: 10px;
+}
+.reply-item {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+}
+.replies-container {
+    margin-left: 40px;
+    margin-top: 12px;
+    border-left: 2px solid #e2e8f0;
+    padding-left: 16px;
+}
+
+.reply-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+}
+
+.reply-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.reply-avatar, .reply-avatar-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #475569;
+}
+
+.reply-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.reply-author {
+    font-weight: 600;
+    text-decoration: none;
+    color: #0f172a;
+    font-size: 14px;
+}
+.reply-author:hover { text-decoration: underline; }
+
+.reply-date {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.reply-text {
+    font-size: 14px;
+    color: #334155;
+    margin: 4px 0 8px;
+    line-height: 1.4;
+}
+
+.reply-footer {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-like, .btn-dislike {
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+.btn-like:hover:not([disabled]) { background: #dcfce7; border-color: #86efac; }
+.btn-dislike:hover:not([disabled]) { background: #fee2e2; border-color: #fca5a5; }
+
+.btn-like[disabled], .btn-dislike[disabled] {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.no-replies {
+    font-size: 13px;
+    color: #94a3b8;
+    font-style: italic;
+    padding: 8px 0;
+}
+

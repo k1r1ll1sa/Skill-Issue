@@ -60,9 +60,11 @@
 #chat-modal {
     position: fixed;
     top: 0;
-    right: -420px;
+    right: calc(-1 * var(--chat-width));
     width: var(--chat-width);
+    max-width: 100vw;
     height: 90vh;
+    max-height: 100dvh;
     background: var(--bg-secondary);
     border-radius: var(--chat-radius) 0 0 var(--chat-radius);
     box-shadow: -8px 0 40px rgba(0, 0, 0, 0.12);
@@ -166,14 +168,6 @@
 #chat-list {
     flex: 1;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-color) transparent;
-}
-
-#chat-list::-webkit-scrollbar { width: 4px; }
-#chat-list::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 4px;
 }
 
 .chat-item {
@@ -481,23 +475,93 @@
     box-shadow: none;
 }
 
-@media (max-width: 480px) {
+#chat-modal.is-open {
+    right: 0;
+}
+
+@media (max-width: 768px) {
+    :root {
+        --chat-width: min(100vw, 400px);
+    }
+
     #chat-modal {
-        width: 100vw;
-        right: -100vw;
-        border-radius: 0;
         height: 100dvh;
+        border-radius: 0;
+        box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
     }
 
     #floating-button {
-        bottom: 1.5rem;
-        right: 16px;
-        width: 48px;
-        height: 48px;
+        bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+        right: max(16px, env(safe-area-inset-right, 0px));
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    #chat-header,
+    #dialog-header {
+        padding: 10px 12px;
+    }
+
+    .chat-header-left span {
+        font-size: 0.9rem;
+    }
+
+    .chat-item {
+        padding: 10px 14px;
+        gap: 10px;
+    }
+
+    .chat-item img {
+        width: 38px;
+        height: 38px;
+    }
+
+    #chat-input-area {
+        padding: 10px 12px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+    }
+
+    #message-input {
+        font-size: 16px;
     }
 
     .message-received,
     .message-sent {
-        max-width: 85%;
+        max-width: 82%;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --chat-width: 100vw;
+    }
+
+    #floating-button {
+        bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+        right: max(12px, env(safe-area-inset-right, 0px));
+        width: 48px;
+        height: 48px;
+    }
+
+    .chat-header-actions button {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    #chat-close-button {
+        font-size: 16px;
+    }
+
+    .message-received,
+    .message-sent {
+        max-width: 88%;
+    }
+
+    #attach-button,
+    #message-form button[type="submit"] {
+        width: 36px;
+        height: 36px;
     }
 }

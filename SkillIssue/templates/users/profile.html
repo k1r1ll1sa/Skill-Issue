@@ -10,7 +10,9 @@
             document.documentElement.setAttribute('data-theme', savedTheme);
         })();
     </script>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% include 'users/_styles_core.html' %}
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+    <link rel="stylesheet" href="{% static 'css/content.css' %}">
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
     <link rel="stylesheet" href="{% static 'css/blocked.css' %}">
 </head>
@@ -136,7 +138,7 @@
             {% endif %}
         </div>
 
-        <div id="announcements-container" class="profile-cards-grid" style="display:none;">
+        <div id="announcements-container" class="profile-cards-grid" hidden>
             {% if announcements %}
                 {% for ann in announcements %}
                     <a class="announcement-link" href="{% url 'announcement_detail' ann.id %}">
@@ -318,24 +320,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const guidesContainer = document.getElementById("guides-container");
     const announcementsContainer = document.getElementById("announcements-container");
 
-    guidesContainer.style.display = "flex";
-    announcementsContainer.style.display = "none";
-    guidesBtn.classList.add("active-btn");
-    announcementsBtn.classList.remove("active-btn");
+    function showGuidesTab() {
+        if (!guidesContainer || !announcementsContainer) return;
+        guidesContainer.hidden = false;
+        announcementsContainer.hidden = true;
+        guidesBtn?.classList.add("active-btn");
+        announcementsBtn?.classList.remove("active-btn");
+    }
 
-    guidesBtn.addEventListener("click", () => {
-        guidesContainer.style.display = "flex";
-        announcementsContainer.style.display = "none";
-        guidesBtn.classList.add("active-btn");
-        announcementsBtn.classList.remove("active-btn");
-    });
+    function showAnnouncementsTab() {
+        if (!guidesContainer || !announcementsContainer) return;
+        guidesContainer.hidden = true;
+        announcementsContainer.hidden = false;
+        guidesBtn?.classList.remove("active-btn");
+        announcementsBtn?.classList.add("active-btn");
+    }
 
-    announcementsBtn.addEventListener("click", () => {
-        guidesContainer.style.display = "none";
-        announcementsContainer.style.display = "flex";
-        guidesBtn.classList.remove("active-btn");
-        announcementsBtn.classList.add("active-btn");
-    });
+    if (guidesBtn && announcementsBtn && guidesContainer && announcementsContainer) {
+        showGuidesTab();
+        guidesBtn.addEventListener("click", showGuidesTab);
+        announcementsBtn.addEventListener("click", showAnnouncementsTab);
+    }
 
     const textarea = document.getElementById('review-text');
     const reviewIdInput = document.getElementById('review-id-edit');

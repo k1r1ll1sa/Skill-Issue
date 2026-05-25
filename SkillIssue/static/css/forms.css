@@ -1,0 +1,314 @@
+.register_container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: calc(var(--header-height) + 32px) 20px 48px;
+    box-sizing: border-box;
+}
+
+.register_panel {
+    width: 700px;
+    max-width: 100%;
+    max-height: 700px;
+    padding: 20px 0;
+    margin: 0 auto;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-secondary);
+    box-shadow: 0px 0px 1px var(--border-color-dark);
+    gap: 30px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.register_input {
+    color: var(--text-primary);
+    height: 50px;
+    background-color: var(--input-bg);
+    text-align: center;
+    box-shadow: 0px 0px 1px var(--border-color-dark);
+    font-family: 'Times New Roman';
+    font-size: 1.4rem;
+    border: 1px solid var(--border-color-dark);
+    min-width: 400px;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+.register_input:focus {
+    outline: none;
+    box-shadow: 0px 1px 3px var(--accent-color);
+}
+
+.register_button {
+    margin-top: 10px;
+    color: white;
+    height: 50px;
+    background-color: var(--accent-color);
+    text-align: center;
+    font-family: 'Times New Roman';
+    font-size: 1.4rem;
+    border: 1px solid var(--border-color-dark);
+    min-width: 300px;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+.register_button:hover {
+    min-width: 400px;
+    background-color: var(--accent-hover);
+}
+
+.register_button:active {
+    min-width: 380px;
+    min-height: 45px;
+    background-color: var(--accent-hover);
+}
+
+.menu-container {
+    position: relative;
+    display: inline-block;
+}
+
+.menu-trigger {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.context-menu {
+    position: absolute;
+    top: 130%;
+    right: 0;
+    z-index: 10;
+    max-width: 200px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-shadow: 0 2px 10px var(--shadow-color);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s, background-color 0.3s ease;
+}
+        
+.context-menu a {
+    display: block;
+    font-family: 'Cascadia Code';
+    font-size: 1rem;
+    padding: 10px 2px;
+    color: var(--text-primary);
+    text-decoration: none;
+    border-bottom: 1px solid var(--bg-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.context-menu a:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.context-menu a:last-child {
+    border-bottom: none;
+}
+
+.menu-container:hover .context-menu,
+.header-drawer-auth:hover .header-auth-dropdown,
+.header-drawer-auth:focus-within .header-auth-dropdown {
+    opacity: 1;
+    visibility: visible;
+}
+
+.header-drawer-auth::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 12px;
+}
+
+.header-auth-dropdown {
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 210px;
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 28px var(--shadow-color-dark);
+    z-index: 1010;
+}
+
+.header-auth-dropdown a {
+    padding: 10px 14px;
+    border-radius: 7px;
+    border-bottom: none;
+    margin-bottom: 2px;
+}
+
+.header-auth-dropdown a:last-child {
+    margin-bottom: 0;
+}
+
+.header-auth-dropdown a:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--accent-color);
+}
+
+.input_error {
+    box-shadow: 0px 1px 3px red;
+}
+
+/* Login, register, password recovery */
+.auth-page .register_panel {
+    border-radius: 12px;
+    padding: 32px 28px;
+    gap: 24px;
+}
+
+.auth-form {
+    width: 100%;
+    align-items: center;
+}
+
+.auth-form .auth-title {
+    font-size: clamp(1.35rem, 5vw, 2rem);
+    margin: 0;
+    text-align: center;
+    line-height: 1.25;
+}
+
+.auth-form .auth-subtitle {
+    font-size: clamp(0.875rem, 3vw, 1rem);
+    margin: 0;
+    text-align: center;
+    color: var(--text-tertiary);
+    line-height: 1.4;
+    max-width: 420px;
+}
+
+.auth-form .register_input {
+    width: 100%;
+    min-width: 0;
+    max-width: 420px;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.auth-form .auth-error-slot {
+    width: 100%;
+    max-width: 420px;
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-form .auth-error-slot .simple-text {
+    font-size: 0.8rem;
+    margin: 0;
+    text-align: center;
+    word-break: break-word;
+    color: #c0392b;
+}
+
+.auth-form .auth-error-slot .simple-text:empty {
+    display: none;
+}
+
+.auth-form .register_button {
+    width: 100%;
+    max-width: 320px;
+    min-width: 0;
+    margin: 0;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.auth-form .auth-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 420px;
+}
+
+.auth-form .auth-links .simple-text {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-tertiary);
+    text-align: center;
+}
+
+.auth-form .auth-links a.simple-text:hover {
+    color: var(--accent-color);
+}
+
+@media (max-width: 768px) {
+    .auth-page {
+        padding: calc(var(--header-height) + 24px) 16px 40px;
+        align-items: center;
+    }
+
+    .auth-page .register_panel {
+        padding: 28px 20px;
+        gap: 20px;
+        max-height: none;
+    }
+
+    .auth-form .register_input,
+    .auth-form .register_button,
+    .auth-form .auth-error-slot,
+    .auth-form .auth-links {
+        max-width: 100%;
+    }
+
+    .auth-page .register_button:hover {
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .auth-page .register_button:active {
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-page {
+        padding: calc(var(--header-height) + 16px) 12px 32px;
+    }
+
+    .auth-page .register_panel {
+        padding: 24px 16px;
+        gap: 16px;
+        border-radius: 10px;
+    }
+
+    .auth-form .register_input {
+        height: 46px;
+        font-size: 1rem;
+    }
+
+    .auth-form .register_button {
+        height: 46px;
+        font-size: 1.1rem;
+    }
+
+    .auth-form .auth-title {
+        font-size: 1.35rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .auth-page .register_panel {
+        padding: 20px 14px;
+    }
+}
+

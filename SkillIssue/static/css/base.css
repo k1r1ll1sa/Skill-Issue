@@ -1,0 +1,64 @@
+/* Variables, reset, utilities */
+:root {
+    --header-height: 40px;
+    --header-mobile-breakpoint: 1023px;
+    --bg-primary: ghostwhite;
+    --bg-secondary: white;
+    --bg-tertiary: #fafafa;
+    --bg-header: #424242;
+    --bg-footer: #424242;
+    --text-primary: black;
+    --text-secondary: #333;
+    --text-tertiary: #666;
+    --text-header: white;
+    --border-color: #ddd;
+    --border-color-dark: #424242;
+    --accent-color: #00BFFF;
+    --accent-hover: #0088cc;
+    --shadow-color: rgba(0,0,0,0.1);
+    --shadow-color-dark: rgba(0,0,0,0.15);
+    --input-bg: ghostwhite;
+    --input-bg-focus: aliceblue;
+    --card-bg: white;
+    --card-shadow: 0px 1px 3px #424242;
+}
+
+[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #252525;
+    --bg-header: #1a1a1a;
+    --bg-footer: #1a1a1a;
+    --text-primary: #e0e0e0;
+    --text-secondary: #c0c0c0;
+    --text-tertiary: #a0a0a0;
+    --text-header: #e0e0e0;
+    --border-color: #444;
+    --border-color-dark: #555;
+    --accent-color: #00BFFF;
+    --accent-hover: #00d4ff;
+    --shadow-color: rgba(0,0,0,0.3);
+    --shadow-color-dark: rgba(0,0,0,0.5);
+    --input-bg: #333;
+    --input-bg-focus: #3a3a3a;
+    --card-bg: #2d2d2d;
+    --card-shadow: 0px 1px 3px rgba(0,0,0,0.5);
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a {
+    text-decoration: none;
+}
+[hidden] {
+    display: none !important;
+}

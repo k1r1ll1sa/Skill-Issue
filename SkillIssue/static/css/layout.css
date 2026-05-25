@@ -1,0 +1,103 @@
+/* Page shell, footer */
+.body-background {
+    width: 1000px;
+    max-width: 95%;
+    align-items: center;
+    justify-content: flex-start;
+    background-color: var(--bg-secondary);
+    box-shadow: 0px 0px 1px var(--border-color-dark);
+    margin: 0 auto;
+    margin-top: var(--header-height);
+    margin-bottom: 40px;
+    text-align: center;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.simple-text {
+    display: block;
+    font-family: 'Cascadia Code';
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    transition: color 0.3s ease;
+}
+
+.footer {
+    background-color: var(--bg-footer);
+    min-height: 80px;
+    width: 100%;
+    box-shadow: 0px -1px 5px var(--accent-color);
+    display: flex;
+    justify-content: center;
+    margin-top: auto;
+    padding: 14px 0;
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.footer-container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.footer-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 12px;
+}
+
+.footer-row-top {
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.footer-university {
+    font-family: 'Cascadia Code', monospace;
+    font-size: 1.15rem;
+    color: #d0d0d0;
+    text-decoration: none;
+    line-height: 1.35;
+    transition: color 0.3s ease;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.footer-university:hover {
+    color: var(--accent-color);
+}
+
+.footer-copyright {
+    font-family: 'Cascadia Code', monospace;
+    font-size: 1.15rem;
+    color: #d0d0d0;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.footer-row-authors {
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.footer-author {
+    font-family: 'Cascadia Code', monospace;
+    font-size: 1rem;
+    color: #b8b8b8;
+    flex: 1 1 0;
+    text-align: center;
+    min-width: 0;
+}
+
+.footer-author:first-child {
+    text-align: left;
+}
+
+.footer-author:last-child {
+    text-align: right;
+}

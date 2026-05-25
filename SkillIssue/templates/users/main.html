@@ -11,7 +11,7 @@
             document.documentElement.setAttribute('data-theme', savedTheme);
         })();
     </script>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% include 'users/_styles_core.html' %}
     <link rel="stylesheet" href="{% static 'css/homepage.css' %}">
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
 </head>
@@ -436,7 +436,7 @@
                     })
                     .then(user => {
                         menuContainer.innerHTML = `
-                            <a class="nav-links" href="/users/${user.username}/" style="margin-right: 20px;" data-lang-ru="профиль" data-lang-en="profile">профиль</a>
+                            <a class="header-drawer-link nav-links" href="/users/${user.username}/" data-lang-ru="профиль" data-lang-en="profile">профиль</a>
                         `;
                         setTimeout(() => {
                             if (typeof applyLanguage === 'function') {
@@ -446,10 +446,11 @@
                     })
                     .catch(() => {
                         menuContainer.innerHTML = `
-                            <a class="nav-links" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
-                            <div class="context-menu">
-                                <a href="{% url 'register_page' %}" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
+                            <a class="header-drawer-link nav-links header-auth-trigger" href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
+                            <a class="header-drawer-link nav-links header-auth-register-mobile" href="{% url 'register_page' %}" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
+                            <div class="context-menu header-auth-dropdown">
                                 <a href="{% url 'login_page' %}" data-lang-ru="войти" data-lang-en="log in">войти</a>
+                                <a href="{% url 'register_page' %}" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
                             </div>
                         `;
                         setTimeout(() => {

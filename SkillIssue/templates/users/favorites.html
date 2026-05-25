@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Избранное - Skill Issue</title>
     <script>
         (function() {
@@ -9,7 +10,7 @@
             document.documentElement.setAttribute('data-theme', savedTheme);
         })();
     </script>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% include 'users/_styles_core.html' %}
     <link rel="stylesheet" href="{% static 'css/favorites.css' %}">
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
 </head>

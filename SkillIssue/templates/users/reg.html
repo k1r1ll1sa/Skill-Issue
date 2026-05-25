@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Регистрация | Skill Issue</title>
     <script>
         (function() {
@@ -9,27 +10,29 @@
             document.documentElement.setAttribute('data-theme', savedTheme);
         })();
     </script>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% include 'users/_styles_core.html' %}
     <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
 <body>
     {% include 'users/header.html' %}
 
-    <div class="register_container">
-        <form id="register_form" class="register_panel" novalidate>
-            <p class="simple-text" style="margin: auto; font-size: 2rem">Давайте зарегистрируемся</p>
-            
+    <div class="register_container auth-page">
+        <form id="register_form" class="register_panel auth-form" novalidate>
+            <p class="simple-text auth-title">Давайте зарегистрируемся</p>
+
             <input class="register_input" type="text" id="reg_username" placeholder="введите username">
             <input class="register_input" type="password" id="reg_password" placeholder="введите пароль">
             <input class="register_input" type="password" id="reg_repeat_password" placeholder="повторите пароль">
             <input class="register_input" type="email" id="reg_email" placeholder="введите email">
 
-            <div style="height: 20px; margin-top: -30px; margin-bottom: -20px">
-                <p id="reg_error" class="simple-text" style="font-size:0.8rem"></p>
+            <div class="auth-error-slot">
+                <p id="reg_error" class="simple-text"></p>
             </div>
 
             <button type="submit" class="register_button">зарегистрироваться</button>
-            <a href="{% url 'login_page' %}" class="simple-text" style="color: dimgray; font-size: 1rem; margin-top: -20px">я уже смешарик</a>
+            <div class="auth-links">
+                <a href="{% url 'login_page' %}" class="simple-text">я уже смешарик</a>
+            </div>
         </form>
     </div>
 

@@ -83,18 +83,20 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function openChat() {
-        modal.style.right = '20px';
+        modal.classList.add('is-open');
+        modal.style.right = '';
         button.style.display = 'none';
         loadContacts();
     }
 
     function closeChat() {
-        modal.style.right = '-420px';
+        modal.classList.remove('is-open');
+        modal.style.right = '';
         button.style.display = 'flex';
     }
 
     button.addEventListener('click', function () {
-        const isOpen = modal.style.right === '20px';
+        const isOpen = modal.classList.contains('is-open');
         isOpen ? closeChat() : openChat();
     });
 
@@ -556,7 +558,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function openChatWithUser(userId, username) {
         // Открыть окно чата
-        modal.style.right = "20px";
+        modal.classList.add('is-open');
+        modal.style.right = '';
         button.style.display = 'none';
 
         // Загрузить контакты

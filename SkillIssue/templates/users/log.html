@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skill Issue</title>
     <script>
         (function() {
@@ -9,28 +10,30 @@
             document.documentElement.setAttribute('data-theme', savedTheme);
         })();
     </script>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% include 'users/_styles_core.html' %}
 </head>
 <body>
     {% include 'users/header.html' %}
 
-    <div class="register_container">
-        <form id="login_form" style="margin: auto; margin-top: 40px;" class="register_panel" novalidate>
-            <p class="simple-text" style="margin: auto; font-size: 2rem" data-lang-ru="Уже зарегистрированы?" data-lang-en="Already registered?">Уже зарегистрированы?</p>
-            <p class="simple-text" style="margin: auto; margin-top: -20px; font-size: 1rem" data-lang-ru="Напомните, кто вы?" data-lang-en="Remind us who you are?">Напомните, кто вы?</p>
+    <div class="register_container auth-page">
+        <form id="login_form" class="register_panel auth-form" novalidate>
+            <p class="simple-text auth-title" data-lang-ru="Уже зарегистрированы?" data-lang-en="Already registered?">Уже зарегистрированы?</p>
+            <p class="simple-text auth-subtitle" data-lang-ru="Напомните, кто вы?" data-lang-en="Remind us who you are?">Напомните, кто вы?</p>
 
-            <input class="register_input" type="text" id="login_username" placeholder="введите username" style="margin: auto"
+            <input class="register_input" type="text" id="login_username" placeholder="введите username"
                    data-placeholder-ru="введите username" data-placeholder-en="enter username">
-            <input class="register_input" type="password" id="login_password" placeholder="введите пароль" style="margin: auto"
+            <input class="register_input" type="password" id="login_password" placeholder="введите пароль"
                    data-placeholder-ru="введите пароль" data-placeholder-en="enter password">
 
-            <div style="height: 20px; margin-top: -30px; margin-bottom: -20px">
-                <p id="login_error" class="simple-text" style="font-size:0.8rem"></p>
+            <div class="auth-error-slot">
+                <p id="login_error" class="simple-text"></p>
             </div>
 
             <button type="submit" class="register_button" data-lang-ru="войти" data-lang-en="log in">войти</button>
-            <a href="{% url 'register_page' %}" class="simple-text" style="color: dimgray; font-size: 1rem; margin-top: -20px" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
-            <a href="{% url 'reset_password_page' %}" class="simple-text" style="color: dimgray; font-size: 1rem; margin-top: -20px" data-lang-ru="забыли пароль?" data-lang-en="forgot your password?">забыли пароль?</a>
+            <div class="auth-links">
+                <a href="{% url 'register_page' %}" class="simple-text" data-lang-ru="зарегистрироваться" data-lang-en="register">зарегистрироваться</a>
+                <a href="{% url 'reset_password_page' %}" class="simple-text" data-lang-ru="забыли пароль?" data-lang-en="forgot your password?">забыли пароль?</a>
+            </div>
         </form>
     </div>
 
