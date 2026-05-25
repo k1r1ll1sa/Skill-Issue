@@ -5,13 +5,13 @@ from . import views
 from django.conf import settings
 from django.conf.urls.static import static
 
-from .views import (GuideRateAPIView, ReviewCreateView, create_announcement_view,
-                    ReviewUpdateView, ReviewDeleteView, AnnouncementListView, GuideListView, ProfileCommentCreateView,
-                    ProfileCommentUpdateView, ProfileCommentDeleteView, PasswordResetConfirmView,
-                    PasswordResetRequestView, delete_account, ChangePasswordView, blocked_page,
-                    GuideReviewRatingView, AnnouncementCommentRatingView, ProfileReviewRatingView,
-                    ReviewReplyCreateView, ReviewReplyRatingView, AnnouncementCommentReplyCreateView,
-                    AnnouncementCommentReplyRatingView, )
+from .views_announcements import create_announcement_view, AnnouncementListView
+from .views_guides import GuideRateAPIView, GuideListView
+from .views_profile import PasswordResetRequestView, PasswordResetConfirmView, ChangePasswordView, blocked_page
+from .views_reviews_comments import ProfileCommentCreateView, ProfileCommentUpdateView, ProfileCommentDeleteView, \
+    ReviewCreateView, ReviewUpdateView, ReviewDeleteView, GuideReviewRatingView, AnnouncementCommentRatingView, \
+    ReviewReplyCreateView, ProfileReviewRatingView, ReviewReplyRatingView, AnnouncementCommentReplyCreateView, \
+    AnnouncementCommentReplyRatingView
 
 router = DefaultRouter()
 router.register(r'guides', views.GuideViewSet, basename='guides')

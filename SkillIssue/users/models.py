@@ -31,6 +31,7 @@ class Profile(models.Model):
         decimal_places=2,
         default=0.00,
     )
+
     allow_reviews = BooleanField(default=True, verbose_name="Разрешить отзывы")
 
     is_blocked = models.BooleanField(default=False, verbose_name="Заблокирован")
@@ -88,6 +89,7 @@ class AnnouncementCommentRating(models.Model):
 
     def __str__(self):
         return f"{'👍' if self.is_like else '👎'} от {self.user.username} на комментарий {self.comment.id}"
+
 
 class ChatMessage(models.Model):
     """Модель сообщения в чате"""
@@ -164,6 +166,7 @@ class ReviewReply(models.Model):
     def __str__(self):
         return f"Ответ от {self.author.username} к отзыву {self.review.id}"
 
+
 class ReviewReplyRating(models.Model):
     """Модель оценки ответа (лайк/дизлайк)"""
     reply = models.ForeignKey(ReviewReply, on_delete=models.CASCADE, related_name='ratings')
@@ -204,6 +207,7 @@ class AnnouncementCommentReply(models.Model):
 
     def __str__(self):
         return f"Ответ от {self.author.username} к комментарию {self.comment.id}"
+
 
 class AnnouncementCommentReplyRating(models.Model):
     """Модель оценки ответа на комментарий (лайк/дизлайк)"""
@@ -299,6 +303,7 @@ class EmailVerificationCode(models.Model):
         from django.utils import timezone
         return timezone.now() > self.expires_at
 
+
 class UserActivity(models.Model):
     """Модель для хранения истории действий пользователя"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
@@ -319,6 +324,7 @@ class UserActivity(models.Model):
 
     def __str__(self):
         return f"{self.get_action_display()} {self.get_target_type_display()}: '{self.target_title}' ({self.user.username})"
+
 
 class FavoriteGuide(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_guides')
@@ -348,18 +354,22 @@ class BlacklistWord(models.Model):
         verbose_name="Запрещённое слово",
         help_text="Слово или фраза, которая будет фильтроваться"
     )
+
     replacement = models.CharField(
         max_length=50,
         default="****",
         verbose_name="Замена",
         help_text="На что заменять слово (по умолчанию: ****)"
     )
+
     is_active = models.BooleanField(
         default=True,
         verbose_name="Активно",
         help_text="Если снять галочку, слово не будет фильтроваться"
     )
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата добавления")
+
     case_sensitive = models.BooleanField(
         default=False,
         verbose_name="Учитывать регистр",
