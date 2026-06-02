@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
+from django.db.models import Count, F, Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.http import JsonResponse
@@ -16,7 +17,9 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.mail import send_mail
-from .models import Profile, UserActivity, Guide, Announcement, ProfileReview, ProfileReviewRating, EmailVerificationCode, GuideRating
+from .models import Profile, UserActivity, Guide, Announcement, ProfileReview, ProfileReviewRating, \
+    EmailVerificationCode, GuideRating, AnnouncementComment, GuideComment, Review, ChatMessage, FavoriteAnnouncement, \
+    FavoriteGuide
 from .serializers import RegisterSerializer, UserProfileSerializer, ReviewSerializer
 from .utils import filter_text
 
