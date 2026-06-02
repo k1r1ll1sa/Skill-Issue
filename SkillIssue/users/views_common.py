@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status, permissions
@@ -8,7 +9,7 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from .models import ChatMessage, User, Profile, Guide, Announcement, UserActivity, Review
+from .models import ChatMessage, User, Profile, Guide, Announcement, UserActivity, Review, ProfileReview
 from .serializers import ChatMessageSerializer, ChatContactSerializer
 
 class IsAuthorOrReadOnly(BasePermission):

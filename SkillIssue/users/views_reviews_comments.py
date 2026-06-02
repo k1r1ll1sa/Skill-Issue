@@ -8,7 +8,7 @@ from drf_yasg import openapi
 from django.db.models import Avg, Count, Q
 from .models import (Review, GuideReviewRating, ReviewReply, ReviewReplyRating, ProfileReview,
                      ProfileReviewRating, AnnouncementComment, AnnouncementCommentRating,
-                     AnnouncementCommentReply, AnnouncementCommentReplyRating, Guide, Profile)
+                     AnnouncementCommentReply, AnnouncementCommentReplyRating, Guide, Profile, Announcement)
 from .serializers import ReviewSerializer, ProfileCommentSerializer
 from .utils import filter_text
 
